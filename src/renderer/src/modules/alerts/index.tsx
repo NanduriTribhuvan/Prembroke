@@ -2,6 +2,7 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import { Bell, Plus, Trash2, BellRing, History, Power } from 'lucide-react'
 import { useAlerts, ALERT_KIND_LABEL, type AlertKind } from '@/stores/alerts'
+import { ModuleHeader, SectionCard, Badge, EmptyState } from '@/components/ui'
 
 const KINDS: AlertKind[] = ['price_above', 'price_below', 'conviction_above', 'funding_below']
 const PRESET_SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT']
@@ -30,165 +31,215 @@ export default function AlertsModule(): React.JSX.Element {
     setNote('')
   }
 
+  const armed = alerts.filter((a) => a.enabled && !a.triggeredAt).length
+
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Bell size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Alerts</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">
-          {alerts.filter((a) => a.enabled && !a.triggeredAt).length} armed · evaluates every 30s
-        </span>
-      </div>
+    <div className="flex h-full flex-col module-enter">
+      <ModuleHeader
+        icon={Bell}
+        title="Alerts"
+        badge={`${armed} armed`}
+      />
 
       <div className="grid min-h-0 flex-1 grid-cols-3 gap-4 overflow-y-auto p-4">
-        {/* create + list */}
+        {/* Create + list */}
         <div className="col-span-2 space-y-4">
-          <form onSubmit={submit} className="rounded-lg border border-edge bg-panel p-3">
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              New alert
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="mb-1 block text-[10px] text-muted">Symbol</label>
-                <input
-                  value={symbol}
-                  onChange={(e) => setSymbol(e.target.value)}
-                  list="alert-symbols"
-                  className="num w-full rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
-                />
-                <datalist id="alert-symbols">
-                  {PRESET_SYMBOLS.map((s) => (
-                    <option key={s} value={s} />
-                  ))}
-                </datalist>
+          <SectionCard title="New alert">
+            <form onSubmit={submit} className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="mb-1 block text-[length:var(--text-caption)] text-muted">
+                    Symbol
+                  </label>
+                  <input
+                    value={symbol}
+                    onChange={(e) => setSymbol(e.target.value)}
+                    list="alert-symbols"
+                    className="num w-full rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
+                  />
+                  <datalist id="alert-symbols">
+                    {PRESET_SYMBOLS.map((s) => (
+                      <option key={s} value={s} />
+                    ))}
+                  </datalist>
+                </div>
+                <div>
+                  <label className="mb-1 block text-[length:var(--text-caption)] text-muted">
+                    Condition
+                  </label>
+                  <select
+                    value={kind}
+                    onChange={(e) => setKind(e.target.value as AlertKind)}
+                    className="w-full rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
+                  >
+                    {KINDS.map((k) => (
+                      <option key={k} value={k}>
+                        {ALERT_KIND_LABEL[k]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-[length:var(--text-caption)] text-muted">
+                    Value
+                  </label>
+                  <input
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    placeholder={
+                      kind === 'conviction_above'
+                        ? '0–100'
+                        : kind === 'funding_below'
+                          ? 'e.g. 0'
+                          : 'price'
+                    }
+                    className="num w-full rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[length:var(--text-caption)] text-muted">
+                    Note (optional)
+                  </label>
+                  <input
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Why this matters"
+                    className="w-full rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="mb-1 block text-[10px] text-muted">Condition</label>
-                <select
-                  value={kind}
-                  onChange={(e) => setKind(e.target.value as AlertKind)}
-                  className="w-full rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
-                >
-                  {KINDS.map((k) => (
-                    <option key={k} value={k}>
-                      {ALERT_KIND_LABEL[k]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-[10px] text-muted">Value</label>
-                <input
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                  placeholder={kind === 'conviction_above' ? '0–100' : kind === 'funding_below' ? 'e.g. 0' : 'price'}
-                  className="num w-full rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[10px] text-muted">Note (optional)</label>
-                <input
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="why this matters"
-                  className="w-full rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              className="mt-3 flex items-center gap-1.5 rounded bg-gold/20 px-3 py-1.5 text-xs font-medium text-gold hover:bg-gold/30"
-            >
-              <Plus size={13} /> Add alert
-            </button>
-          </form>
-
-          <div className="rounded-lg border border-edge bg-panel">
-            <div className="border-b border-edge px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              Your alerts ({alerts.length})
-            </div>
-            {alerts.length === 0 && (
-              <div className="p-4 text-center text-xs text-muted">
-                No alerts yet. Create one above — it’ll fire a desktop notification even from other tabs.
-              </div>
-            )}
-            {alerts.map((a) => (
-              <div
-                key={a.id}
-                className={clsx(
-                  'flex items-center gap-3 border-b border-edge/40 px-3 py-2.5',
-                  a.triggeredAt && 'opacity-60'
-                )}
+              <button
+                type="submit"
+                className="t-colors mt-1 flex items-center gap-1.5 rounded bg-accent-soft px-3 py-1.5 text-xs font-medium text-gold hover:bg-gold/30"
               >
-                <span
+                <Plus size={13} /> Add alert
+              </button>
+            </form>
+          </SectionCard>
+
+          <SectionCard title={`Your alerts (${alerts.length})`}>
+            {alerts.length === 0 ? (
+              <EmptyState
+                icon={Bell}
+                title="No alerts yet"
+                description="Create one above — it fires a desktop notification even from other tabs."
+              />
+            ) : (
+              alerts.map((a) => (
+                <div
+                  key={a.id}
                   className={clsx(
-                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
-                    a.triggeredAt ? 'bg-gold/15 text-gold' : a.enabled ? 'bg-up/15 text-up' : 'bg-panel2 text-muted'
+                    'flex items-center gap-3 border-b border-edge/40 py-2.5 last:border-0',
+                    a.triggeredAt && 'opacity-60'
                   )}
                 >
-                  {a.triggeredAt ? <BellRing size={13} /> : <Bell size={13} />}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[13px] text-text">
-                    <span className="font-medium">{a.symbol}</span>{' '}
-                    <span className="text-muted">{ALERT_KIND_LABEL[a.kind]}</span>{' '}
-                    <span className="num text-gold">{a.value}</span>
+                  <span
+                    className={clsx(
+                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
+                      a.triggeredAt
+                        ? 'bg-gold/15 text-gold'
+                        : a.enabled
+                          ? 'bg-up/15 text-up'
+                          : 'bg-panel2 text-muted'
+                    )}
+                  >
+                    {a.triggeredAt ? <BellRing size={13} /> : <Bell size={13} />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[13px] text-text">
+                      <span className="font-medium">{a.symbol}</span>{' '}
+                      <span className="text-muted">{ALERT_KIND_LABEL[a.kind]}</span>{' '}
+                      <span className="num text-gold">{a.value}</span>
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-2">
+                      <Badge
+                        tone={
+                          a.triggeredAt
+                            ? 'gold'
+                            : a.enabled
+                              ? 'up'
+                              : 'default'
+                        }
+                      >
+                        {a.triggeredAt
+                          ? `Triggered ${timeAgo(a.triggeredAt)}`
+                          : a.enabled
+                            ? 'Armed'
+                            : 'Paused'}
+                      </Badge>
+                      {a.note && (
+                        <span className="text-[length:var(--text-caption)] text-text-tertiary">
+                          {a.note}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-muted">
-                    {a.triggeredAt ? `triggered ${timeAgo(a.triggeredAt)}` : a.enabled ? 'armed' : 'paused'}
-                    {a.note ? ` · ${a.note}` : ''}
-                  </div>
+                  {a.triggeredAt ? (
+                    <button
+                      onClick={() => rearm(a.id)}
+                      className="t-colors rounded px-2 py-1 text-[11px] text-gold hover:bg-panel2"
+                    >
+                      Re-arm
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => toggle(a.id)}
+                      title={a.enabled ? 'Pause' : 'Arm'}
+                      className={clsx(
+                        't-colors rounded p-1.5 hover:bg-panel2',
+                        a.enabled ? 'text-up' : 'text-muted'
+                      )}
+                    >
+                      <Power size={14} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => remove(a.id)}
+                    className="t-colors rounded p-1.5 text-muted hover:bg-panel2 hover:text-down"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
-                {a.triggeredAt ? (
-                  <button
-                    onClick={() => rearm(a.id)}
-                    className="rounded px-2 py-1 text-[11px] text-gold hover:bg-panel2"
-                  >
-                    Re-arm
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => toggle(a.id)}
-                    title={a.enabled ? 'Pause' : 'Arm'}
-                    className={clsx('rounded p-1.5 hover:bg-panel2', a.enabled ? 'text-up' : 'text-muted')}
-                  >
-                    <Power size={14} />
-                  </button>
-                )}
-                <button
-                  onClick={() => remove(a.id)}
-                  className="rounded p-1.5 text-muted hover:bg-panel2 hover:text-down"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
+              ))
+            )}
+          </SectionCard>
         </div>
 
-        {/* trigger log */}
-        <div className="rounded-lg border border-edge bg-panel">
-          <div className="flex items-center justify-between border-b border-edge px-3 py-2">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <History size={13} className="text-gold" /> Trigger log
-            </div>
-            {log.length > 0 && (
-              <button onClick={clearLog} className="text-[10px] text-muted hover:text-text">
-                clear
+        {/* Trigger log */}
+        <SectionCard
+          title="Trigger log"
+          icon={History}
+          actions={
+            log.length > 0 ? (
+              <button
+                onClick={clearLog}
+                className="t-colors text-[length:var(--text-caption)] text-muted hover:text-text"
+              >
+                Clear
               </button>
-            )}
-          </div>
-          {log.length === 0 && <div className="p-4 text-center text-xs text-muted">No triggers yet.</div>}
-          {log.map((l) => (
-            <div key={l.id} className="border-b border-edge/40 px-3 py-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] font-medium text-text">{l.symbol}</span>
-                <span className="text-[10px] text-muted">{timeAgo(l.at)}</span>
+            ) : undefined
+          }
+        >
+          {log.length === 0 ? (
+            <EmptyState
+              icon={History}
+              title="No triggers yet"
+              description="Triggered alerts appear here."
+            />
+          ) : (
+            log.map((l) => (
+              <div key={l.id} className="border-b border-edge/40 py-2 last:border-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] font-medium text-text">{l.symbol}</span>
+                  <span className="text-[length:var(--text-caption)] text-muted">
+                    {timeAgo(l.at)}
+                  </span>
+                </div>
+                <div className="text-[11px] text-muted">{l.message}</div>
               </div>
-              <div className="text-[11px] text-muted">{l.message}</div>
-            </div>
-          ))}
-        </div>
+            ))
+          )}
+        </SectionCard>
       </div>
     </div>
   )

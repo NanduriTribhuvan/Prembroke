@@ -7,7 +7,7 @@ import type { ConvictionResult } from './engine'
  * fair-value-gap zones, swing points, buy/sell-side liquidity, and the plan's
  * entry / stop / target. Pure presentation over data the engine already produced.
  */
-const C = {
+export const SMC_COLORS = {
   up: '#16c784',
   down: '#ea3943',
   gold: '#d9a521',
@@ -21,6 +21,7 @@ const C = {
   obEdge: 'rgba(217,165,33,0.5)',
   draw: '#2fd9c5'
 }
+const C = SMC_COLORS
 const VISIBLE = 90
 
 export default function SmcChart({ result }: { result: ConvictionResult }): React.JSX.Element {

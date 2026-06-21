@@ -6,6 +6,7 @@ import { findConcepts } from '@/modules/playbook/concepts'
 import { useAiLimit } from '@/stores/ailimit'
 import { useView } from '@/stores/view'
 import { listProviders, askAIStream, type ResolvedProvider, type AiProviderId } from '@/lib/ai'
+import { ModuleHeader, SectionCard } from '@/components/ui'
 
 interface Msg {
   role: 'user' | 'ai'
@@ -129,64 +130,71 @@ export default function AiModule(): React.JSX.Element {
   const noProviders = providers !== null && providers.length === 0
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <GraduationCap size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">AI Mentor</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">ICT / SMC expert</span>
-        {current && (
-          <div className="flex items-center gap-1.5 rounded bg-panel2 px-2 py-1">
-            <Cpu size={12} className="text-gold" />
-            <select
-              value={selected}
-              onChange={(e) => setSelected(e.target.value as AiProviderId)}
-              className="bg-transparent text-[11px] text-text outline-none"
+    <div className="flex h-full flex-col module-enter">
+      <ModuleHeader
+        icon={GraduationCap}
+        title="AI Mentor"
+        badge="ICT / SMC expert"
+        actions={
+          <div className="flex items-center gap-3">
+            {current && (
+              <div className="flex items-center gap-1.5 rounded bg-panel2 px-2 py-1">
+                <Cpu size={12} className="text-gold" />
+                <select
+                  value={selected}
+                  onChange={(e) => setSelected(e.target.value as AiProviderId)}
+                  className="bg-transparent text-[length:var(--text-caption)] text-text outline-none"
+                >
+                  {providers?.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <span
+              className={clsx(
+                'num text-[length:var(--text-caption)]',
+                remaining > 5 ? 'text-muted' : remaining > 0 ? 'text-warn' : 'text-down'
+              )}
+              title="AI requests left this hour"
             >
-              {providers?.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
+              {remaining}/{perHour} left
+            </span>
+            {noProviders ? (
+              <span className="flex items-center gap-1 text-[length:var(--text-caption)] text-warn">
+                <AlertCircle size={12} /> No AI provider
+              </span>
+            ) : current ? (
+              <span className="flex items-center gap-1 text-[length:var(--text-caption)] text-up">
+                <span className="h-1.5 w-1.5 rounded-full bg-up" />{' '}
+                {current.kind === 'local' ? 'local · free' : 'cloud · free'}
+              </span>
+            ) : null}
           </div>
-        )}
-        <div className="ml-auto flex items-center gap-3">
-          <span
-            className={clsx('num text-[11px]', remaining > 5 ? 'text-muted' : remaining > 0 ? 'text-warn' : 'text-down')}
-            title="AI requests left this hour"
-          >
-            {remaining}/{perHour} left
-          </span>
-          {noProviders ? (
-            <span className="flex items-center gap-1 text-[11px] text-warn">
-              <AlertCircle size={12} /> No AI provider
-            </span>
-          ) : current ? (
-            <span className="flex items-center gap-1 text-[11px] text-up">
-              <span className="h-1.5 w-1.5 rounded-full bg-up" /> {current.kind === 'local' ? 'local · free' : 'cloud · free'}
-            </span>
-          ) : null}
-        </div>
-      </div>
+        }
+      />
 
       <div ref={scroller} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
         {messages.length === 0 && (
           <div className="mx-auto max-w-xl pt-6 text-center">
             <GraduationCap size={28} className="mx-auto mb-3 text-gold/60" />
             <p className="text-sm text-muted">
-              Ask anything about ICT, Smart Money Concepts, SMT, structure, liquidity, or the live tape. The
-              Mentor pulls the relevant Playbook concepts into its answer.
+              Ask anything about ICT, Smart Money Concepts, SMT, structure, liquidity, or the live
+              tape. The Mentor pulls the relevant Playbook concepts into its answer.
             </p>
             {noProviders && (
-              <div className="mt-4 rounded-lg border border-warn/30 bg-warn/10 p-3 text-left text-xs text-warn">
-                <div className="mb-1 font-semibold">No AI engine yet — pick any free option:</div>
-                <div className="text-muted">
-                  <b>Cloud (fastest, free):</b> grab a free key from Groq, Google Gemini, Cerebras or
-                  OpenRouter and paste it in Settings → AI engine.
-                  <br />
-                  <b>Local (private, free):</b> install Ollama from ollama.com, run{' '}
-                  <code className="num">ollama pull llama3.2:3b</code>, reopen Prembroke.
-                </div>
+              <div className="mt-4">
+                <SectionCard title="No AI engine yet — pick any free option">
+                  <div className="text-[length:var(--text-caption)] text-muted">
+                    <b>Cloud (fastest, free):</b> grab a free key from Groq, Google Gemini, Cerebras
+                    or OpenRouter and paste it in Settings → AI engine.
+                    <br />
+                    <b>Local (private, free):</b> install Ollama from ollama.com, run{' '}
+                    <code className="num">ollama pull llama3.2:3b</code>, reopen Prembroke.
+                  </div>
+                </SectionCard>
               </div>
             )}
             <div className="mt-5 space-y-2">
@@ -195,7 +203,7 @@ export default function AiModule(): React.JSX.Element {
                   key={q}
                   onClick={() => ask(q)}
                   disabled={busy || !current}
-                  className="block w-full rounded-lg border border-edge bg-panel px-3 py-2 text-left text-xs text-text hover:border-gold/40 disabled:opacity-50"
+                  className="t-colors block w-full rounded-lg border border-edge bg-panel px-3 py-2 text-left text-xs text-text hover:border-gold/40 disabled:opacity-50"
                 >
                   {q}
                 </button>
@@ -210,7 +218,7 @@ export default function AiModule(): React.JSX.Element {
               className={clsx(
                 'max-w-[80%] whitespace-pre-wrap rounded-lg px-3 py-2 text-[13px] leading-relaxed',
                 m.role === 'user'
-                  ? 'bg-leaf/30 text-text'
+                  ? 'bg-accent-soft text-text'
                   : m.error
                     ? 'border border-down/30 bg-down/10 text-down'
                     : 'border border-edge bg-panel text-text'
@@ -247,7 +255,7 @@ export default function AiModule(): React.JSX.Element {
         <button
           type="submit"
           disabled={busy || !input.trim() || !current}
-          className="flex items-center gap-1.5 rounded-lg bg-gold/20 px-3 py-2 text-[13px] font-medium text-gold hover:bg-gold/30 disabled:opacity-40"
+          className="t-colors flex items-center gap-1.5 rounded-lg bg-accent-soft px-3 py-2 text-[13px] font-medium text-gold hover:bg-gold/30 disabled:opacity-40"
         >
           <Send size={14} /> Send
         </button>

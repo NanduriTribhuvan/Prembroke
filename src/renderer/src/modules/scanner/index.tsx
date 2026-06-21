@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
-import { Radar, TrendingUp, TrendingDown, RefreshCw, ArrowRight, Download } from 'lucide-react'
+import { Radar, TrendingUp, TrendingDown, RefreshCw, Download, SlidersHorizontal } from 'lucide-react'
 import { fetchCandles, computeConviction, type ConvictionResult } from '@/modules/conviction/engine'
 import { useView } from '@/stores/view'
 import { useSettings } from '@/stores/settings'
 import { exportCsv } from '@/lib/export'
+import { ModuleHeader, DataTable, EmptyState, TabBar, BiasChip, IconButton } from '@/components/ui'
 
 const UNIVERSE = [
   'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DOGEUSDT',
@@ -54,7 +55,12 @@ function SetupCard({
       <div className="flex items-center gap-1.5 border-b border-edge px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
         {icon} {title}
       </div>
-      {rows.length === 0 && <div className="p-3 text-xs text-muted">No qualifying setups right now.</div>}
+      {rows.length === 0 && (
+        <EmptyState
+          title="No qualifying setups"
+          description="No matching setups right now — adjust the timeframe or check back soon."
+        />
+      )}
       {rows.map((r) => (
         <button
           key={r.symbol}
@@ -67,7 +73,6 @@ function SetupCard({
             <div className="truncate text-[11px] text-muted">{r.structure.lastEvent}</div>
           </div>
           <span className={clsx('text-[11px] font-semibold', gradeColor(r.score))}>{r.grade.toUpperCase()}</span>
-          <ArrowRight size={13} className="text-muted opacity-0 group-hover:opacity-100" />
         </button>
       ))}
     </div>
@@ -82,53 +87,97 @@ export default function ScannerModule(): React.JSX.Element {
   const longs = (data ?? []).filter((r) => r.bias === 'long').slice(0, 6)
   const shorts = (data ?? []).filter((r) => r.bias === 'short').sort((a, b) => b.score - a.score).slice(0, 6)
 
+  const tableCols = [
+    {
+      key: 'symbol',
+      header: 'Symbol',
+      render: (r: ConvictionResult) => (
+        <span className="text-[13px] font-medium text-text">{r.symbol.replace('USDT', '')}</span>
+      )
+    },
+    {
+      key: 'score',
+      header: 'Score',
+      align: 'right' as const,
+      sortable: true,
+      render: (r: ConvictionResult) => (
+        <span className={clsx('num text-sm font-bold', gradeColor(r.score))}>{r.score}</span>
+      )
+    },
+    {
+      key: 'grade',
+      header: 'Grade',
+      align: 'center' as const,
+      render: (r: ConvictionResult) => (
+        <span className={clsx('text-xs font-semibold', gradeColor(r.score))}>{r.grade.toUpperCase()}</span>
+      )
+    },
+    {
+      key: 'bias',
+      header: 'Bias',
+      align: 'center' as const,
+      render: (r: ConvictionResult) => <BiasChip bias={r.bias} />
+    },
+    {
+      key: 'structure',
+      header: 'Structure',
+      render: (r: ConvictionResult) => (
+        <span className="max-w-[200px] truncate text-[11px] text-muted">{r.structure.lastEvent}</span>
+      )
+    },
+    {
+      key: 'rr',
+      header: 'R:R',
+      align: 'right' as const,
+      render: (r: ConvictionResult) => (
+        <span className="num text-xs text-gold">{r.plan ? r.plan.rr.toFixed(2) : '—'}</span>
+      )
+    }
+  ]
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Radar size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Conviction Scanner</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">
-          {data ? `${data.length} symbols ranked` : 'scanning…'}
-        </span>
-        <div className="ml-auto flex items-center gap-1">
-          {INTERVALS.map((iv) => (
-            <button
-              key={iv}
-              onClick={() => setInterval(iv)}
-              className={clsx(
-                'rounded px-2 py-1 text-xs',
-                interval === iv ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2'
-              )}
-            >
-              {iv}
-            </button>
-          ))}
-          {data && data.length > 0 && (
-            <button
-              onClick={() =>
-                exportCsv(
-                  `scanner_${interval}`,
-                  data.map((r) => ({
-                    symbol: r.symbol,
-                    score: r.score,
-                    grade: r.grade,
-                    bias: r.bias,
-                    rr: r.plan?.rr ?? '',
-                    structure: r.structure.lastEvent
-                  }))
-                )
-              }
-              title="Export CSV"
-              className="ml-1 rounded p-1.5 text-muted hover:bg-panel2 hover:text-gold"
-            >
-              <Download size={14} />
-            </button>
-          )}
-          <button onClick={() => refetch()} className="ml-1 rounded p-1.5 text-muted hover:bg-panel2 hover:text-text">
-            <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
-          </button>
-        </div>
-      </div>
+      <ModuleHeader
+        icon={Radar}
+        title="Conviction scanner"
+        badge={data ? `${data.length} symbols ranked` : 'scanning…'}
+        actions={
+          <div className="flex items-center gap-2">
+            <TabBar
+              tabs={INTERVALS.map((iv) => ({ id: iv, label: iv }))}
+              active={interval}
+              onTabChange={setInterval}
+              size="sm"
+            />
+            {data && data.length > 0 && (
+              <IconButton
+                icon={Download}
+                title="Export CSV"
+                size="sm"
+                onClick={() =>
+                  exportCsv(
+                    `scanner_${interval}`,
+                    data.map((r) => ({
+                      symbol: r.symbol,
+                      score: r.score,
+                      grade: r.grade,
+                      bias: r.bias,
+                      rr: r.plan?.rr ?? '',
+                      structure: r.structure.lastEvent
+                    }))
+                  )
+                }
+              />
+            )}
+            <IconButton
+              icon={RefreshCw}
+              title="Refresh"
+              size="sm"
+              onClick={() => refetch()}
+            />
+          </div>
+        }
+      />
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <div className="grid grid-cols-2 gap-4">
@@ -137,58 +186,17 @@ export default function ScannerModule(): React.JSX.Element {
         </div>
 
         <div className="mt-4 rounded-lg border border-edge bg-panel">
-          <div className="border-b border-edge px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
-            Full ranking · {interval}
+          <div className="flex items-center gap-1.5 border-b border-edge px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
+            <SlidersHorizontal size={13} className="text-gold" /> Full ranking · {interval}
           </div>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-edge text-[10px] uppercase tracking-wider text-muted">
-                <th className="px-3 py-1.5 text-left font-semibold">Symbol</th>
-                <th className="px-3 py-1.5 text-right font-semibold">Score</th>
-                <th className="px-3 py-1.5 text-center font-semibold">Grade</th>
-                <th className="px-3 py-1.5 text-center font-semibold">Bias</th>
-                <th className="px-3 py-1.5 text-left font-semibold">Structure</th>
-                <th className="px-3 py-1.5 text-right font-semibold">R:R</th>
-                <th className="px-3 py-1.5"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {(data ?? []).map((r, i) => (
-                <tr
-                  key={r.symbol}
-                  onClick={() => focus(r.symbol)}
-                  className={clsx('cursor-pointer border-b border-edge/40 hover:bg-panel2', i % 2 && 'bg-panel2/20')}
-                >
-                  <td className="px-3 py-1.5 text-[13px] font-medium text-text">{r.symbol.replace('USDT', '')}</td>
-                  <td className={clsx('num px-3 py-1.5 text-right text-sm font-bold', gradeColor(r.score))}>
-                    {r.score}
-                  </td>
-                  <td className={clsx('px-3 py-1.5 text-center text-xs font-semibold', gradeColor(r.score))}>
-                    {r.grade.toUpperCase()}
-                  </td>
-                  <td className="px-3 py-1.5 text-center">
-                    <span
-                      className={clsx(
-                        'rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase',
-                        r.bias === 'long' ? 'bg-up/15 text-up' : r.bias === 'short' ? 'bg-down/15 text-down' : 'bg-panel2 text-muted'
-                      )}
-                    >
-                      {r.bias}
-                    </span>
-                  </td>
-                  <td className="max-w-[200px] truncate px-3 py-1.5 text-[11px] text-muted">
-                    {r.structure.lastEvent}
-                  </td>
-                  <td className="num px-3 py-1.5 text-right text-xs text-gold">
-                    {r.plan ? r.plan.rr.toFixed(2) : '—'}
-                  </td>
-                  <td className="px-3 py-1.5 text-right">
-                    <ArrowRight size={13} className="text-muted" />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable<ConvictionResult>
+            cols={tableCols}
+            rows={data ?? []}
+            rowKey={(r) => r.symbol}
+            loading={isFetching && !data}
+            onRowClick={(r) => focus(r.symbol)}
+            emptyTitle="No results — scanner is loading"
+          />
         </div>
       </div>
     </div>

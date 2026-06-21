@@ -10,10 +10,11 @@ import {
   type ConvictionResult,
   type NewsRiskContext
 } from './engine'
-import SmcChart from './SmcChart'
+import SmcChart, { SMC_COLORS } from './SmcChart'
 import { useView } from '@/stores/view'
 import { useSettings } from '@/stores/settings'
 import { askAI } from '@/lib/ai'
+import { ModuleHeader, ScoreRing, BiasChip, TabBar } from '@/components/ui'
 
 const SYMBOLS = [
   { s: 'BTCUSDT', label: 'BTC' },
@@ -140,54 +141,6 @@ const GRADE_COLOR: Record<ConvictionResult['grade'], string> = {
   skip: 'text-muted'
 }
 
-function biasChip(bias: string): React.JSX.Element {
-  const m =
-    bias === 'long'
-      ? 'bg-up/15 text-up'
-      : bias === 'short'
-        ? 'bg-down/15 text-down'
-        : 'bg-panel2 text-muted'
-  return (
-    <span className={clsx('rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase', m)}>
-      {bias}
-    </span>
-  )
-}
-
-function ScoreRing({ score, grade }: { score: number; grade: string }): React.JSX.Element {
-  const r = 52
-  const circ = 2 * Math.PI * r
-  const pct = Math.max(0, Math.min(100, score)) / 100
-  const color = score >= 72 ? '#16c784' : score >= 58 ? '#c99a2e' : score >= 45 ? '#f0b90b' : '#8aa593'
-  return (
-    <div className="relative h-[140px] w-[140px]">
-      <svg viewBox="0 0 140 140" className="h-full w-full -rotate-90">
-        <circle cx="70" cy="70" r={r} fill="none" stroke="#1c3325" strokeWidth="12" />
-        <circle
-          cx="70"
-          cy="70"
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          strokeDashoffset={circ * (1 - pct)}
-          style={{ transition: 'stroke-dashoffset 0.6s ease' }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="num text-3xl font-bold" style={{ color }}>
-          {score}
-        </span>
-        <span className={clsx('text-xs font-semibold', GRADE_COLOR[grade as ConvictionResult['grade']])}>
-          {grade.toUpperCase()}
-        </span>
-      </div>
-    </div>
-  )
-}
-
 function WatchRow({
   symbol,
   label,
@@ -217,7 +170,7 @@ function WatchRow({
         </span>
       </div>
       <div className="flex items-center gap-2">
-        {data && biasChip(data.bias)}
+        {data && <BiasChip bias={data.bias} />}
         <span
           className={clsx(
             'num w-7 text-right text-sm font-bold',
@@ -244,39 +197,32 @@ export default function ConvictionModule(): React.JSX.Element {
   const { data, isLoading, isFetching, refetch, error } = useConviction(symbol, interval)
   const active = SYMBOLS.find((x) => x.s === symbol) ?? { s: symbol, label: symbol.replace('USDT', '') }
 
+  const intervalTabs = INTERVALS.map((iv) => ({ id: iv, label: iv }))
+
   return (
     <div className="flex h-full flex-col">
-      {/* header */}
-      <div className="flex items-center justify-between border-b border-edge px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Gauge size={18} className="text-gold" />
-          <h1 className="text-[15px] font-semibold text-text">Conviction Engine</h1>
-          <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">
-            ICT / SMC confluence
-          </span>
-        </div>
-        <div className="flex items-center gap-1">
-          {INTERVALS.map((iv) => (
+      <ModuleHeader
+        icon={Gauge}
+        title="Conviction engine"
+        badge="ICT / SMC confluence"
+        actions={
+          <div className="flex items-center gap-2">
+            <TabBar
+              tabs={intervalTabs}
+              active={interval}
+              onTabChange={setInterval}
+              size="sm"
+            />
             <button
-              key={iv}
-              onClick={() => setInterval(iv)}
-              className={clsx(
-                'rounded px-2 py-1 text-xs',
-                interval === iv ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2'
-              )}
+              onClick={() => refetch()}
+              title="Refresh"
+              className="rounded p-1.5 text-muted hover:bg-panel2 hover:text-text"
             >
-              {iv}
+              <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
             </button>
-          ))}
-          <button
-            onClick={() => refetch()}
-            title="Refresh"
-            className="ml-1 rounded p-1.5 text-muted hover:bg-panel2 hover:text-text"
-          >
-            <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
-          </button>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       <div className="flex min-h-0 flex-1">
         {/* watchlist */}
@@ -300,7 +246,7 @@ export default function ConvictionModule(): React.JSX.Element {
         <section className="min-w-0 flex-1 overflow-y-auto p-5">
           {error && (
             <div className="rounded border border-down/30 bg-down/10 p-4 text-sm text-down">
-              Couldn’t load market data for {symbol}. Binance may be geo-blocked on your network —
+              Couldn't load market data for {symbol}. Binance may be geo-blocked on your network —
               the engine will retry automatically.
             </div>
           )}
@@ -313,12 +259,17 @@ export default function ConvictionModule(): React.JSX.Element {
             <>
               {/* top row: ring + plan */}
               <div className="flex flex-wrap items-center gap-6">
-                <ScoreRing score={data.score} grade={data.grade} />
+                <div className="flex flex-col items-center gap-1">
+                  <ScoreRing score={data.score} size={140} />
+                  <span className={clsx('text-xs font-semibold', GRADE_COLOR[data.grade as ConvictionResult['grade']])}>
+                    {data.grade.toUpperCase()}
+                  </span>
+                </div>
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-semibold text-text">{active?.label}</span>
                     <span className="num text-sm text-muted">{symbol}</span>
-                    {biasChip(data.bias)}
+                    <BiasChip bias={data.bias} />
                   </div>
                   <span className="num text-2xl font-bold text-text">
                     ${data.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}
@@ -413,7 +364,7 @@ export default function ConvictionModule(): React.JSX.Element {
               <div className="mt-5">
                 <div className="mb-2 flex items-center justify-between">
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                    Price &amp; Smart-Money map
+                    Price &amp; smart-money map
                   </div>
                   <div className="flex items-center gap-3 text-[10px] text-muted">
                     <span className="flex items-center gap-1">
@@ -428,10 +379,10 @@ export default function ConvictionModule(): React.JSX.Element {
                       <span className="h-2 w-2 rounded-sm" style={{ background: 'rgba(217,165,33,0.5)' }} /> OB
                     </span>
                     <span className="flex items-center gap-1">
-                      <span className="h-px w-3" style={{ background: '#2fd9c5' }} /> draw
+                      <span className="h-px w-3" style={{ background: SMC_COLORS.draw }} /> draw
                     </span>
                     <span className="flex items-center gap-1">
-                      <span className="h-px w-3" style={{ background: '#d9a521' }} /> plan
+                      <span className="h-px w-3" style={{ background: SMC_COLORS.gold }} /> plan
                     </span>
                   </div>
                 </div>

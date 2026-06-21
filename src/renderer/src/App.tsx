@@ -32,7 +32,7 @@ function Pane({ index }: { index: number }): React.JSX.Element {
       className={clsx(
         'flex min-h-0 min-w-0 flex-col overflow-hidden',
         tiled && 'rounded-lg border',
-        tiled && (isActive ? 'border-gold/50' : 'border-edge')
+        tiled && (isActive ? 'border-accent/50' : 'border-edge')
       )}
     >
       {tiled && (
@@ -67,7 +67,7 @@ function Pane({ index }: { index: number }): React.JSX.Element {
           {isActive && <span className="h-1.5 w-1.5 rounded-full bg-gold" title="Active pane" />}
         </div>
       )}
-      <div className="min-h-0 flex-1 overflow-hidden">
+      <div key={id} className="module-enter min-h-0 flex-1 overflow-hidden">
         <Comp />
       </div>
     </div>
@@ -100,7 +100,7 @@ export default function App(): React.JSX.Element {
               <WidgetCanvas />
             )
           ) : (
-            <div className={clsx('grid h-full gap-1', grid)}>
+            <div className={clsx('grid h-full gap-[var(--space-gap)]', grid)}>
               {Array.from({ length: layout }).map((_, i) => (
                 <Pane key={i} index={i} />
               ))}

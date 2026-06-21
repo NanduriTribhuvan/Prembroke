@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
-import { Search, ArrowUpDown, Coins, Activity, Banknote } from 'lucide-react'
+import { Search, Coins, Activity, Banknote } from 'lucide-react'
 import { MAJOR_CURRENCIES, computeCurrencyStrength, type Currency } from '@shared/markets'
 import { useKeys } from '@/stores/keys'
+import { ModuleHeader, DataTable } from '@/components/ui'
 
 interface Row {
   symbol: string
@@ -145,7 +146,7 @@ function CurrencyStrength(): React.JSX.Element {
         <Activity size={13} className="text-gold" /> Currency strength
       </div>
       <div className="mb-3 text-[10px] text-muted">
-        {data ? `8 majors · ECB daily, as of ${data.asOf}` : error ? 'FX data unavailable' : 'loading…'}
+        {data ? `8 majors · ECB daily, as of ${data.asOf}` : error ? 'FX data unavailable' : 'Loading…'}
       </div>
       <div className="space-y-1.5">
         {sorted.map((c) => {
@@ -174,7 +175,7 @@ function CurrencyStrength(): React.JSX.Element {
 }
 
 export default function MarketsModule(): React.JSX.Element {
-  const { data, error } = useScreener()
+  const { data, isLoading, error, refetch } = useScreener()
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'quoteVol', dir: -1 })
 
@@ -192,98 +193,96 @@ export default function MarketsModule(): React.JSX.Element {
   const toggleSort = (key: SortKey): void =>
     setSort((s) => (s.key === key ? { key, dir: (s.dir * -1) as 1 | -1 } : { key, dir: -1 }))
 
-  const Header = ({ k, label, right }: { k: SortKey; label: string; right?: boolean }): React.JSX.Element => (
-    <button
-      onClick={() => toggleSort(k)}
-      className={clsx(
-        'flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider hover:text-gold',
-        sort.key === k ? 'text-gold' : 'text-muted',
-        right && 'ml-auto justify-end'
-      )}
-    >
-      {label}
-      <ArrowUpDown size={10} />
-    </button>
-  )
+  const tableCols = [
+    {
+      key: 'symbol',
+      header: 'Symbol',
+      sortable: true,
+      render: (r: Row) => <span className="text-[13px] font-medium text-text">{r.symbol}</span>
+    },
+    {
+      key: 'last',
+      header: 'Price',
+      align: 'right' as const,
+      sortable: true,
+      render: (r: Row) => (
+        <span className="num text-xs text-text">
+          {r.last.toLocaleString('en-US', { maximumFractionDigits: r.last < 1 ? 5 : 2 })}
+        </span>
+      )
+    },
+    {
+      key: 'changePct',
+      header: '24h %',
+      align: 'right' as const,
+      sortable: true,
+      render: (r: Row) => (
+        <span className={clsx('num text-xs font-semibold', r.changePct >= 0 ? 'text-up' : 'text-down')}>
+          {r.changePct >= 0 ? '+' : ''}
+          {r.changePct.toFixed(2)}%
+        </span>
+      )
+    },
+    {
+      key: 'quoteVol',
+      header: 'Volume',
+      align: 'right' as const,
+      sortable: true,
+      render: (r: Row) => <span className="num text-xs text-muted">{fmtVol(r.quoteVol)}</span>
+    },
+    {
+      key: 'range',
+      header: '24h range',
+      align: 'right' as const,
+      render: (r: Row) => {
+        const pos = (r.last - r.low) / (r.high - r.low || 1)
+        return (
+          <div className="relative ml-auto h-1.5 w-24 rounded-full bg-panel2">
+            <div
+              className="absolute top-1/2 h-2.5 w-0.5 -translate-y-1/2 rounded bg-gold"
+              style={{ left: `${Math.max(0, Math.min(100, pos * 100))}%` }}
+            />
+          </div>
+        )
+      }
+    }
+  ]
+
+  const sortKey = sort.key
+  const sortDir: 'asc' | 'desc' = sort.dir === 1 ? 'asc' : 'desc'
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Coins size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Markets</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">
-          {data ? `${data.length} pairs · live` : 'loading…'}
-        </span>
-        <div className="ml-auto flex items-center gap-1.5 rounded border border-edge bg-panel px-2 py-1">
-          <Search size={13} className="text-muted" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search symbol…"
-            className="w-40 bg-transparent text-xs text-text outline-none placeholder:text-muted"
-          />
-        </div>
-      </div>
+      <ModuleHeader
+        icon={Coins}
+        title="Markets"
+        badge={data ? `${data.length} pairs · live` : 'loading…'}
+        actions={
+          <div className="flex items-center gap-1.5 rounded border border-edge bg-panel px-2 py-1">
+            <Search size={13} className="text-muted" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search symbol…"
+              className="w-40 bg-transparent text-xs text-text outline-none placeholder:text-muted"
+            />
+          </div>
+        }
+      />
 
       <div className="flex min-h-0 flex-1">
         <div className="min-w-0 flex-1 overflow-y-auto">
-          {error && (
-            <div className="m-4 rounded border border-warn/30 bg-warn/10 p-3 text-xs text-warn">
-              Binance screener unreachable (possible geo-block). Retrying…
-            </div>
-          )}
-          <table className="w-full">
-            <thead className="sticky top-0 z-10 bg-bg">
-              <tr className="border-b border-edge">
-                <th className="px-4 py-2 text-left">
-                  <Header k="symbol" label="Symbol" />
-                </th>
-                <th className="px-4 py-2 text-right">
-                  <Header k="last" label="Price" right />
-                </th>
-                <th className="px-4 py-2 text-right">
-                  <Header k="changePct" label="24h %" right />
-                </th>
-                <th className="px-4 py-2 text-right">
-                  <Header k="quoteVol" label="Volume" right />
-                </th>
-                <th className="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  24h range
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, i) => {
-                const pos = (r.last - r.low) / (r.high - r.low || 1)
-                return (
-                  <tr key={r.symbol} className={clsx('border-b border-edge/50', i % 2 && 'bg-panel/30')}>
-                    <td className="px-4 py-2 text-[13px] font-medium text-text">{r.symbol}</td>
-                    <td className="num px-4 py-2 text-right text-xs text-text">
-                      {r.last.toLocaleString('en-US', { maximumFractionDigits: r.last < 1 ? 5 : 2 })}
-                    </td>
-                    <td
-                      className={clsx(
-                        'num px-4 py-2 text-right text-xs font-semibold',
-                        r.changePct >= 0 ? 'text-up' : 'text-down'
-                      )}
-                    >
-                      {r.changePct >= 0 ? '+' : ''}
-                      {r.changePct.toFixed(2)}%
-                    </td>
-                    <td className="num px-4 py-2 text-right text-xs text-muted">{fmtVol(r.quoteVol)}</td>
-                    <td className="px-4 py-2">
-                      <div className="relative ml-auto h-1.5 w-24 rounded-full bg-panel2">
-                        <div
-                          className="absolute top-1/2 h-2.5 w-0.5 -translate-y-1/2 rounded bg-gold"
-                          style={{ left: `${Math.max(0, Math.min(100, pos * 100))}%` }}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <DataTable<Row>
+            cols={tableCols}
+            rows={rows}
+            rowKey={(r) => r.symbol}
+            loading={isLoading}
+            error={error ? 'Binance screener unreachable (possible geo-block). Retrying…' : null}
+            onRetry={() => refetch()}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={(k) => toggleSort(k as SortKey)}
+          />
         </div>
         <aside className="w-64 shrink-0 overflow-y-auto border-l border-edge">
           <LiveFx />

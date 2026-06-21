@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
-import { TrendingUp, TrendingDown, Gauge, Clock, Globe } from 'lucide-react'
+import { TrendingUp, TrendingDown, Gauge, Clock, Globe, LayoutDashboard } from 'lucide-react'
 import { SESSIONS, isSessionOpen, nextSessionEvent } from '@shared/markets'
 import { useKeys } from '@/stores/keys'
+import { ModuleHeader, Stat, GaugeBar, SectionCard } from '@/components/ui'
 
 interface Ticker24h {
   symbol: string
@@ -84,25 +85,37 @@ function fmtBig(v: number): string {
 
 function GlobalStrip(): React.JSX.Element {
   const { data } = useGlobal()
-  const cell = (label: string, value: string, tone?: string): React.JSX.Element => (
-    <div className="flex flex-col">
-      <span className="text-[10px] uppercase tracking-wider text-muted">{label}</span>
-      <span className={clsx('num text-sm font-semibold', tone ?? 'text-text')}>{value}</span>
-    </div>
-  )
+  const changeTone = data
+    ? data.mcapChange >= 0 ? 'up' as const : 'down' as const
+    : 'muted' as const
+
   return (
     <div className="mb-4 flex flex-wrap items-center gap-6 rounded-lg border border-edge bg-panel px-4 py-2.5">
       <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-gold">
         <Globe size={13} /> Global
       </div>
-      {cell('Total mcap', data ? fmtBig(data.mcap) : '—')}
-      {cell(
-        '24h',
-        data ? `${data.mcapChange >= 0 ? '+' : ''}${data.mcapChange.toFixed(2)}%` : '—',
-        data ? (data.mcapChange >= 0 ? 'text-up' : 'text-down') : undefined
-      )}
-      {cell('BTC dominance', data ? `${data.btcDom.toFixed(1)}%` : '—', 'text-gold')}
-      {cell('ETH dominance', data ? `${data.ethDom.toFixed(1)}%` : '—')}
+      <Stat
+        label="Total mcap"
+        value={data ? fmtBig(data.mcap) : '—'}
+        mono
+      />
+      <Stat
+        label="24h"
+        value={data ? `${data.mcapChange >= 0 ? '+' : ''}${data.mcapChange.toFixed(2)}%` : '—'}
+        tone={changeTone}
+        mono
+      />
+      <Stat
+        label="BTC dominance"
+        value={data ? `${data.btcDom.toFixed(1)}%` : '—'}
+        tone="gold"
+        mono
+      />
+      <Stat
+        label="ETH dominance"
+        value={data ? `${data.ethDom.toFixed(1)}%` : '—'}
+        mono
+      />
     </div>
   )
 }
@@ -117,11 +130,10 @@ function MoverList({
   positive: boolean
 }): React.JSX.Element {
   return (
-    <div className="rounded-lg border border-edge bg-panel p-3">
-      <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-        {positive ? <TrendingUp size={13} className="text-up" /> : <TrendingDown size={13} className="text-down" />}
-        {title}
-      </div>
+    <SectionCard
+      title={title}
+      icon={positive ? TrendingUp : TrendingDown}
+    >
       <ul className="space-y-1">
         {rows.map((t) => {
           const pct = parseFloat(t.priceChangePercent)
@@ -141,31 +153,40 @@ function MoverList({
           )
         })}
       </ul>
-    </div>
+    </SectionCard>
   )
+}
+
+function fngTone(v: number): 'down' | 'warn' | 'gold' | 'up' {
+  if (v < 25) return 'down'
+  if (v < 45) return 'warn'
+  if (v < 55) return 'gold'
+  return 'up'
 }
 
 function FearGreedGauge(): React.JSX.Element {
   const { data } = useFearGreed()
   const v = data?.value ?? 50
-  const color = v < 25 ? '#ea3943' : v < 45 ? '#f0b90b' : v < 55 ? '#c99a2e' : v < 75 ? '#16c784' : '#16c784'
+  const tone = fngTone(v)
+
   return (
-    <div className="rounded-lg border border-edge bg-panel p-3">
-      <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-        <Gauge size={13} className="text-gold" /> Fear &amp; Greed
-      </div>
+    <SectionCard title="Fear and greed" icon={Gauge}>
       <div className="flex items-center gap-4">
-        <div className="num text-4xl font-bold" style={{ color }}>
+        <span className={clsx(
+          'num text-4xl font-bold',
+          tone === 'up' && 'text-up',
+          tone === 'down' && 'text-down',
+          tone === 'warn' && 'text-warn',
+          tone === 'gold' && 'text-gold',
+        )}>
           {data ? v : '—'}
-        </div>
-        <div className="flex-1">
-          <div className="h-2 overflow-hidden rounded-full bg-panel2">
-            <div className="h-full rounded-full" style={{ width: `${v}%`, background: color }} />
-          </div>
-          <div className="mt-1 text-xs text-text">{data?.label ?? 'loading…'}</div>
+        </span>
+        <div className="flex-1 flex flex-col gap-1">
+          <GaugeBar value={v} tone={tone} />
+          <div className="text-xs text-text">{data?.label ?? 'Loading…'}</div>
         </div>
       </div>
-    </div>
+    </SectionCard>
   )
 }
 
@@ -177,10 +198,7 @@ function SessionClock(): React.JSX.Element {
   }, [])
   const next = nextSessionEvent(now)
   return (
-    <div className="rounded-lg border border-edge bg-panel p-3">
-      <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-        <Clock size={13} className="text-gold" /> Trading sessions (UTC)
-      </div>
+    <SectionCard title="Trading sessions (UTC)" icon={Clock}>
       <div className="grid grid-cols-2 gap-2">
         {SESSIONS.map((s) => {
           const open = isSessionOpen(s.id, now)
@@ -204,7 +222,7 @@ function SessionClock(): React.JSX.Element {
           {Math.round(next.minutesUntil % 60)}m
         </div>
       )}
-    </div>
+    </SectionCard>
   )
 }
 
@@ -216,10 +234,11 @@ export default function DashboardModule(): React.JSX.Element {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <h1 className="text-[15px] font-semibold text-text">Command Dashboard</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">live · Binance + alternative.me</span>
-      </div>
+      <ModuleHeader
+        icon={LayoutDashboard}
+        title="Command dashboard"
+        badge="live · Binance + alternative.me"
+      />
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <GlobalStrip />

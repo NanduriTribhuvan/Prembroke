@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { LineChart, Newspaper, RefreshCw, ExternalLink } from 'lucide-react'
 import { useKeys } from '@/stores/keys'
+import { ModuleHeader, ErrorBanner, IconButton } from '@/components/ui'
 
 const FH = 'https://finnhub.io/api/v1'
 const WATCH = [
@@ -76,25 +77,37 @@ export default function StocksModule(): React.JSX.Element {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <LineChart size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Stocks &amp; ETFs</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">Finnhub · live</span>
-        <button
-          onClick={() => quotes.refetch()}
-          className="ml-auto rounded p-1.5 text-muted hover:bg-panel2 hover:text-text"
-        >
-          <RefreshCw size={14} className={quotes.isFetching ? 'animate-spin' : ''} />
-        </button>
-      </div>
+      <ModuleHeader
+        icon={LineChart}
+        title="Stocks and ETFs"
+        badge="Finnhub · live"
+        actions={
+          key ? (
+            <IconButton
+              icon={RefreshCw}
+              title="Refresh quotes"
+              size="sm"
+              onClick={() => quotes.refetch()}
+            />
+          ) : undefined
+        }
+      />
 
       {!key ? (
-        <div className="m-4 rounded border border-warn/30 bg-warn/10 p-3 text-xs text-warn">
-          Add your Finnhub key in Settings → API keys to load stock data.
+        <div className="m-4">
+          <ErrorBanner message="Add your Finnhub key in Settings → API keys to load stock data." />
         </div>
       ) : (
         <div className="flex min-h-0 flex-1">
           <div className="min-w-0 flex-1 overflow-y-auto p-4">
+            {quotes.error && (
+              <div className="mb-4">
+                <ErrorBanner
+                  message="Finnhub unreachable or rate-limited."
+                  onRetry={() => quotes.refetch()}
+                />
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2">
               {quotes.data?.map((q) => (
                 <div key={q.s} className="flex items-center justify-between rounded-lg border border-edge bg-panel p-3">

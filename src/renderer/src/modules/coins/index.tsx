@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
-import { CircleDollarSign, Flame, Boxes, RefreshCw } from 'lucide-react'
+import { CircleDollarSign, Flame, Boxes } from 'lucide-react'
 import { useKeys } from '@/stores/keys'
+import { ModuleHeader, DataTable, Sparkline, IconButton } from '@/components/ui'
+import { RefreshCw } from 'lucide-react'
 
 function cgHeaders(key: string): HeadersInit | undefined {
   return key ? { 'x-cg-demo-api-key': key } : undefined
@@ -36,27 +38,11 @@ function fmtUsd(v: number): string {
   return `$${v.toLocaleString('en-US', { maximumFractionDigits: v < 1 ? 5 : 2 })}`
 }
 
-function Spark({ data, up }: { data: number[]; up: boolean }): React.JSX.Element {
-  if (!data || data.length < 2) return <svg width="80" height="22" />
-  const min = Math.min(...data)
-  const max = Math.max(...data)
-  const range = max - min || 1
-  const pts = data
-    .map((p, i) => `${(i / (data.length - 1)) * 78 + 1},${20 - ((p - min) / range) * 18}`)
-    .join(' ')
+function PctCell({ v }: { v: number | null }): React.JSX.Element {
+  if (v == null) return <span className="num text-[11px] text-muted">—</span>
   return (
-    <svg width="80" height="22" className="overflow-visible">
-      <polyline points={pts} fill="none" stroke={up ? '#16c784' : '#ea3943'} strokeWidth="1.2" />
-    </svg>
-  )
-}
-
-function pct(v: number | null): React.JSX.Element {
-  if (v == null) return <span className="text-muted">—</span>
-  return (
-    <span className={v >= 0 ? 'text-up' : 'text-down'}>
-      {v >= 0 ? '+' : ''}
-      {v.toFixed(2)}%
+    <span className={clsx('num text-[11px]', v >= 0 ? 'text-up' : 'text-down')}>
+      {v >= 0 ? '+' : ''}{v.toFixed(2)}%
     </span>
   )
 }
@@ -103,67 +89,100 @@ export default function CoinsModule(): React.JSX.Element {
     .slice(-6)
     .reverse()
 
+  const tableCols = [
+    {
+      key: 'rank',
+      header: '#',
+      render: (c: Coin) => <span className="num text-[11px] text-muted">{c.market_cap_rank}</span>
+    },
+    {
+      key: 'name',
+      header: 'Coin',
+      render: (c: Coin) => (
+        <span>
+          <span className="text-[13px] font-medium text-text">{c.symbol.toUpperCase()}</span>{' '}
+          <span className="text-[11px] text-muted">{c.name}</span>
+        </span>
+      )
+    },
+    {
+      key: 'price',
+      header: 'Price',
+      align: 'right' as const,
+      render: (c: Coin) => <span className="num text-xs text-text">{fmtUsd(c.current_price)}</span>
+    },
+    {
+      key: '1h',
+      header: '1h',
+      align: 'right' as const,
+      render: (c: Coin) => <PctCell v={c.price_change_percentage_1h_in_currency} />
+    },
+    {
+      key: '24h',
+      header: '24h',
+      align: 'right' as const,
+      render: (c: Coin) => <PctCell v={c.price_change_percentage_24h_in_currency} />
+    },
+    {
+      key: '7d',
+      header: '7d',
+      align: 'right' as const,
+      render: (c: Coin) => <PctCell v={c.price_change_percentage_7d_in_currency} />
+    },
+    {
+      key: 'mcap',
+      header: 'Mcap',
+      align: 'right' as const,
+      render: (c: Coin) => <span className="num text-[11px] text-muted">{fmtUsd(c.market_cap)}</span>
+    },
+    {
+      key: 'chart',
+      header: '7d chart',
+      align: 'right' as const,
+      render: (c: Coin) => {
+        const up = (c.price_change_percentage_7d_in_currency ?? 0) >= 0
+        return (
+          <Sparkline
+            data={c.sparkline_in_7d?.price ?? []}
+            tone={up ? 'up' : 'down'}
+            width={80}
+            height={22}
+          />
+        )
+      }
+    }
+  ]
+
+  const errorMsg = markets.error
+    ? 'CoinGecko rate-limited or unreachable. Add your key in Settings to raise limits.'
+    : null
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <CircleDollarSign size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Coins</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">
-          CoinGecko {key ? '· keyed' : '· public'}
-        </span>
-        <button
-          onClick={() => markets.refetch()}
-          className="ml-auto rounded p-1.5 text-muted hover:bg-panel2 hover:text-text"
-        >
-          <RefreshCw size={14} className={markets.isFetching ? 'animate-spin' : ''} />
-        </button>
-      </div>
+      <ModuleHeader
+        icon={CircleDollarSign}
+        title="Coins"
+        badge={`CoinGecko ${key ? '· keyed' : '· public'}`}
+        actions={
+          <IconButton
+            icon={RefreshCw}
+            title="Refresh"
+            size="sm"
+            onClick={() => markets.refetch()}
+          />
+        }
+      />
 
       <div className="flex min-h-0 flex-1">
         <div className="min-w-0 flex-1 overflow-y-auto">
-          {markets.error && (
-            <div className="m-4 rounded border border-warn/30 bg-warn/10 p-3 text-xs text-warn">
-              CoinGecko rate-limited or unreachable. Add your key in Settings to raise limits.
-            </div>
-          )}
-          <table className="w-full">
-            <thead className="sticky top-0 z-10 bg-bg">
-              <tr className="border-b border-edge text-[10px] uppercase tracking-wider text-muted">
-                <th className="px-3 py-2 text-left font-semibold">#</th>
-                <th className="px-3 py-2 text-left font-semibold">Coin</th>
-                <th className="px-3 py-2 text-right font-semibold">Price</th>
-                <th className="px-3 py-2 text-right font-semibold">1h</th>
-                <th className="px-3 py-2 text-right font-semibold">24h</th>
-                <th className="px-3 py-2 text-right font-semibold">7d</th>
-                <th className="px-3 py-2 text-right font-semibold">Mcap</th>
-                <th className="px-3 py-2 text-right font-semibold">7d chart</th>
-              </tr>
-            </thead>
-            <tbody>
-              {markets.data?.map((c, i) => (
-                <tr key={c.id} className={clsx('border-b border-edge/40', i % 2 && 'bg-panel/30')}>
-                  <td className="num px-3 py-1.5 text-[11px] text-muted">{c.market_cap_rank}</td>
-                  <td className="px-3 py-1.5">
-                    <span className="text-[13px] font-medium text-text">{c.symbol.toUpperCase()}</span>{' '}
-                    <span className="text-[11px] text-muted">{c.name}</span>
-                  </td>
-                  <td className="num px-3 py-1.5 text-right text-xs text-text">{fmtUsd(c.current_price)}</td>
-                  <td className="num px-3 py-1.5 text-right text-[11px]">{pct(c.price_change_percentage_1h_in_currency)}</td>
-                  <td className="num px-3 py-1.5 text-right text-[11px]">{pct(c.price_change_percentage_24h_in_currency)}</td>
-                  <td className="num px-3 py-1.5 text-right text-[11px]">{pct(c.price_change_percentage_7d_in_currency)}</td>
-                  <td className="num px-3 py-1.5 text-right text-[11px] text-muted">{fmtUsd(c.market_cap)}</td>
-                  <td className="px-3 py-1.5 text-right">
-                    <div className="inline-block">
-                      <Spark
-                        data={c.sparkline_in_7d?.price ?? []}
-                        up={(c.price_change_percentage_7d_in_currency ?? 0) >= 0}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable<Coin>
+            cols={tableCols}
+            rows={markets.data ?? []}
+            rowKey={(c) => c.id}
+            loading={markets.isLoading}
+            error={errorMsg}
+            onRetry={() => markets.refetch()}
+          />
         </div>
 
         <aside className="w-64 shrink-0 space-y-4 overflow-y-auto border-l border-edge p-3">
@@ -178,10 +197,10 @@ export default function CoinsModule(): React.JSX.Element {
                     {t.item.symbol.toUpperCase()}
                     <span className="ml-1 text-[10px] text-muted">#{t.item.market_cap_rank ?? '—'}</span>
                   </span>
-                  {pct(t.item.data?.price_change_percentage_24h?.usd ?? null)}
+                  <PctCell v={t.item.data?.price_change_percentage_24h?.usd ?? null} />
                 </div>
               ))}
-              {!trending.data && <div className="text-xs text-muted">loading…</div>}
+              {!trending.data && <div className="text-xs text-muted">Loading…</div>}
             </div>
           </div>
 
@@ -203,7 +222,7 @@ export default function CoinsModule(): React.JSX.Element {
                   <span className="num text-down">{(c.market_cap_change_24h ?? 0).toFixed(1)}%</span>
                 </div>
               ))}
-              {!categories.data && <div className="text-xs text-muted">loading…</div>}
+              {!categories.data && <div className="text-xs text-muted">Loading…</div>}
             </div>
           </div>
         </aside>

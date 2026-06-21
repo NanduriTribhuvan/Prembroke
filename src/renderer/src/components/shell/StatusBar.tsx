@@ -18,7 +18,11 @@ export default function StatusBar(): React.JSX.Element {
   }, [])
 
   return (
-    <footer className="flex h-7 shrink-0 items-center justify-between border-t border-border-subtle bg-panel px-3 text-[11px]">
+    <footer
+      className="flex shrink-0 items-center justify-between border-t border-border-subtle bg-panel px-2 text-[11px]"
+      style={{ height: 'var(--statusbar-h)' }}
+    >
+      {/* Left: feed status */}
       <div className="flex items-center gap-2">
         <span
           className={clsx(
@@ -33,11 +37,16 @@ export default function StatusBar(): React.JSX.Element {
         </span>
         <span className="text-muted">· Binance WS</span>
       </div>
+
+      {/* Centre: disclaimer */}
       <div className="text-muted">
         <span className="brandmark">PREMBROKE</span> — conviction terminal · analysis only, not a broker
       </div>
-      <div className="num flex items-center gap-3 text-muted">
+
+      {/* Right: clocks */}
+      <div className="num flex items-center text-muted">
         <span>UTC {now.toISOString().slice(11, 19)}</span>
+        <span className="mx-2 h-3 border-l border-border-subtle" />
         <span className="text-text">LOCAL {now.toLocaleTimeString('en-GB')}</span>
       </div>
     </footer>

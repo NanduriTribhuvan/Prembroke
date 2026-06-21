@@ -25,6 +25,7 @@ import {
   PieChart,
   CalendarRange,
   SlidersHorizontal,
+  Calculator,
   type LucideIcon
 } from 'lucide-react'
 import { usePersistedState } from './lib'
@@ -52,6 +53,7 @@ import CorrelationMatrix from './tools/CorrelationMatrix'
 import PortfolioRisk from './tools/PortfolioRisk'
 import Seasonality from './tools/Seasonality'
 import StrategyOptimizer from './tools/StrategyOptimizer'
+import { ModuleHeader, SectionCard } from '@/components/ui'
 
 interface ToolDef {
   id: string
@@ -257,7 +259,18 @@ const TOOLS: ToolDef[] = [
   }
 ]
 
-const GROUP_ORDER = ['Overview', 'Risk', 'Edge', 'Leverage', 'Levels', 'Growth', 'Market', 'Quant', 'Research', 'Journal']
+const GROUP_ORDER = [
+  'Overview',
+  'Risk',
+  'Edge',
+  'Leverage',
+  'Levels',
+  'Growth',
+  'Market',
+  'Quant',
+  'Research',
+  'Journal'
+]
 
 export default function ToolkitModule(): React.JSX.Element {
   const [activeId, setActiveId] = usePersistedState<string>('active-tool', TOOLS[0].id)
@@ -265,18 +278,18 @@ export default function ToolkitModule(): React.JSX.Element {
   const ActiveComponent = active.component
 
   return (
-    <div className="flex h-full min-h-0">
+    <div className="flex h-full min-h-0 module-enter">
       {/* Left rail */}
       <aside className="w-60 shrink-0 overflow-y-auto border-r border-edge bg-panel/40 p-3">
-        <div className="mb-3 px-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
-          Trader Toolkit
+        <div className="mb-3 px-1 text-[length:var(--text-micro)] font-semibold uppercase tracking-[0.16em] text-muted">
+          Trader toolkit
         </div>
         {GROUP_ORDER.map((group) => {
           const items = TOOLS.filter((t) => t.group === group)
           if (items.length === 0) return null
           return (
             <div key={group} className="mb-4">
-              <div className="mb-1 px-2 text-[10px] uppercase tracking-wide text-muted/60">
+              <div className="mb-1 px-2 text-[length:var(--text-caption)] uppercase tracking-wide text-muted/60">
                 {group}
               </div>
               <div className="space-y-0.5">
@@ -289,13 +302,13 @@ export default function ToolkitModule(): React.JSX.Element {
                       type="button"
                       onClick={() => setActiveId(tool.id)}
                       className={clsx(
-                        'flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-[12px] transition-colors',
+                        't-colors flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-[12px]',
                         isActive
-                          ? 'bg-accent/15 text-accent'
+                          ? 'bg-accent-soft text-gold'
                           : 'text-muted hover:bg-panel2 hover:text-text'
                       )}
                     >
-                      <Icon className={clsx('h-4 w-4 shrink-0', isActive ? 'text-accent' : '')} />
+                      <Icon className={clsx('h-4 w-4 shrink-0', isActive ? 'text-gold' : '')} />
                       <span className="truncate">{tool.label}</span>
                     </button>
                   )
@@ -307,18 +320,19 @@ export default function ToolkitModule(): React.JSX.Element {
       </aside>
 
       {/* Tool surface */}
-      <section className="min-w-0 flex-1 overflow-y-auto">
-        <header className="flex items-center gap-3 border-b border-edge px-6 py-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded border border-edge bg-panel">
-            <active.icon className="h-5 w-5 text-accent" />
-          </div>
-          <div>
-            <h1 className="text-[15px] font-medium leading-tight text-text">{active.label}</h1>
-            <p className="text-[11px] text-muted">{active.blurb}</p>
-          </div>
-        </header>
-        <div className="p-6">
-          <ActiveComponent />
+      <section className="min-w-0 flex-1 flex flex-col overflow-hidden">
+        <ModuleHeader
+          icon={Calculator}
+          title={active.label}
+          badge={active.group}
+          actions={
+            <span className="text-[length:var(--text-caption)] text-muted">{active.blurb}</span>
+          }
+        />
+        <div className="flex-1 overflow-y-auto p-6">
+          <SectionCard>
+            <ActiveComponent />
+          </SectionCard>
         </div>
       </section>
     </div>

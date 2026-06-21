@@ -5,6 +5,7 @@ import type { ViewId } from '@/stores/view'
 import { useView } from '@/stores/view'
 import { useWorkspace, type Layout } from '@/stores/workspace'
 import { isTimeframe, normalizeTimeframe } from '@shared/canvas'
+import { IconButton, Toolbar, ToolbarDivider } from '@/components/ui'
 
 const FUNCS: Record<string, ViewId> = {
   ALPHA: 'alpha', CIO: 'alpha', RADAR: 'alpha', BRIEF: 'alpha',
@@ -138,9 +139,18 @@ export default function CommandBar(): React.JSX.Element {
     dispatch(parts.join(' '))
   }
 
+  const layoutIcons: [Layout, typeof Square, string][] = [
+    [1, Square, '1-panel layout'],
+    [2, Columns2, '2-panel layout'],
+    [4, LayoutGrid, '4-panel layout'],
+  ]
+
   return (
-    <div className="relative flex h-8 shrink-0 items-center gap-2 border-b border-edge bg-bg px-3">
-      <ChevronRight size={14} className="text-gold" />
+    <div
+      className="relative flex shrink-0 items-center gap-2 border-b border-edge bg-bg px-3"
+      style={{ height: 'var(--cmdbar-h)' }}
+    >
+      <ChevronRight size={14} className="text-gold shrink-0" />
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -171,11 +181,11 @@ export default function CommandBar(): React.JSX.Element {
             }
           }}
           placeholder="Command — e.g.  ETH CONV   ·   SOL CHART   ·   DOM   ·   SCAN   ·   type HELP"
-          className="num focus-ring w-full rounded bg-transparent text-[12px] uppercase tracking-wide text-gold outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-muted"
+          className="focus-ring num w-full rounded bg-transparent text-[12px] uppercase tracking-wide text-gold outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-muted"
           spellCheck={false}
         />
         {suggestions.length > 0 && (
-          <div className="absolute left-0 top-7 z-50 w-56 overflow-hidden rounded-lg border border-border-subtle bg-overlay shadow-xl">
+          <div className="absolute left-0 top-7 z-50 w-64 overflow-hidden rounded-lg border border-border-subtle bg-overlay shadow-xl">
             {suggestions.map((s, i) => (
               <button
                 key={s.v}
@@ -200,36 +210,34 @@ export default function CommandBar(): React.JSX.Element {
 
       {flash && <span className="num text-[11px] text-up">{flash}</span>}
 
-      <button onClick={() => setHelp((h) => !h)} className="rounded p-1 text-muted hover:text-gold" title="Function codes (HELP)">
-        <HelpCircle size={14} />
-      </button>
-
-      {/* workspaces */}
-      <button
-        onClick={() => setWsOpen((o) => !o)}
-        className={clsx('rounded p-1', wsOpen ? 'text-gold' : 'text-muted hover:text-gold')}
-        title="Saved workspaces"
-      >
-        <Bookmark size={14} />
-      </button>
-
-      <div className="mx-1 h-4 w-px bg-edge" />
-
-      <div className="flex items-center gap-0.5">
-        {([1, 2, 4] as Layout[]).map((n) => {
-          const Icon = n === 1 ? Square : n === 2 ? Columns2 : LayoutGrid
-          return (
-            <button
-              key={n}
-              onClick={() => setLayout(n)}
-              title={`${n}-panel layout`}
-              className={clsx('rounded p-1', layout === n ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2 hover:text-text')}
-            >
-              <Icon size={14} />
-            </button>
-          )
-        })}
-      </div>
+      <Toolbar>
+        <IconButton
+          icon={HelpCircle}
+          title="Function codes (HELP)"
+          onClick={() => setHelp((h) => !h)}
+          active={help}
+          size="sm"
+        />
+        <ToolbarDivider />
+        <IconButton
+          icon={Bookmark}
+          title="Saved workspaces"
+          onClick={() => setWsOpen((o) => !o)}
+          active={wsOpen}
+          size="sm"
+        />
+        <ToolbarDivider />
+        {layoutIcons.map(([n, Icon, label]) => (
+          <IconButton
+            key={n}
+            icon={Icon}
+            title={label}
+            onClick={() => setLayout(n)}
+            active={layout === n}
+            size="sm"
+          />
+        ))}
+      </Toolbar>
 
       {help && (
         <div className="absolute left-3 top-9 z-50 w-[460px] rounded-lg border border-border-subtle bg-overlay p-3 shadow-xl">

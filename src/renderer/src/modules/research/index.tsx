@@ -28,6 +28,7 @@ import { askAI, providerLabel, type AiProviderId } from '@/lib/ai'
 import { useAiLimit } from '@/stores/ailimit'
 import { useView } from '@/stores/view'
 import { useSettings } from '@/stores/settings'
+import { ModuleHeader, SectionCard, EmptyState, ErrorBanner } from '@/components/ui'
 
 // ---- specialist roster -----------------------------------------------------
 
@@ -200,7 +201,8 @@ async function gather(symbol: string, interval: string): Promise<Gathered> {
     fetchCandles(symbol, '4h', 120).catch(() => [] as Candle[]),
     fetchCandles(symbol, '1d', 150).catch(() => [] as Candle[])
   ])
-  const mtf: MtfContext | undefined = h4c.length && d1c.length ? { h4: biasOf(h4c), d1: biasOf(d1c) } : undefined
+  const mtf: MtfContext | undefined =
+    h4c.length && d1c.length ? { h4: biasOf(h4c), d1: biasOf(d1c) } : undefined
 
   const correlateName = symbol === 'BTCUSDT' ? 'ETHUSDT' : 'BTCUSDT'
   const corr = await fetchCandles(correlateName, interval, 220).catch(() => [] as Candle[])
@@ -307,7 +309,11 @@ export default function ResearchModule(): React.JSX.Element {
   const [running, setRunning] = useState(false)
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [runs, setRuns] = useState<Run[]>([])
-  const [synthesis, setSynthesis] = useState<{ status: Status; output: string; via: AiProviderId | 'none' | null }>({
+  const [synthesis, setSynthesis] = useState<{
+    status: Status
+    output: string
+    via: AiProviderId | 'none' | null
+  }>({
     status: 'idle',
     output: '',
     via: null
@@ -340,7 +346,8 @@ export default function ResearchModule(): React.JSX.Element {
     for (let i = 0; i < ANALYSTS.length; i++) {
       const a = ANALYSTS[i]
       if (!limit.canAsk()) {
-        for (let j = i; j < results.length; j++) results[j] = { ...results[j], status: 'error', output: 'AI hourly limit reached.' }
+        for (let j = i; j < results.length; j++)
+          results[j] = { ...results[j], status: 'error', output: 'AI hourly limit reached.' }
         setRuns(results.map((r) => ({ ...r })))
         break
       }
@@ -369,7 +376,11 @@ export default function ResearchModule(): React.JSX.Element {
           system: CIO_SYSTEM,
           prompt: `${block}\n\nANALYST NOTES:\n${notes}\n\nDeliver the CIO call now.`
         })
-        setSynthesis({ status: res.ok ? 'done' : 'error', output: res.text, via: res.ok ? res.provider : null })
+        setSynthesis({
+          status: res.ok ? 'done' : 'error',
+          output: res.text,
+          via: res.ok ? res.provider : null
+        })
       } catch (e) {
         setSynthesis({ status: 'error', output: (e as Error).message, via: null })
       }
@@ -388,94 +399,114 @@ export default function ResearchModule(): React.JSX.Element {
   }, [researchSeed])
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Users size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Research Team</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">4 analysts + CIO</span>
-        <div className="ml-auto flex items-center gap-2">
-          <input
-            value={symbolInput}
-            onChange={(e) => setSymbolInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') void run()
-            }}
-            placeholder="BTC"
-            className="num w-24 rounded border border-edge bg-panel2 px-2 py-1 text-xs uppercase text-text outline-none focus:border-gold/50"
-          />
-          <div className="flex gap-0.5">
-            {INTERVALS.map((iv) => (
-              <button
-                key={iv}
-                onClick={() => setInterval(iv)}
-                className={clsx(
-                  'rounded px-1.5 py-1 text-[11px]',
-                  interval === iv ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2'
-                )}
-              >
-                {iv}
-              </button>
-            ))}
+    <div className="flex h-full flex-col module-enter">
+      <ModuleHeader
+        icon={Users}
+        title="Research team"
+        badge="4 analysts + CIO"
+        actions={
+          <div className="flex items-center gap-2">
+            <input
+              value={symbolInput}
+              onChange={(e) => setSymbolInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void run()
+              }}
+              placeholder="BTC"
+              className="num w-20 rounded border border-edge bg-panel2 px-2 py-1 text-xs uppercase text-text outline-none focus:border-gold/50"
+            />
+            <div className="flex gap-0.5">
+              {INTERVALS.map((iv) => (
+                <button
+                  key={iv}
+                  onClick={() => setInterval(iv)}
+                  className={clsx(
+                    't-colors rounded px-1.5 py-1 text-[11px]',
+                    interval === iv ? 'bg-accent-soft text-gold' : 'text-muted hover:bg-panel2'
+                  )}
+                >
+                  {iv}
+                </button>
+              ))}
+            </div>
+            <span
+              className={clsx(
+                'num text-[11px]',
+                remaining > 5 ? 'text-muted' : remaining > 0 ? 'text-warn' : 'text-down'
+              )}
+              title="AI requests left this hour (a run uses up to 5)"
+            >
+              {remaining} left
+            </span>
+            <button
+              onClick={() => void run()}
+              disabled={running}
+              className="t-colors flex items-center gap-1.5 rounded-lg bg-accent-soft px-3 py-1.5 text-xs font-medium text-gold hover:bg-gold/30 disabled:opacity-50"
+            >
+              {running ? <Loader2 size={13} className="animate-spin" /> : <Play size={13} />}
+              {running ? 'Researching…' : 'Run research'}
+            </button>
           </div>
-          <span
-            className={clsx('num text-[11px]', remaining > 5 ? 'text-muted' : remaining > 0 ? 'text-warn' : 'text-down')}
-            title="AI requests left this hour (a run uses up to 5)"
-          >
-            {remaining} left
-          </span>
-          <button
-            onClick={() => void run()}
-            disabled={running}
-            className="flex items-center gap-1.5 rounded-lg bg-gold/20 px-3 py-1.5 text-xs font-medium text-gold hover:bg-gold/30 disabled:opacity-50"
-          >
-            {running ? <Loader2 size={13} className="animate-spin" /> : <Play size={13} />}
-            {running ? 'Researching…' : 'Run research'}
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {error && (
-          <div className="mb-4 rounded-lg border border-down/30 bg-down/10 p-3 text-xs text-down">{error}</div>
+          <div className="mb-4">
+            <ErrorBanner message={error} />
+          </div>
         )}
 
         {!snapshot && !running && (
-          <div className="mx-auto max-w-md pt-10 text-center">
-            <Users size={28} className="mx-auto mb-3 text-gold/60" />
-            <p className="text-sm text-muted">
-              A panel of AI specialists — Technical, Derivatives, Macro and Risk — each studies the live data for
-              your symbol, then the CIO merges them into one verdict with a plan and the key risks.
-            </p>
-            <p className="mt-2 text-[11px] text-muted">
-              Enter a symbol and run. Needs an AI engine (Settings → AI engine).
-            </p>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="Enter a symbol and run"
+            description="A panel of AI specialists — Technical, Derivatives, Macro and Risk — each studies the live data for your symbol, then the CIO merges them into one verdict with a plan and the key risks. Needs an AI engine (Settings → AI engine)."
+          />
         )}
 
         {snapshot && (
           <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-            <Stat label="Price" value={fmtPrice(snapshot.price)} />
-            <Stat
+            <SnapshotStat label="Price" value={fmtPrice(snapshot.price)} />
+            <SnapshotStat
               label="Conviction"
               value={`${snapshot.score} ${snapshot.grade}`}
-              tone={snapshot.bias === 'long' ? 'up' : snapshot.bias === 'short' ? 'down' : 'muted'}
+              tone={
+                snapshot.bias === 'long' ? 'up' : snapshot.bias === 'short' ? 'down' : undefined
+              }
             />
-            <Stat label="Bias" value={snapshot.bias.toUpperCase()} tone={snapshot.bias === 'long' ? 'up' : snapshot.bias === 'short' ? 'down' : 'muted'} />
-            <Stat
+            <SnapshotStat
+              label="Bias"
+              value={snapshot.bias.toUpperCase()}
+              tone={
+                snapshot.bias === 'long' ? 'up' : snapshot.bias === 'short' ? 'down' : undefined
+              }
+            />
+            <SnapshotStat
               label="Funding"
               value={snapshot.funding != null ? `${(snapshot.funding * 100).toFixed(3)}%` : 'n/a'}
-              tone={snapshot.funding != null ? (snapshot.funding >= 0 ? 'up' : 'down') : 'muted'}
+              tone={
+                snapshot.funding != null
+                  ? snapshot.funding >= 0
+                    ? 'up'
+                    : 'down'
+                  : undefined
+              }
             />
-            <Stat
+            <SnapshotStat
               label="L/S ratio"
               value={snapshot.longShort != null ? snapshot.longShort.toFixed(2) : 'n/a'}
             />
-            <Stat
+            <SnapshotStat
               label="Fear & Greed"
               value={snapshot.fng ? `${snapshot.fng.value}` : 'n/a'}
               hint={snapshot.fng?.label}
             />
-            <Stat label="Next catalyst" value={snapshot.nextCatalyst ? 'scheduled' : 'none'} hint={snapshot.nextCatalyst ?? undefined} />
+            <SnapshotStat
+              label="Next catalyst"
+              value={snapshot.nextCatalyst ? 'Scheduled' : 'None'}
+              hint={snapshot.nextCatalyst ?? undefined}
+            />
           </div>
         )}
 
@@ -488,27 +519,34 @@ export default function ResearchModule(): React.JSX.Element {
         )}
 
         {synthesis.status !== 'idle' && (
-          <div className="mt-4 rounded-lg border border-gold/40 bg-gold/5 p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <Crown size={15} className="text-gold" />
-              <span className="text-[13px] font-semibold text-gold">Chief Investment Officer — verdict</span>
-              {synthesis.status === 'running' && <Loader2 size={13} className="animate-spin text-gold" />}
-            </div>
-            {synthesis.output ? (
-              <div
-                className={clsx(
-                  'whitespace-pre-wrap text-[13px] leading-relaxed',
-                  synthesis.status === 'error' ? 'text-down' : 'text-text'
-                )}
-              >
-                {synthesis.output}
-                {synthesis.via && synthesis.via !== 'none' && (
-                  <div className="mt-2 text-[10px] uppercase tracking-wider text-muted">via {providerLabel(synthesis.via)}</div>
-                )}
-              </div>
-            ) : (
-              <div className="text-xs text-muted">Synthesising the desk…</div>
-            )}
+          <div className="mt-4">
+            <SectionCard
+              title="Chief Investment Officer — verdict"
+              icon={Crown}
+              actions={
+                synthesis.status === 'running' ? (
+                  <Loader2 size={13} className="animate-spin text-gold" />
+                ) : undefined
+              }
+            >
+              {synthesis.output ? (
+                <div
+                  className={clsx(
+                    'whitespace-pre-wrap text-[13px] leading-relaxed',
+                    synthesis.status === 'error' ? 'text-down' : 'text-text'
+                  )}
+                >
+                  {synthesis.output}
+                  {synthesis.via && synthesis.via !== 'none' && (
+                    <div className="mt-2 text-[length:var(--text-caption)] uppercase tracking-wider text-muted">
+                      via {providerLabel(synthesis.via)}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-xs text-muted">Synthesising the desk…</div>
+              )}
+            </SectionCard>
           </div>
         )}
       </div>
@@ -516,7 +554,8 @@ export default function ResearchModule(): React.JSX.Element {
   )
 }
 
-function Stat({
+/** Snapshot KPI cell with an optional tooltip hint. */
+function SnapshotStat({
   label,
   value,
   tone,
@@ -524,12 +563,12 @@ function Stat({
 }: {
   label: string
   value: string
-  tone?: 'up' | 'down' | 'muted'
+  tone?: 'up' | 'down'
   hint?: string
 }): React.JSX.Element {
   return (
     <div className="rounded-lg border border-edge bg-panel p-2.5" title={hint}>
-      <div className="text-[10px] uppercase tracking-wider text-muted">{label}</div>
+      <div className="text-[length:var(--text-caption)] uppercase tracking-wider text-muted">{label}</div>
       <div
         className={clsx(
           'num mt-0.5 truncate text-[13px] font-semibold',
@@ -538,7 +577,7 @@ function Stat({
       >
         {value}
       </div>
-      {hint && <div className="mt-0.5 truncate text-[10px] text-muted">{hint}</div>}
+      {hint && <div className="mt-0.5 truncate text-[length:var(--text-caption)] text-muted">{hint}</div>}
     </div>
   )
 }
@@ -546,7 +585,7 @@ function Stat({
 function AnalystCard({ run }: { run: Run }): React.JSX.Element {
   const Icon = run.analyst.icon
   return (
-    <div className="rounded-lg border border-edge bg-panel p-3">
+    <SectionCard>
       <div className="mb-2 flex items-center gap-2">
         <Icon size={14} className={run.analyst.accent} />
         <span className="text-[13px] font-medium text-text">{run.analyst.name}</span>
@@ -557,12 +596,19 @@ function AnalystCard({ run }: { run: Run }): React.JSX.Element {
         </span>
       </div>
       {run.output ? (
-        <div className={clsx('whitespace-pre-wrap text-[12px] leading-relaxed', run.status === 'error' ? 'text-down' : 'text-muted')}>
+        <div
+          className={clsx(
+            'whitespace-pre-wrap text-[12px] leading-relaxed',
+            run.status === 'error' ? 'text-down' : 'text-muted'
+          )}
+        >
           {run.output}
         </div>
       ) : (
-        <div className="text-[11px] text-muted/60">{run.status === 'running' ? 'Thinking…' : 'Queued'}</div>
+        <div className="text-[11px] text-muted/60">
+          {run.status === 'running' ? 'Thinking…' : 'Queued'}
+        </div>
       )}
-    </div>
+    </SectionCard>
   )
 }

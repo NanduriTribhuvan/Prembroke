@@ -4,6 +4,7 @@ import { Sunrise, TrendingUp, AlertTriangle, Radio, RefreshCw, Users } from 'luc
 import { fetchCandles, computeConviction, computeSmt, type ConvictionResult } from '@/modules/conviction/engine'
 import { useView } from '@/stores/view'
 import ExplainButton from '@/components/ExplainButton'
+import { ModuleHeader, SectionCard, BiasChip } from '@/components/ui'
 
 const UNIVERSE = [
   'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DOGEUSDT',
@@ -133,14 +134,16 @@ export default function AlphaModule(): React.JSX.Element {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Sunrise size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Alpha Radar</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">your AI CIO · 4h scan</span>
-        <button onClick={() => refetch()} className="ml-auto rounded p-1.5 text-muted hover:bg-panel2 hover:text-text">
-          <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
-        </button>
-      </div>
+      <ModuleHeader
+        icon={Sunrise}
+        title="Alpha radar"
+        badge="your AI CIO · 4h scan"
+        actions={
+          <button onClick={() => refetch()} className="rounded p-1.5 text-muted hover:bg-panel2 hover:text-text">
+            <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {/* greeting headline */}
@@ -168,7 +171,7 @@ export default function AlphaModule(): React.JSX.Element {
 
         {!data && (
           <div className="flex h-40 items-center justify-center text-sm text-muted">
-            Running conviction across {UNIVERSE.length} assets + scanning risk & narrative…
+            Running conviction across {UNIVERSE.length} assets + scanning risk &amp; narrative…
           </div>
         )}
 
@@ -176,97 +179,90 @@ export default function AlphaModule(): React.JSX.Element {
           <div className="grid grid-cols-3 gap-4">
             {/* opportunities */}
             <div className="col-span-2 space-y-2">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                <TrendingUp size={13} className="text-up" /> Today&apos;s opportunities
-              </div>
-              {data.opportunities.length === 0 && (
-                <div className="rounded-lg border border-edge bg-panel p-3 text-xs text-muted">
-                  No high-conviction setups right now — patience is a position.
-                </div>
-              )}
-              {data.opportunities.map((o, i) => (
-                <div
-                  key={o.symbol}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => focus(o.symbol)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') focus(o.symbol)
-                  }}
-                  className="group flex w-full cursor-pointer items-start gap-3 rounded-lg border border-edge bg-panel p-3 text-left hover:border-gold/40"
-                >
-                  <span className="num text-[11px] text-muted">{i + 1}</span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[14px] font-semibold text-text">{o.symbol.replace('USDT', '')}</span>
-                      <span
-                        className={clsx(
-                          'rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase',
-                          o.bias === 'long' ? 'bg-up/15 text-up' : 'bg-down/15 text-down'
-                        )}
+              <SectionCard title="Today's opportunities" icon={TrendingUp}>
+                {data.opportunities.length === 0 ? (
+                  <div className="text-xs text-muted">
+                    No high-conviction setups right now — patience is a position.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {data.opportunities.map((o, i) => (
+                      <div
+                        key={o.symbol}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => focus(o.symbol)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') focus(o.symbol)
+                        }}
+                        className="group flex w-full cursor-pointer items-start gap-3 rounded-lg border border-edge bg-elevated p-3 text-left hover:border-gold/40"
                       >
-                        {o.bias}
-                      </span>
-                      {o.plan && <span className="num text-[10px] text-gold">R:R {o.plan.rr.toFixed(1)}</span>}
-                    </div>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {o.factors
-                        .filter((f) => f.hit)
-                        .slice(0, 4)
-                        .map((f) => (
-                          <span key={f.key} className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">
-                            + {f.label}
-                          </span>
-                        ))}
-                    </div>
+                        <span className="num text-[11px] text-muted">{i + 1}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[14px] font-semibold text-text">{o.symbol.replace('USDT', '')}</span>
+                            <BiasChip bias={o.bias} />
+                            {o.plan && <span className="num text-[10px] text-gold">R:R {o.plan.rr.toFixed(1)}</span>}
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {o.factors
+                              .filter((f) => f.hit)
+                              .slice(0, 4)
+                              .map((f) => (
+                                <span key={f.key} className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">
+                                  + {f.label}
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1.5">
+                          <div className="text-right">
+                            <div className={clsx('num text-lg font-bold', confColor(o.score))}>{o.score}%</div>
+                            <div className="text-[9px] uppercase text-muted">confidence</div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              runResearch(o.symbol)
+                            }}
+                            title="Run the AI Research Team on this setup"
+                            className="flex items-center gap-1 rounded bg-gold/15 px-2 py-1 text-[10px] font-medium text-gold opacity-0 transition-opacity hover:bg-gold/25 group-hover:opacity-100"
+                          >
+                            <Users size={11} /> Deep dive
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex flex-col items-end gap-1.5">
-                    <div className="text-right">
-                      <div className={clsx('num text-lg font-bold', confColor(o.score))}>{o.score}%</div>
-                      <div className="text-[9px] uppercase text-muted">confidence</div>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        runResearch(o.symbol)
-                      }}
-                      title="Run the AI Research Team on this setup"
-                      className="flex items-center gap-1 rounded bg-gold/15 px-2 py-1 text-[10px] font-medium text-gold opacity-0 transition-opacity hover:bg-gold/25 group-hover:opacity-100"
-                    >
-                      <Users size={11} /> Deep dive
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )}
+              </SectionCard>
             </div>
 
             {/* risks + narrative */}
             <div className="space-y-4">
-              <div>
-                <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  <AlertTriangle size={13} className="text-down" /> Risks
-                </div>
-                <div className="space-y-1.5">
-                  {data.risks.length === 0 && <div className="text-xs text-muted">No major risk flags.</div>}
-                  {data.risks.map((r, i) => (
-                    <div key={i} className="rounded-lg border border-down/20 bg-down/5 p-2 text-[12px] text-text">
-                      {r}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  <Radio size={13} className="text-gold" /> Emerging narrative
-                </div>
+              <SectionCard title="Risks" icon={AlertTriangle}>
+                {data.risks.length === 0 ? (
+                  <div className="text-xs text-muted">No major risk flags.</div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {data.risks.map((r, i) => (
+                      <div key={i} className="rounded-lg border border-down/20 bg-down/5 p-2 text-[12px] text-text">
+                        {r}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </SectionCard>
+
+              <SectionCard title="Emerging narrative" icon={Radio}>
                 <div className="space-y-1.5">
                   {data.narrative.map((n, i) => (
-                    <div key={i} className="rounded-lg border border-edge bg-panel p-2 text-[12px] text-text">
+                    <div key={i} className="rounded-lg border border-edge bg-elevated p-2 text-[12px] text-text">
                       {n}
                     </div>
                   ))}
                 </div>
-              </div>
+              </SectionCard>
             </div>
           </div>
         )}

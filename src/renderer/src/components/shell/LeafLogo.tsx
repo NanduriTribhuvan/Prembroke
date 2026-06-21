@@ -3,13 +3,15 @@
  * needs no raster asset. Dark-green blade, gold midrib + veins + serrated edge.
  *
  * Colours are optional props so the mark can pick up a theme when desired; the
- * defaults reproduce the brand exactly, so existing call sites are unchanged.
+ * defaults now use CSS variables so the logo recolours automatically with the
+ * active accent theme. Existing call sites are unchanged — pass explicit
+ * strings to override.
  */
 export default function LeafLogo({
   size = 20,
-  blade = '#14532d',
-  stroke = '#d9a521',
-  vein = '#c99a2e'
+  blade = 'var(--color-leaf)',
+  stroke = 'var(--color-gold)',
+  vein = 'var(--color-gold)'
 }: {
   size?: number
   /** Blade fill colour. */
