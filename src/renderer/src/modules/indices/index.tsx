@@ -4,8 +4,16 @@ import clsx from 'clsx'
 import { Activity, RefreshCw, KeyRound } from 'lucide-react'
 import { INDEX_SYMBOLS, type SymbolInfo } from '@shared/markets'
 import { useKeys } from '@/stores/keys'
+import { ModuleHeader } from '@/components/ui/ModuleHeader'
+import { IconButton } from '@/components/ui/IconButton'
+import { ErrorBanner } from '@/components/ui/ErrorBanner'
 
-/** Single TradingView Advanced Chart embed; rebuilds when the symbol changes. */
+// TradingView embed literal colours — cannot use CSS vars in JSON config.
+const TV_COLORS = {
+  background: '#0b1710',
+  grid: 'rgba(28,51,37,0.6)',
+} as const
+
 function TVChart({ symbol }: { symbol: string }): React.JSX.Element {
   const host = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -28,8 +36,8 @@ function TVChart({ symbol }: { symbol: string }): React.JSX.Element {
       theme: 'dark',
       style: '1',
       locale: 'en',
-      backgroundColor: '#0b1710',
-      gridColor: 'rgba(28,51,37,0.6)',
+      backgroundColor: TV_COLORS.background,
+      gridColor: TV_COLORS.grid,
       hide_side_toolbar: true,
       allow_symbol_change: false,
       studies: ['STD;EMA'],
@@ -52,7 +60,6 @@ interface IndexQuote {
   pct: number
 }
 
-/** Map Twelve Data quote symbol → our index id, for matching the response. */
 function tdSymbolMap(symbols: readonly SymbolInfo[]): Map<string, string> {
   const m = new Map<string, string>()
   for (const s of symbols) if (s.twelvedata) m.set(s.twelvedata, s.id)
@@ -95,30 +102,33 @@ export default function IndicesModule(): React.JSX.Element {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Activity size={18} className="text-accent" />
-        <h1 className="text-[15px] font-semibold text-text">Indices</h1>
-        <span className="rounded bg-elevated px-1.5 py-0.5 text-[10px] text-text-tertiary">
-          {INDEX_SYMBOLS.length} indices · charts + delayed quotes
-        </span>
-        <button
-          onClick={() => quotes.refetch()}
-          className="t-colors ml-auto rounded p-1.5 text-text-secondary hover:bg-elevated hover:text-text"
-          title="Refresh quotes"
-        >
-          <RefreshCw size={14} className={quotes.isFetching ? 'animate-spin' : ''} />
-        </button>
-      </div>
+      <ModuleHeader
+        icon={Activity}
+        title="Indices"
+        badge={`${INDEX_SYMBOLS.length} indices · charts + delayed quotes`}
+        actions={
+          <IconButton
+            icon={RefreshCw}
+            title="Refresh quotes"
+            onClick={() => quotes.refetch()}
+          />
+        }
+      />
 
       <div className="flex min-h-0 flex-1">
         <aside className="w-72 shrink-0 overflow-y-auto border-r border-edge p-3">
           {!key && (
-            <div className="mb-3 flex items-start gap-2 rounded-lg border border-warn/30 bg-warn/10 p-3 text-xs text-warn">
+            <div className="mb-3 flex items-start gap-2 rounded-lg border border-warn/30 bg-warn/10 p-3 text-[length:var(--text-caption)] text-warn">
               <KeyRound size={14} className="mt-0.5 shrink-0" />
               <span>
                 Add your Twelve Data key in Settings → API keys for delayed index quotes. Charts work
-                without a key. Real-time is a premium upgrade.
+                without a key.
               </span>
+            </div>
+          )}
+          {quotes.error && (
+            <div className="mb-3">
+              <ErrorBanner message="Quotes unavailable." onRetry={() => quotes.refetch()} />
             </div>
           )}
           <div className="space-y-1.5">
@@ -128,35 +138,31 @@ export default function IndicesModule(): React.JSX.Element {
               return (
                 <button
                   key={s.id}
+                  type="button"
                   onClick={() => setActive(s)}
                   className={clsx(
                     't-colors flex w-full items-center justify-between rounded-lg border p-2.5 text-left',
                     isActive
-                      ? 'border-border-strong bg-accent-soft'
-                      : 'border-edge bg-panel hover:bg-elevated'
+                      ? 'border-gold/30 bg-accent-soft'
+                      : 'border-edge bg-panel hover:bg-panel2'
                   )}
                 >
                   <div className="min-w-0">
-                    <div className="text-[13px] font-semibold text-text">{s.label}</div>
-                    <div className="num text-[10px] text-text-tertiary">{s.id}</div>
+                    <div className="text-[length:var(--text-body)] font-semibold text-text">{s.label}</div>
+                    <div className="num text-[length:var(--text-caption)] text-muted">{s.id}</div>
                   </div>
                   <div className="text-right">
                     {q ? (
                       <>
-                        <div className="num text-xs text-text">
+                        <div className="num text-[length:var(--text-caption)] text-text">
                           {q.close.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                         </div>
-                        <div
-                          className={clsx(
-                            'num text-[11px] font-semibold',
-                            q.pct >= 0 ? 'text-up' : 'text-down'
-                          )}
-                        >
+                        <div className={clsx('num text-[length:var(--text-caption)] font-semibold', q.pct >= 0 ? 'text-up' : 'text-down')}>
                           {Number.isFinite(q.pct) ? `${q.pct >= 0 ? '+' : ''}${q.pct.toFixed(2)}%` : '—'}
                         </div>
                       </>
                     ) : (
-                      <span className="num text-[11px] text-text-tertiary">{key ? '…' : '—'}</span>
+                      <span className="num text-[length:var(--text-caption)] text-muted">{key ? '…' : '—'}</span>
                     )}
                   </div>
                 </button>

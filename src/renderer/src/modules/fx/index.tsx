@@ -11,12 +11,12 @@ import {
   type CarryBias
 } from '@shared/markets'
 import { useKeys } from '@/stores/keys'
+import { ModuleHeader } from '@/components/ui/ModuleHeader'
+import { SectionCard } from '@/components/ui/SectionCard'
+import { ErrorBanner } from '@/components/ui/ErrorBanner'
+import { Badge } from '@/components/ui/Badge'
+import { IconButton } from '@/components/ui/IconButton'
 
-/**
- * Seed central-bank policy rates (annualised, percent). Static reference data —
- * no live key required. The carry table recomputes purely from this map; users
- * who want live policy data can refine it later behind a premium key.
- */
 const POLICY_RATES: Partial<Record<Currency, number>> = {
   USD: 4.5,
   EUR: 3.15,
@@ -28,18 +28,9 @@ const POLICY_RATES: Partial<Record<Currency, number>> = {
   NZD: 4.25
 }
 
-/** Twelve Data quote symbols for the major pairs (own-key, delayed). */
 const QUOTE_PAIRS = [
-  'EUR/USD',
-  'GBP/USD',
-  'USD/JPY',
-  'USD/CHF',
-  'AUD/USD',
-  'USD/CAD',
-  'NZD/USD',
-  'EUR/GBP',
-  'EUR/JPY',
-  'GBP/JPY'
+  'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF',
+  'AUD/USD', 'USD/CAD', 'NZD/USD', 'EUR/GBP', 'EUR/JPY', 'GBP/JPY'
 ]
 
 interface FxQuote {
@@ -118,28 +109,29 @@ function CurrencyStrengthPanel(): React.JSX.Element {
   const { data, error } = useCurrencyStrength()
   const sorted = data ? [...MAJOR_CURRENCIES].sort((a, b) => data.scores[b] - data.scores[a]) : []
   return (
-    <div className="p-3">
-      <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
-        <Activity size={13} className="text-accent" /> Currency strength
-      </div>
-      <div className="mb-3 text-[10px] text-text-tertiary">
-        {data ? `8 majors · ECB daily, as of ${data.asOf}` : error ? 'FX data unavailable' : 'loading…'}
-      </div>
+    <SectionCard title="Currency strength" icon={Activity}>
+      <p className="mb-3 text-[length:var(--text-caption)] text-muted">
+        {data
+          ? `8 majors · ECB daily, as of ${data.asOf}`
+          : error
+            ? 'FX data unavailable'
+            : 'Loading…'}
+      </p>
       <div className="space-y-1.5">
         {sorted.map((c) => {
           const v = data!.scores[c]
           const pct = Math.abs(v) * 10
           return (
             <div key={c} className="flex items-center gap-2">
-              <span className="num w-9 text-xs text-text">{c}</span>
-              <div className="relative h-3.5 flex-1 overflow-hidden rounded bg-elevated">
+              <span className="num w-9 text-[length:var(--text-caption)] text-text">{c}</span>
+              <div className="relative h-3.5 flex-1 overflow-hidden rounded bg-panel2">
                 <div
                   className={clsx('absolute top-0 h-full', v >= 0 ? 'left-1/2 bg-up/70' : 'right-1/2 bg-down/70')}
                   style={{ width: `${pct / 2}%` }}
                 />
-                <div className="absolute left-1/2 top-0 h-full w-px bg-border-subtle" />
+                <div className="absolute left-1/2 top-0 h-full w-px bg-edge" />
               </div>
-              <span className={clsx('num w-9 text-right text-[11px]', v >= 0 ? 'text-up' : 'text-down')}>
+              <span className={clsx('num w-9 text-right text-[length:var(--text-caption)]', v >= 0 ? 'text-up' : 'text-down')}>
                 {v >= 0 ? '+' : ''}
                 {v.toFixed(1)}
               </span>
@@ -147,7 +139,7 @@ function CurrencyStrengthPanel(): React.JSX.Element {
           )
         })}
       </div>
-    </div>
+    </SectionCard>
   )
 }
 
@@ -164,128 +156,119 @@ export default function FxModule(): React.JSX.Element {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Banknote size={18} className="text-accent" />
-        <h1 className="text-[15px] font-semibold text-text">FX desk</h1>
-        <span className="rounded bg-elevated px-1.5 py-0.5 text-[10px] text-text-tertiary">
-          {FOREX_SYMBOLS.length} pairs · carry &amp; strength
-        </span>
-        <button
-          onClick={() => quotes.refetch()}
-          className="t-colors ml-auto rounded p-1.5 text-text-secondary hover:bg-elevated hover:text-text"
-          title="Refresh quotes"
-        >
-          <RefreshCw size={14} className={quotes.isFetching ? 'animate-spin' : ''} />
-        </button>
-      </div>
+      <ModuleHeader
+        icon={Banknote}
+        title="FX desk"
+        badge={`${FOREX_SYMBOLS.length} pairs · carry & strength`}
+        actions={
+          <IconButton
+            icon={RefreshCw}
+            title="Refresh quotes"
+            onClick={() => quotes.refetch()}
+          />
+        }
+      />
 
       <div className="flex min-h-0 flex-1">
-        <div className="min-w-0 flex-1 overflow-y-auto p-4">
-          {/* Live quotes (own-key, delayed) */}
-          <div className="mb-4 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
-            <Banknote size={13} className="text-accent" /> Live quotes
-            <span className="rounded bg-elevated px-1.5 py-0.5 text-[9px] normal-case tracking-normal text-text-tertiary">
-              Twelve Data · delayed
-            </span>
-          </div>
-          {!key ? (
-            <div className="mb-5 flex items-start gap-2 rounded-lg border border-warn/30 bg-warn/10 p-3 text-xs text-warn">
-              <KeyRound size={14} className="mt-0.5 shrink-0" />
-              <span>
-                Add your Twelve Data key in Settings → API keys to load delayed FX quotes. Currency
-                strength and the carry table below work without a key. Real-time pricing is a premium
-                upgrade.
-              </span>
-            </div>
-          ) : (
-            <div className="mb-5 grid grid-cols-2 gap-2">
-              {quotes.data?.map((q) => (
-                <div
-                  key={q.symbol}
-                  className="flex items-center justify-between rounded-lg border border-edge bg-panel p-3"
-                >
-                  <span className="text-[13px] font-semibold text-text">{q.symbol}</span>
-                  <div className="text-right">
-                    <div className="num text-sm text-text">
-                      {q.close.toFixed(q.symbol.includes('JPY') ? 3 : 5)}
-                    </div>
-                    <div
-                      className={clsx(
-                        'num text-[11px] font-semibold',
-                        q.pct >= 0 ? 'text-up' : 'text-down'
-                      )}
-                    >
-                      {Number.isFinite(q.pct) ? `${q.pct >= 0 ? '+' : ''}${q.pct.toFixed(2)}%` : '—'}
+        <div className="min-w-0 flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Live quotes section */}
+          <SectionCard
+            title="Live quotes"
+            icon={Banknote}
+            actions={
+              <Badge tone="default">Twelve Data · delayed</Badge>
+            }
+          >
+            {!key ? (
+              <div className="flex items-start gap-2 rounded-lg border border-warn/30 bg-warn/10 p-3 text-[length:var(--text-caption)] text-warn">
+                <KeyRound size={14} className="mt-0.5 shrink-0" />
+                <span>
+                  Add your Twelve Data key in Settings → API keys to load delayed FX quotes. Currency
+                  strength and the carry table work without a key.
+                </span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {quotes.data?.map((q) => (
+                  <div
+                    key={q.symbol}
+                    className="flex items-center justify-between rounded-lg border border-edge bg-panel2 p-2.5"
+                  >
+                    <span className="text-[length:var(--text-body)] font-semibold text-text">{q.symbol}</span>
+                    <div className="text-right">
+                      <div className="num text-[length:var(--text-body)] text-text">
+                        {q.close.toFixed(q.symbol.includes('JPY') ? 3 : 5)}
+                      </div>
+                      <div className={clsx('num text-[length:var(--text-caption)] font-semibold', q.pct >= 0 ? 'text-up' : 'text-down')}>
+                        {Number.isFinite(q.pct) ? `${q.pct >= 0 ? '+' : ''}${q.pct.toFixed(2)}%` : '—'}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              {quotes.data && quotes.data.length === 0 && (
-                <div className="col-span-2 text-center text-xs text-text-tertiary">
-                  No quotes (market may be closed, or key limit reached).
-                </div>
-              )}
-            </div>
-          )}
+                ))}
+                {quotes.data && quotes.data.length === 0 && (
+                  <p className="col-span-2 text-center text-[length:var(--text-caption)] text-muted">
+                    No quotes (market may be closed, or key limit reached).
+                  </p>
+                )}
+              </div>
+            )}
+          </SectionCard>
 
-          {/* Carry table (keyless, pure) */}
-          <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
-            <ArrowDownUp size={13} className="text-accent" /> Carry &amp; rate differential
-            <button
-              onClick={() => setShowAll((v) => !v)}
-              className="t-colors ml-auto rounded bg-elevated px-1.5 py-0.5 text-[9px] normal-case tracking-normal text-text-secondary hover:text-text"
-            >
-              {showAll ? 'Top 10' : `All ${carry.length}`}
-            </button>
-          </div>
-          <div className="mb-3 text-[10px] text-text-tertiary">
-            Base policy rate minus quote policy rate (seed reference rates) — positive favours a long
-            carry.
-          </div>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-edge text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">
-                <th className="px-3 py-2 text-left">Pair</th>
-                <th className="px-3 py-2 text-right">Diff</th>
-                <th className="px-3 py-2 text-right">Carry</th>
-              </tr>
-            </thead>
-            <tbody>
-              {carryRows.map((r, i) => (
-                <tr key={r.pair} className={clsx('border-b border-edge/50', i % 2 && 'bg-panel/30')}>
-                  <td className="px-3 py-2 text-[13px] font-medium text-text">
-                    {r.base}/{r.quote}
-                  </td>
-                  <td
-                    className={clsx(
-                      'num px-3 py-2 text-right text-xs font-semibold',
-                      r.diffPct > 0 ? 'text-up' : r.diffPct < 0 ? 'text-down' : 'text-text-tertiary'
-                    )}
-                  >
-                    {r.diffPct > 0 ? '+' : ''}
-                    {r.diffPct.toFixed(2)}%
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <span
-                      className={clsx(
-                        'rounded px-1.5 py-0.5 text-[10px] font-medium',
-                        r.carryBias === 'long'
-                          ? 'bg-up/15 text-up'
-                          : r.carryBias === 'short'
-                            ? 'bg-down/15 text-down'
-                            : 'bg-elevated text-text-tertiary'
-                      )}
-                    >
-                      {biasLabel(r.carryBias)}
-                    </span>
-                  </td>
+          {/* Carry table section */}
+          <SectionCard
+            title="Carry & rate differential"
+            icon={ArrowDownUp}
+            actions={
+              <button
+                type="button"
+                onClick={() => setShowAll((v) => !v)}
+                className="text-[length:var(--text-caption)] text-muted hover:text-text t-colors"
+              >
+                {showAll ? 'Top 10' : `All ${carry.length}`}
+              </button>
+            }
+          >
+            <p className="mb-3 text-[length:var(--text-caption)] text-muted">
+              Base policy rate minus quote policy rate — positive favours a long carry.
+            </p>
+            {quotes.error && (
+              <div className="mb-3">
+                <ErrorBanner message="FX quotes unavailable." onRetry={() => quotes.refetch()} />
+              </div>
+            )}
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-edge text-[length:var(--text-label)] font-semibold uppercase tracking-wider text-muted">
+                  <th className="px-3 py-2 text-left">Pair</th>
+                  <th className="px-3 py-2 text-right">Diff</th>
+                  <th className="px-3 py-2 text-right">Carry</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {carryRows.map((r, i) => (
+                  <tr key={r.pair} className={clsx('border-b border-edge/50', i % 2 && 'bg-panel/30')}>
+                    <td className="px-3 py-2 text-[length:var(--text-body)] font-medium text-text">
+                      {r.base}/{r.quote}
+                    </td>
+                    <td className={clsx('num px-3 py-2 text-right text-[length:var(--text-caption)] font-semibold', r.diffPct > 0 ? 'text-up' : r.diffPct < 0 ? 'text-down' : 'text-muted')}>
+                      {r.diffPct > 0 ? '+' : ''}
+                      {r.diffPct.toFixed(2)}%
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <Badge
+                        tone={r.carryBias === 'long' ? 'up' : r.carryBias === 'short' ? 'down' : 'default'}
+                      >
+                        {biasLabel(r.carryBias)}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </SectionCard>
         </div>
 
-        <aside className="w-64 shrink-0 overflow-y-auto border-l border-edge">
+        <aside className="w-64 shrink-0 overflow-y-auto border-l border-edge p-3">
           <CurrencyStrengthPanel />
         </aside>
       </div>

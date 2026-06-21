@@ -1,8 +1,25 @@
 import { useQuery } from '@tanstack/react-query'
-import clsx from 'clsx'
 import { Grid3x3, RefreshCw } from 'lucide-react'
 import { fetchCandles, computeConviction } from '@/modules/conviction/engine'
 import { useView } from '@/stores/view'
+import { ModuleHeader } from '@/components/ui/ModuleHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
+
+// Canvas/cell colour constants — kept as literals because CSS vars
+// cannot be passed to inline style background safely without a helper.
+const CELL_COLORS = {
+  strongUp: { bg: 'rgba(22,199,132,0.30)', fg: 'rgba(22,199,132,1)' },
+  up:       { bg: 'rgba(22,199,132,0.18)', fg: 'rgba(22,199,132,1)' },
+  gold:     { bg: 'rgba(217,165,33,0.18)',  fg: 'rgba(217,165,33,1)' },
+  weak:     { bg: 'rgba(240,185,11,0.12)',  fg: 'rgba(240,185,11,1)' },
+  neutral:  { bg: 'rgba(138,165,147,0.10)', fg: 'rgba(138,165,147,1)' },
+  legendA:  'rgba(22,199,132,0.30)',
+  legendB:  'rgba(217,165,33,0.18)',
+  legendN:  'rgba(138,165,147,0.10)',
+  corr0:    'rgba(22,199,132,0.5)',
+  corrMid:  'rgba(138,165,147,0.15)',
+  corrNeg:  'rgba(234,57,67,0.5)',
+} as const
 
 const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DOGEUSDT', 'AVAXUSDT', 'LINKUSDT']
 const TFS = ['15m', '1h', '4h', '1d']
@@ -42,11 +59,11 @@ function useHeatmap() {
 }
 
 function cellStyle(score: number): { bg: string; fg: string } {
-  if (score >= 80) return { bg: 'rgba(22,199,132,0.30)', fg: '#16c784' }
-  if (score >= 72) return { bg: 'rgba(22,199,132,0.18)', fg: '#16c784' }
-  if (score >= 58) return { bg: 'rgba(217,165,33,0.18)', fg: '#d9a521' }
-  if (score >= 45) return { bg: 'rgba(240,185,11,0.12)', fg: '#f0b90b' }
-  return { bg: 'rgba(138,165,147,0.10)', fg: '#8aa593' }
+  if (score >= 80) return CELL_COLORS.strongUp
+  if (score >= 72) return CELL_COLORS.up
+  if (score >= 58) return CELL_COLORS.gold
+  if (score >= 45) return CELL_COLORS.weak
+  return CELL_COLORS.neutral
 }
 
 export default function HeatmapModule(): React.JSX.Element {
@@ -55,29 +72,39 @@ export default function HeatmapModule(): React.JSX.Element {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Grid3x3 size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Confluence Heatmap</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">
-          conviction · symbol × timeframe
-        </span>
-        <button onClick={() => refetch()} className="ml-auto rounded p-1.5 text-muted hover:bg-panel2 hover:text-text">
-          <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
-        </button>
-      </div>
+      <ModuleHeader
+        icon={Grid3x3}
+        title="Confluence heatmap"
+        badge="conviction · symbol × timeframe"
+        actions={
+          <button
+            type="button"
+            onClick={() => refetch()}
+            title="Refresh"
+            className="inline-flex items-center justify-center rounded p-1.5 text-muted hover:bg-panel2 hover:text-text t-colors"
+          >
+            <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
       <div className="min-h-0 flex-1 overflow-auto p-4">
         {!data ? (
-          <div className="flex h-40 items-center justify-center text-sm text-muted">
-            Scanning {SYMBOLS.length} symbols × {TFS.length} timeframes…
-          </div>
+          <EmptyState
+            title={`Scanning ${SYMBOLS.length} symbols × ${TFS.length} timeframes…`}
+          />
         ) : (
           <table className="w-full max-w-3xl">
             <thead>
               <tr>
-                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wider text-muted">Symbol</th>
+                <th className="px-3 py-2 text-left text-[length:var(--text-label)] uppercase tracking-wider text-muted font-semibold">
+                  Symbol
+                </th>
                 {TFS.map((tf) => (
-                  <th key={tf} className="px-3 py-2 text-center text-[11px] uppercase tracking-wider text-muted">
+                  <th
+                    key={tf}
+                    className="px-3 py-2 text-center text-[length:var(--text-label)] uppercase tracking-wider text-muted font-semibold"
+                  >
                     {tf}
                   </th>
                 ))}
@@ -86,16 +113,24 @@ export default function HeatmapModule(): React.JSX.Element {
             <tbody>
               {data.map((row) => (
                 <tr key={row.symbol}>
-                  <td className="px-3 py-1.5 text-[13px] font-medium text-text">{row.symbol.replace('USDT', '')}</td>
+                  <td className="px-3 py-1.5 text-[length:var(--text-body)] font-medium text-text">
+                    {row.symbol.replace('USDT', '')}
+                  </td>
                   {TFS.map((tf) => {
                     const c = row.cells[tf]
-                    if (!c) return <td key={tf} className="px-1.5 py-1.5 text-center text-[11px] text-muted">—</td>
+                    if (!c)
+                      return (
+                        <td key={tf} className="px-1.5 py-1.5 text-center text-[length:var(--text-caption)] text-muted">
+                          —
+                        </td>
+                      )
                     const st = cellStyle(c.score)
                     return (
                       <td key={tf} className="px-1.5 py-1.5">
                         <button
+                          type="button"
                           onClick={() => focus(row.symbol)}
-                          className="flex w-full flex-col items-center rounded py-1.5 transition-transform hover:scale-105"
+                          className="flex w-full flex-col items-center rounded py-1.5 hover:scale-105 t-elevate"
                           style={{ background: st.bg }}
                           title={`${row.symbol} ${tf} · ${c.bias} · ${c.grade}`}
                         >
@@ -103,10 +138,13 @@ export default function HeatmapModule(): React.JSX.Element {
                             {c.score}
                           </span>
                           <span
-                            className={clsx(
-                              'text-[9px] font-semibold uppercase',
-                              c.bias === 'long' ? 'text-up' : c.bias === 'short' ? 'text-down' : 'text-muted'
-                            )}
+                            className={
+                              c.bias === 'long'
+                                ? 'text-[9px] font-semibold uppercase text-up'
+                                : c.bias === 'short'
+                                  ? 'text-[9px] font-semibold uppercase text-down'
+                                  : 'text-[9px] font-semibold uppercase text-muted'
+                            }
                           >
                             {c.bias === 'long' ? '▲' : c.bias === 'short' ? '▼' : '–'}
                           </span>
@@ -119,11 +157,21 @@ export default function HeatmapModule(): React.JSX.Element {
             </tbody>
           </table>
         )}
-        <div className="mt-4 flex items-center gap-4 text-[10px] text-muted">
-          <span className="flex items-center gap-1"><span className="h-3 w-3 rounded" style={{ background: 'rgba(22,199,132,0.30)' }} /> A (≥72)</span>
-          <span className="flex items-center gap-1"><span className="h-3 w-3 rounded" style={{ background: 'rgba(217,165,33,0.18)' }} /> B (≥58)</span>
-          <span className="flex items-center gap-1"><span className="h-3 w-3 rounded" style={{ background: 'rgba(138,165,147,0.10)' }} /> skip</span>
-          <span>▲ long · ▼ short — click any cell to open it in Conviction</span>
+
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-[length:var(--text-caption)] text-muted">
+          <span className="flex items-center gap-1">
+            <span className="h-3 w-3 rounded" style={{ background: CELL_COLORS.legendA }} />
+            A (≥72)
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-3 w-3 rounded" style={{ background: CELL_COLORS.legendB }} />
+            B (≥58)
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-3 w-3 rounded" style={{ background: CELL_COLORS.legendN }} />
+            Skip
+          </span>
+          <span>▲ long · ▼ short — click any cell to open in conviction</span>
         </div>
       </div>
     </div>

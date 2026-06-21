@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
-import { Boxes, Flame, Rocket, Search, ExternalLink, Droplets, Loader2 } from 'lucide-react'
+import { ArrowLeftRight, Search, ExternalLink, Droplets } from 'lucide-react'
+import { ModuleHeader, TabBar, ErrorBanner, EmptyState, Skeleton } from '@/components/ui'
 
 type DexPair = Awaited<ReturnType<typeof window.api.dex.search>>['pairs'][number]
 type Tab = 'trending' | 'new' | 'search'
@@ -90,7 +91,7 @@ function PairTable({ pairs, variant }: { pairs: DexPair[]; variant: Tab }): Reac
     <div className="overflow-x-auto">
       <table className="w-full min-w-[760px] border-collapse text-[12px]">
         <thead>
-          <tr className="border-b border-edge text-left text-[10px] uppercase tracking-wider text-muted">
+          <tr className="border-b border-edge text-left text-[length:var(--text-caption)] uppercase tracking-wider text-muted">
             <th className="py-2 pl-1 pr-2 font-medium">Token</th>
             <th className="px-2 py-2 text-right font-medium">Price</th>
             <th className="px-2 py-2 text-right font-medium">1h</th>
@@ -101,14 +102,19 @@ function PairTable({ pairs, variant }: { pairs: DexPair[]; variant: Tab }): Reac
             {variant === 'new' ? (
               <th className="px-2 py-2 text-right font-medium">Age</th>
             ) : (
-              <th className="px-2 py-2 text-right font-medium">{variant === 'trending' ? 'Boost' : 'Txns'}</th>
+              <th className="px-2 py-2 text-right font-medium">
+                {variant === 'trending' ? 'Boost' : 'Txns'}
+              </th>
             )}
             <th className="px-1 py-2 text-right font-medium"></th>
           </tr>
         </thead>
         <tbody>
           {pairs.map((p) => (
-            <tr key={`${p.chainId}-${p.pairAddress}`} className="border-b border-edge/40 hover:bg-panel2/50">
+            <tr
+              key={`${p.chainId}-${p.pairAddress}`}
+              className="border-b border-edge/40 hover:bg-panel2/50 t-colors"
+            >
               <td className="py-2 pl-1 pr-2">
                 <div className="flex items-center gap-2">
                   <TokenIcon pair={p} />
@@ -126,17 +132,25 @@ function PairTable({ pairs, variant }: { pairs: DexPair[]; variant: Tab }): Reac
                 </div>
               </td>
               <td className="num px-2 py-2 text-right text-text">{fmtPrice(p.priceUsd)}</td>
-              <td className={clsx('num px-2 py-2 text-right', pctClass(p.priceChangeH1))}>{fmtPct(p.priceChangeH1)}</td>
+              <td className={clsx('num px-2 py-2 text-right', pctClass(p.priceChangeH1))}>
+                {fmtPct(p.priceChangeH1)}
+              </td>
               <td className={clsx('num px-2 py-2 text-right', pctClass(p.priceChangeH24))}>
                 {fmtPct(p.priceChangeH24)}
               </td>
               <td className="num px-2 py-2 text-right text-text">{fmtUsd(p.volumeH24)}</td>
               <td className="num px-2 py-2 text-right text-text">{fmtUsd(p.liquidityUsd)}</td>
-              <td className="num px-2 py-2 text-right text-muted">{fmtUsd(p.fdv ?? p.marketCap)}</td>
+              <td className="num px-2 py-2 text-right text-muted">
+                {fmtUsd(p.fdv ?? p.marketCap)}
+              </td>
               {variant === 'new' ? (
-                <td className="num px-2 py-2 text-right text-muted">{fmtAge(p.pairCreatedAt)}</td>
+                <td className="num px-2 py-2 text-right text-muted">
+                  {fmtAge(p.pairCreatedAt)}
+                </td>
               ) : variant === 'trending' ? (
-                <td className="num px-2 py-2 text-right text-gold">{p.boost ? `⚡${p.boost}` : '—'}</td>
+                <td className="num px-2 py-2 text-right text-gold">
+                  {p.boost ? `${p.boost}` : '—'}
+                </td>
               ) : (
                 <td className="num px-2 py-2 text-right text-muted">
                   {p.txnsH24 != null ? p.txnsH24.toLocaleString('en-US') : '—'}
@@ -145,7 +159,7 @@ function PairTable({ pairs, variant }: { pairs: DexPair[]; variant: Tab }): Reac
               <td className="px-1 py-2 text-right">
                 <button
                   onClick={() => window.open(p.url, '_blank')}
-                  className="text-muted hover:text-gold"
+                  className="text-muted hover:text-gold t-colors"
                   title="Open on DexScreener"
                 >
                   <ExternalLink size={13} />
@@ -160,6 +174,12 @@ function PairTable({ pairs, variant }: { pairs: DexPair[]; variant: Tab }): Reac
 }
 
 // ---- module ----------------------------------------------------------------
+
+const TABS = [
+  { id: 'trending', label: 'Trending' },
+  { id: 'new', label: 'New pairs' },
+  { id: 'search', label: 'Search' }
+]
 
 export default function DexModule(): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('trending')
@@ -188,36 +208,21 @@ export default function DexModule(): React.JSX.Element {
   const pairs = active.data?.pairs ?? []
   const err = active.data?.error
 
-  const TABS: { id: Tab; label: string; icon: typeof Flame }[] = [
-    { id: 'trending', label: 'Trending', icon: Flame },
-    { id: 'new', label: 'New pairs', icon: Rocket },
-    { id: 'search', label: 'Search', icon: Search }
-  ]
-
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Boxes size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">DEX Screener</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">on-chain · all chains · free</span>
-        <div className="ml-auto flex items-center gap-1">
-          {TABS.map((t) => {
-            const Icon = t.icon
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={clsx(
-                  'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs',
-                  tab === t.id ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2 hover:text-text'
-                )}
-              >
-                <Icon size={13} /> {t.label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      <ModuleHeader
+        icon={ArrowLeftRight}
+        title="DEX screener"
+        badge="on-chain · all chains · free"
+        actions={
+          <TabBar
+            tabs={TABS}
+            active={tab}
+            onTabChange={(id) => setTab(id as Tab)}
+            size="sm"
+          />
+        }
+      />
 
       {tab === 'search' && (
         <div className="border-b border-edge px-4 py-2">
@@ -228,7 +233,7 @@ export default function DexModule(): React.JSX.Element {
             }}
             className="flex items-center gap-2"
           >
-            <Search size={14} className="text-muted" />
+            <Search size={14} className="text-muted shrink-0" />
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
@@ -238,7 +243,7 @@ export default function DexModule(): React.JSX.Element {
             />
             <button
               type="submit"
-              className="rounded-lg bg-gold/20 px-3 py-1 text-xs font-medium text-gold hover:bg-gold/30"
+              className="rounded-lg bg-accent-soft px-3 py-1 text-xs font-medium text-gold t-colors hover:bg-gold/30"
             >
               Search
             </button>
@@ -247,21 +252,22 @@ export default function DexModule(): React.JSX.Element {
       )}
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        {active.isLoading || (tab === 'search' && searched.isFetching) ? (
-          <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted">
-            <Loader2 size={16} className="animate-spin text-gold" /> Loading on-chain markets…
+        {(active.isLoading || (tab === 'search' && searched.isFetching)) ? (
+          <div className="space-y-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} height="40px" rounded className="w-full" />
+            ))}
           </div>
         ) : err ? (
-          <div className="rounded-lg border border-down/30 bg-down/10 p-3 text-xs text-down">
-            DexScreener error: {err}
-          </div>
+          <ErrorBanner message={`DexScreener error: ${err}`} />
         ) : tab === 'search' && query.length < 2 ? (
-          <div className="py-16 text-center text-sm text-muted">
-            <Droplets size={24} className="mx-auto mb-2 text-gold/50" />
-            Type a token name, symbol or contract address to find every pair across all chains.
-          </div>
+          <EmptyState
+            icon={Droplets}
+            title="Search for a token"
+            description="Type a token name, symbol or contract address to find every pair across all chains."
+          />
         ) : pairs.length === 0 ? (
-          <div className="py-16 text-center text-sm text-muted">No pairs found.</div>
+          <EmptyState title="No pairs found" />
         ) : (
           <PairTable pairs={pairs} variant={tab} />
         )}

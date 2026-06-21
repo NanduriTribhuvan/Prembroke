@@ -14,6 +14,13 @@ import {
   yearsTo,
   type OptionsChain
 } from '@shared/options'
+import {
+  ModuleHeader,
+  SectionCard,
+  TabBar,
+  ErrorBanner,
+  Skeleton
+} from '@/components/ui'
 
 type Currency = 'BTC' | 'ETH'
 const DAY = 24 * 60 * 60 * 1000
@@ -45,8 +52,8 @@ function daysTo(expiry: number, now: number): number {
   return Math.max(0, Math.round((expiry - now) / DAY))
 }
 
-/** A labelled stat tile. */
-function Stat(props: {
+/** A labelled stat tile with icon — kept local to avoid conflict with the primitive Stat. */
+function OptionsStat(props: {
   icon: typeof Percent
   label: string
   value: string
@@ -56,12 +63,12 @@ function Stat(props: {
   const tone = props.tone ?? 'text'
   return (
     <div className="rounded-lg border border-edge bg-panel p-3">
-      <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted">
+      <div className="mb-1.5 flex items-center gap-1.5 text-[length:var(--text-caption)] font-semibold uppercase tracking-wider text-muted">
         <props.icon size={12} className="text-gold" /> {props.label}
       </div>
       <div
         className={clsx(
-          'num text-[19px] font-semibold',
+          'num text-[length:var(--text-display)] font-semibold',
           tone === 'up' && 'text-up',
           tone === 'down' && 'text-down',
           tone === 'gold' && 'text-gold',
@@ -70,7 +77,9 @@ function Stat(props: {
       >
         {props.value}
       </div>
-      {props.hint && <div className="mt-0.5 text-[11px] text-muted">{props.hint}</div>}
+      {props.hint && (
+        <div className="mt-0.5 text-[length:var(--text-caption)] text-muted">{props.hint}</div>
+      )}
     </div>
   )
 }
@@ -89,7 +98,6 @@ export default function CryptoOptionsModule(): React.JSX.Element {
     const t = yearsTo(expiry, chain.ts)
     const spot = chain.underlyingPrice
 
-    // Per-strike open interest + gamma, windowed around spot.
     const callOi = new Map<number, number>()
     const putOi = new Map<number, number>()
     for (const c of contracts) {
@@ -128,52 +136,61 @@ export default function CryptoOptionsModule(): React.JSX.Element {
 
   const maxTermIv = view ? Math.max(1, ...view.term.map((p) => p.atmIv)) : 1
 
+  const currencyTabs = [
+    { id: 'BTC', label: 'BTC' },
+    { id: 'ETH', label: 'ETH' }
+  ]
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Spline size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Crypto Options</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">Deribit · live</span>
-        <div className="ml-2 flex items-center gap-0.5">
-          {(['BTC', 'ETH'] as Currency[]).map((c) => (
-            <button
-              key={c}
-              onClick={() => {
-                setCurrency(c)
+      <ModuleHeader
+        icon={Spline}
+        title="Crypto options"
+        badge="Deribit · live"
+        actions={
+          <div className="flex items-center gap-2">
+            {view && (
+              <span className="num text-[13px] text-text">
+                {currency} <span className="text-gold">{fmtUsd(view.spot)}</span>
+              </span>
+            )}
+            <TabBar
+              tabs={currencyTabs}
+              active={currency}
+              onTabChange={(id) => {
+                setCurrency(id as Currency)
                 setSelExpiry(null)
               }}
-              className={clsx(
-                'num rounded px-2 py-0.5 text-[11px]',
-                currency === c ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2 hover:text-text'
-              )}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-        {view && (
-          <span className="num ml-auto text-[13px] text-text">
-            {currency} <span className="text-gold">{fmtUsd(view.spot)}</span>
-          </span>
-        )}
-      </div>
+              size="sm"
+            />
+          </div>
+        }
+      />
 
       {error && (
-        <div className="m-4 rounded-lg border border-down/40 bg-down/10 p-3 text-xs text-down">
-          Deribit unreachable: {(error as Error).message}. Retrying…
+        <div className="m-4">
+          <ErrorBanner
+            message={`Deribit unreachable: ${(error as Error).message}. Retrying…`}
+          />
         </div>
       )}
-      {isLoading && !view && <div className="p-4 text-xs text-muted">Loading {currency} options chain…</div>}
+
+      {isLoading && !view && (
+        <div className="space-y-2 p-4">
+          <div className="grid grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} height="80px" rounded className="w-full" />
+            ))}
+          </div>
+        </div>
+      )}
 
       {view && (
         <div className="grid min-h-0 flex-1 grid-cols-[200px_1fr] gap-4 overflow-y-auto p-4">
           {/* Expiry rail */}
           <div className="flex flex-col gap-2">
-            <div className="rounded-lg border border-edge bg-panel">
-              <div className="border-b border-edge px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted">
-                Expiries
-              </div>
-              <div className="max-h-[280px] overflow-y-auto">
+            <SectionCard title="Expiries">
+              <div className="max-h-[280px] -mx-3 -mb-3 overflow-y-auto">
                 {view.exps.map((e) => {
                   const active = e.expiry === view.expiry
                   return (
@@ -181,69 +198,93 @@ export default function CryptoOptionsModule(): React.JSX.Element {
                       key={e.expiry}
                       onClick={() => setSelExpiry(e.expiry)}
                       className={clsx(
-                        'flex w-full items-center justify-between px-3 py-1.5 text-left text-xs',
+                        'flex w-full items-center justify-between px-3 py-1.5 text-left text-xs t-colors',
                         active ? 'bg-panel2 text-text' : 'text-muted hover:bg-panel2/60 hover:text-text'
                       )}
                     >
                       <span className="num">{e.label}</span>
-                      <span className="num text-[10px] text-muted">{daysTo(e.expiry, chain!.ts)}d</span>
+                      <span className="num text-[10px] text-muted">
+                        {daysTo(e.expiry, chain!.ts)}d
+                      </span>
                     </button>
                   )
                 })}
               </div>
-            </div>
+            </SectionCard>
 
-            {/* IV term structure */}
-            <div className="rounded-lg border border-edge bg-panel p-3">
-              <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted">
-                ATM IV term structure
-              </div>
+            <SectionCard title="ATM IV term structure">
               <div className="space-y-1.5">
                 {view.term.map((p) => (
                   <div key={p.expiry} className="flex items-center gap-2">
                     <span className="num w-12 shrink-0 text-[10px] text-muted">{p.label}</span>
                     <div className="h-2 flex-1 overflow-hidden rounded bg-panel2">
-                      <div className="h-full rounded bg-gold/70" style={{ width: `${(p.atmIv / maxTermIv) * 100}%` }} />
+                      <div
+                        className="h-full rounded bg-gold/70"
+                        style={{ width: `${(p.atmIv / maxTermIv) * 100}%` }}
+                      />
                     </div>
-                    <span className="num w-10 shrink-0 text-right text-[10px] text-text">{p.atmIv.toFixed(0)}%</span>
+                    <span className="num w-10 shrink-0 text-right text-[10px] text-text">
+                      {p.atmIv.toFixed(0)}%
+                    </span>
                   </div>
                 ))}
               </div>
-            </div>
+            </SectionCard>
           </div>
 
           {/* Main */}
           <div className="flex min-w-0 flex-col gap-4">
             <div className="grid grid-cols-4 gap-3">
-              <Stat
+              <OptionsStat
                 icon={Percent}
                 label="Put / call (OI)"
                 value={view.pcr.oi.toFixed(2)}
                 tone={view.pcr.oi > 1 ? 'down' : 'up'}
                 hint={view.pcr.oi > 1 ? 'put-heavy · hedged' : 'call-heavy · bullish'}
               />
-              <Stat icon={Target} label="Max pain" value={view.mp ? fmtUsd(view.mp) : '—'} tone="gold" hint="pin into expiry" />
-              <Stat icon={Gauge} label="ATM IV" value={view.atm !== null ? `${view.atm.toFixed(1)}%` : '—'} hint="implied volatility" />
-              <Stat
+              <OptionsStat
+                icon={Target}
+                label="Max pain"
+                value={view.mp ? fmtUsd(view.mp) : '—'}
+                tone="gold"
+                hint="pin into expiry"
+              />
+              <OptionsStat
+                icon={Gauge}
+                label="ATM IV"
+                value={view.atm !== null ? `${view.atm.toFixed(1)}%` : '—'}
+                hint="implied volatility"
+              />
+              <OptionsStat
                 icon={view.skew !== null && view.skew >= 0 ? TrendingDown : TrendingUp}
                 label="25Δ skew"
-                value={view.skew !== null ? `${view.skew >= 0 ? '+' : ''}${view.skew.toFixed(1)}` : '—'}
+                value={
+                  view.skew !== null
+                    ? `${view.skew >= 0 ? '+' : ''}${view.skew.toFixed(1)}`
+                    : '—'
+                }
                 tone={view.skew !== null && view.skew >= 0 ? 'down' : 'up'}
-                hint={view.skew !== null && view.skew >= 0 ? 'downside puts bid · fear' : 'call skew · greed'}
+                hint={
+                  view.skew !== null && view.skew >= 0
+                    ? 'downside puts bid · fear'
+                    : 'call skew · greed'
+                }
               />
             </div>
 
             {/* Open interest by strike */}
-            <div className="rounded-lg border border-edge bg-panel">
-              <div className="flex items-center justify-between border-b border-edge px-3 py-2">
-                <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  <Layers size={13} className="text-gold" /> Open interest by strike
-                </span>
+            <SectionCard
+              title="Open interest by strike"
+              icon={Layers}
+              actions={
                 <span className="num text-[10px] text-muted">
-                  <span className="text-up">calls</span> · <span className="text-down">puts</span> · expiry {view.exps.find((e) => e.expiry === view.expiry)?.label}
+                  <span className="text-up">calls</span> · <span className="text-down">puts</span>
+                  {' · expiry '}
+                  {view.exps.find((e) => e.expiry === view.expiry)?.label}
                 </span>
-              </div>
-              <div className="space-y-1 p-3">
+              }
+            >
+              <div className="space-y-1">
                 {view.strikes.map((s) => {
                   const cOi = view.callOi.get(s) ?? 0
                   const pOi = view.putOi.get(s) ?? 0
@@ -252,7 +293,10 @@ export default function CryptoOptionsModule(): React.JSX.Element {
                     <div key={s} className="flex items-center gap-2 text-[11px]">
                       <div className="flex flex-1 justify-end gap-1">
                         <div className="flex w-full items-center justify-end">
-                          <div className="h-3 rounded-l bg-up/60" style={{ width: `${(cOi / view.maxOi) * 100}%` }} />
+                          <div
+                            className="h-3 rounded-l bg-up/60"
+                            style={{ width: `${(cOi / view.maxOi) * 100}%` }}
+                          />
                         </div>
                       </div>
                       <span
@@ -264,48 +308,62 @@ export default function CryptoOptionsModule(): React.JSX.Element {
                         {fmtInt(s)}
                       </span>
                       <div className="flex flex-1 items-center">
-                        <div className="h-3 rounded-r bg-down/60" style={{ width: `${(pOi / view.maxOi) * 100}%` }} />
+                        <div
+                          className="h-3 rounded-r bg-down/60"
+                          style={{ width: `${(pOi / view.maxOi) * 100}%` }}
+                        />
                       </div>
                     </div>
                   )
                 })}
               </div>
-            </div>
+            </SectionCard>
 
             {/* Gamma exposure */}
-            <div className="rounded-lg border border-edge bg-panel">
-              <div className="flex items-center justify-between border-b border-edge px-3 py-2">
-                <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  <Spline size={13} className="text-gold" /> Dealer gamma exposure (est.)
-                </span>
+            <SectionCard
+              title="Dealer gamma exposure (est.)"
+              icon={Spline}
+              actions={
                 <span className="num text-[10px] text-muted">
                   net {view.netGex >= 0 ? '+' : ''}
-                  {fmtUsd(Math.abs(view.netGex))} · flip {view.zeroGamma ? fmtUsd(view.zeroGamma) : '—'}
+                  {fmtUsd(Math.abs(view.netGex))} · flip{' '}
+                  {view.zeroGamma ? fmtUsd(view.zeroGamma) : '—'}
                 </span>
-              </div>
-              <div className="space-y-1 p-3">
+              }
+            >
+              <div className="space-y-1">
                 {view.strikes.map((s) => {
                   const g = view.gexByStrike.get(s) ?? 0
                   const pct = (Math.abs(g) / view.maxAbsGex) * 100
                   return (
                     <div key={s} className="flex items-center gap-2 text-[11px]">
                       <div className="flex flex-1 justify-end">
-                        {g < 0 && <div className="h-3 rounded-l bg-down/60" style={{ width: `${pct}%` }} />}
+                        {g < 0 && (
+                          <div
+                            className="h-3 rounded-l bg-down/60"
+                            style={{ width: `${pct}%` }}
+                          />
+                        )}
                       </div>
                       <span className="num w-16 shrink-0 text-center text-muted">{fmtInt(s)}</span>
                       <div className="flex flex-1">
-                        {g > 0 && <div className="h-3 rounded-r bg-up/60" style={{ width: `${pct}%` }} />}
+                        {g > 0 && (
+                          <div
+                            className="h-3 rounded-r bg-up/60"
+                            style={{ width: `${pct}%` }}
+                          />
+                        )}
                       </div>
                     </div>
                   )
                 })}
-                <div className="flex items-center gap-2 pt-1 text-[9px] text-muted">
+                <div className="flex items-center gap-2 pt-1 text-[length:var(--text-caption)] text-muted">
                   <span className="flex-1 text-right">negative · short gamma</span>
                   <span className="w-16 shrink-0 text-center">strike</span>
                   <span className="flex-1">positive · long gamma</span>
                 </div>
               </div>
-            </div>
+            </SectionCard>
           </div>
         </div>
       )}

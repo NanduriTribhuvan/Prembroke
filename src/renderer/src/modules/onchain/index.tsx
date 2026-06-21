@@ -2,6 +2,14 @@ import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { Boxes, Layers, Coins, RefreshCw, Fuel, ArrowLeftRight } from 'lucide-react'
 import { useKeys } from '@/stores/keys'
+import {
+  ModuleHeader,
+  SectionCard,
+  DataTable,
+  ErrorBanner,
+  IconButton,
+  KpiTile
+} from '@/components/ui'
 
 interface Chain {
   name: string
@@ -64,16 +72,6 @@ function useStables() {
   })
 }
 
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }): React.JSX.Element {
-  return (
-    <div className="rounded-lg border border-edge bg-panel p-3">
-      <div className="text-[11px] uppercase tracking-wider text-muted">{label}</div>
-      <div className="num mt-1 text-2xl font-bold text-text">{value}</div>
-      {sub && <div className="text-[11px] text-muted">{sub}</div>}
-    </div>
-  )
-}
-
 interface Transfer {
   hash: string
   eth: number
@@ -88,7 +86,9 @@ function useEthGas() {
       const res = await fetch(
         `https://api.etherscan.io/v2/api?chainid=1&module=gastracker&action=gasoracle&apikey=${key}`
       )
-      const j = (await res.json()) as { result: { SafeGasPrice: string; ProposeGasPrice: string; FastGasPrice: string } }
+      const j = (await res.json()) as {
+        result: { SafeGasPrice: string; ProposeGasPrice: string; FastGasPrice: string }
+      }
       return {
         safe: parseFloat(j.result.SafeGasPrice),
         propose: parseFloat(j.result.ProposeGasPrice),
@@ -108,7 +108,9 @@ function useWhaleTransfers() {
       const res = await fetch(
         `https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_getBlockByNumber&tag=latest&boolean=true&apikey=${key}`
       )
-      const j = (await res.json()) as { result?: { transactions?: { hash: string; value: string }[] } }
+      const j = (await res.json()) as {
+        result?: { transactions?: { hash: string; value: string }[] }
+      }
       const txs = j.result?.transactions ?? []
       return txs
         .map((t) => ({ hash: t.hash, eth: parseInt(t.value, 16) / 1e18 }))
@@ -131,86 +133,109 @@ export default function OnchainModule(): React.JSX.Element {
   const topChains = chains?.slice(0, 10) ?? []
   const maxChain = topChains[0]?.tvl ?? 1
 
+  const protocolCols = [
+    { key: 'name', header: 'Protocol' },
+    { key: 'category', header: 'Category' },
+    {
+      key: 'tvl',
+      header: 'TVL',
+      align: 'right' as const,
+      render: (p: Protocol) => <span className="num">{fmtUsd(p.tvl)}</span>
+    },
+    {
+      key: 'change_1d',
+      header: '24h',
+      align: 'right' as const,
+      render: (p: Protocol) => (
+        <span
+          className={clsx('num', (p.change_1d ?? 0) >= 0 ? 'text-up' : 'text-down')}
+        >
+          {p.change_1d == null
+            ? '—'
+            : `${p.change_1d >= 0 ? '+' : ''}${p.change_1d.toFixed(1)}%`}
+        </span>
+      )
+    }
+  ]
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Boxes size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">On-chain &amp; DeFi</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">DeFiLlama · live</span>
-        <button onClick={() => refetch()} className="ml-auto rounded p-1.5 text-muted hover:bg-panel2 hover:text-text">
-          <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
-        </button>
-      </div>
+      <ModuleHeader
+        icon={Boxes}
+        title="On-chain &amp; DeFi"
+        badge="DeFiLlama · live"
+        actions={
+          <IconButton
+            icon={RefreshCw}
+            title="Refresh"
+            onClick={() => refetch()}
+            disabled={isFetching}
+          />
+        }
+      />
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {error && (
-          <div className="mb-4 rounded border border-warn/30 bg-warn/10 p-3 text-xs text-warn">
-            DeFiLlama unreachable. Retrying…
+          <div className="mb-4">
+            <ErrorBanner message="DeFiLlama unreachable. Retrying…" onRetry={() => refetch()} />
           </div>
         )}
 
         <div className="grid grid-cols-3 gap-4">
-          <Stat label="Total DeFi TVL" value={fmtUsd(totalTvl)} sub={`${chains?.length ?? 0} chains tracked`} />
-          <Stat label="Stablecoin supply" value={stables ? fmtUsd(stables) : '—'} sub="circulating, all chains" />
-          <Stat
+          <KpiTile
+            label="Total DeFi TVL"
+            value={fmtUsd(totalTvl)}
+            sub={`${chains?.length ?? 0} chains tracked`}
+            tone="gold"
+          />
+          <KpiTile
+            label="Stablecoin supply"
+            value={stables ? fmtUsd(stables) : '—'}
+            sub="circulating, all chains"
+          />
+          <KpiTile
             label="Top chain"
             value={topChains[0] ? topChains[0].name : '—'}
             sub={topChains[0] ? fmtUsd(topChains[0].tvl) : ''}
+            tone="gold"
           />
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-4">
-          <div className="rounded-lg border border-edge bg-panel p-3">
-            <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Layers size={13} className="text-gold" /> Top chains by TVL
-            </div>
+          <SectionCard title="Top chains by TVL" icon={Layers}>
             <div className="space-y-2">
               {topChains.map((c) => (
                 <div key={c.name} className="flex items-center gap-2">
                   <span className="w-24 truncate text-xs text-text">{c.name}</span>
                   <div className="relative h-3 flex-1 overflow-hidden rounded bg-panel2">
-                    <div className="h-full rounded bg-gold/50" style={{ width: `${(c.tvl / maxChain) * 100}%` }} />
+                    <div
+                      className="h-full rounded bg-gold/50"
+                      style={{ width: `${(c.tvl / maxChain) * 100}%` }}
+                    />
                   </div>
-                  <span className="num w-16 text-right text-[11px] text-muted">{fmtUsd(c.tvl)}</span>
+                  <span className="num w-16 text-right text-[11px] text-muted">
+                    {fmtUsd(c.tvl)}
+                  </span>
                 </div>
               ))}
             </div>
-          </div>
+          </SectionCard>
 
-          <div className="rounded-lg border border-edge bg-panel">
-            <div className="flex items-center gap-1.5 border-b border-edge px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Coins size={13} className="text-gold" /> Top protocols
+          <SectionCard title="Top protocols" icon={Coins}>
+            <div className="-mx-3 -mb-3 max-h-[420px] overflow-y-auto">
+              <DataTable
+                cols={protocolCols}
+                rows={protocols ?? []}
+                rowKey={(p) => p.name}
+                loading={!protocols}
+              />
             </div>
-            <div className="max-h-[420px] overflow-y-auto">
-              <table className="w-full">
-                <tbody>
-                  {protocols?.map((p, i) => (
-                    <tr key={p.name + i} className={clsx('border-b border-edge/40', i % 2 && 'bg-panel2/20')}>
-                      <td className="px-3 py-1.5 text-[13px] text-text">{p.name}</td>
-                      <td className="px-3 py-1.5 text-[10px] text-muted">{p.category}</td>
-                      <td className="num px-3 py-1.5 text-right text-xs text-text">{fmtUsd(p.tvl)}</td>
-                      <td
-                        className={clsx(
-                          'num px-3 py-1.5 text-right text-[11px]',
-                          (p.change_1d ?? 0) >= 0 ? 'text-up' : 'text-down'
-                        )}
-                      >
-                        {p.change_1d == null ? '—' : `${p.change_1d >= 0 ? '+' : ''}${p.change_1d.toFixed(1)}%`}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          </SectionCard>
         </div>
 
         {ethKey && (
           <div className="mt-4 grid grid-cols-2 gap-4">
-            <div className="rounded-lg border border-edge bg-panel p-3">
-              <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                <Fuel size={13} className="text-gold" /> Ethereum gas (gwei)
-              </div>
+            <SectionCard title="Ethereum gas (gwei)" icon={Fuel}>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { l: 'Safe', v: gas.data?.safe },
@@ -218,33 +243,36 @@ export default function OnchainModule(): React.JSX.Element {
                   { l: 'Fast', v: gas.data?.fast }
                 ].map((g) => (
                   <div key={g.l} className="rounded bg-panel2 p-2 text-center">
-                    <div className="num text-xl font-bold text-gold">{g.v != null ? g.v.toFixed(2) : '—'}</div>
-                    <div className="text-[10px] text-muted">{g.l}</div>
+                    <div className="num text-xl font-bold text-gold">
+                      {g.v != null ? g.v.toFixed(2) : '—'}
+                    </div>
+                    <div className="text-[length:var(--text-caption)] text-muted">{g.l}</div>
                   </div>
                 ))}
               </div>
-            </div>
+            </SectionCard>
 
-            <div className="rounded-lg border border-edge bg-panel p-3">
-              <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                <ArrowLeftRight size={13} className="text-gold" /> Largest transfers · latest block
-              </div>
+            <SectionCard title="Largest transfers · latest block" icon={ArrowLeftRight}>
               <div className="space-y-1">
                 {whales.data?.map((t) => (
                   <button
                     key={t.hash}
-                    onClick={() => window.open(`https://etherscan.io/tx/${t.hash}`, '_blank')}
-                    className="flex w-full items-center justify-between text-[11px] hover:text-gold"
+                    onClick={() =>
+                      window.open(`https://etherscan.io/tx/${t.hash}`, '_blank')
+                    }
+                    className="flex w-full items-center justify-between text-[11px] t-colors hover:text-gold"
                   >
                     <span className="num text-muted">{t.hash.slice(0, 10)}…</span>
                     <span className="num font-semibold text-text">{t.eth.toFixed(2)} ETH</span>
                   </button>
                 ))}
                 {(!whales.data || whales.data.length === 0) && (
-                  <div className="text-[11px] text-muted">No large transfers in the latest block.</div>
+                  <div className="text-[11px] text-muted">
+                    No large transfers in the latest block.
+                  </div>
                 )}
               </div>
-            </div>
+            </SectionCard>
           </div>
         )}
       </div>

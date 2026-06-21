@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import clsx from 'clsx'
+import { ChartCandlestick } from 'lucide-react'
+import { ModuleHeader } from '@/components/ui/ModuleHeader'
+import { TabBar } from '@/components/ui/TabBar'
+import { IconButton } from '@/components/ui/IconButton'
+import { Toolbar, ToolbarDivider } from '@/components/ui/Toolbar'
+import { LayoutDashboard } from 'lucide-react'
+
+// TradingView embed uses literal colours for the chart background/grid.
+// These cannot be CSS vars because the embed config is a JSON string.
+const TV_COLORS = {
+  background: '#0b1710',
+  grid: 'rgba(28,51,37,0.6)',
+} as const
 
 /** Single TradingView Advanced Chart embed. Rebuilds when symbol/interval change. */
 function TVChart({ symbol, interval }: { symbol: string; interval: string }): React.JSX.Element {
@@ -16,8 +28,7 @@ function TVChart({ symbol, interval }: { symbol: string; interval: string }): Re
     el.appendChild(widget)
 
     const script = document.createElement('script')
-    script.src =
-      'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js'
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js'
     script.async = true
     script.innerHTML = JSON.stringify({
       autosize: true,
@@ -27,8 +38,8 @@ function TVChart({ symbol, interval }: { symbol: string; interval: string }): Re
       theme: 'dark',
       style: '1',
       locale: 'en',
-      backgroundColor: '#0b1710',
-      gridColor: 'rgba(28,51,37,0.6)',
+      backgroundColor: TV_COLORS.background,
+      gridColor: TV_COLORS.grid,
       hide_side_toolbar: false,
       allow_symbol_change: true,
       studies: ['STD;EMA', 'STD;RSI'],
@@ -55,13 +66,21 @@ const PRESETS = [
   'OANDA:XAUUSD',
   'TVC:DXY'
 ]
-const INTERVALS = [
-  { v: '15', l: '15m' },
-  { v: '60', l: '1H' },
-  { v: '240', l: '4H' },
-  { v: 'D', l: '1D' }
+
+const INTERVAL_TABS = [
+  { id: '15',  label: '15m' },
+  { id: '60',  label: '1H' },
+  { id: '240', label: '4H' },
+  { id: 'D',   label: '1D' }
 ]
+
 type Layout = 1 | 2 | 4
+
+const LAYOUT_TABS = [
+  { id: '1', label: '1×' },
+  { id: '2', label: '2×' },
+  { id: '4', label: '4×' }
+]
 
 export default function ChartsModule(): React.JSX.Element {
   const [layout, setLayout] = useState<Layout>(1)
@@ -87,87 +106,93 @@ export default function ChartsModule(): React.JSX.Element {
 
   return (
     <div className="flex h-full flex-col">
-      {/* toolbar */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-edge px-4 py-2.5">
-        <h1 className="text-[15px] font-semibold text-text">Charts</h1>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            if (input.trim()) {
-              setPaneSymbol(input.trim().toUpperCase())
-              setInput('')
-            }
-          }}
-          className="flex items-center"
-        >
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={`Pane ${activePane + 1} symbol e.g. BINANCE:BTCUSDT`}
-            className="num w-64 rounded border border-edge bg-panel px-2 py-1 text-xs text-text outline-none focus:border-gold/50"
-          />
-        </form>
-        <div className="flex items-center gap-1">
-          {PRESETS.map((p) => (
-            <button
-              key={p}
-              onClick={() => setPaneSymbol(p)}
-              className="rounded bg-panel2 px-1.5 py-1 text-[10px] text-muted hover:text-gold"
+      <ModuleHeader
+        icon={ChartCandlestick}
+        title="Charts"
+        actions={
+          <div className="flex items-center gap-2">
+            {/* Symbol search */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (input.trim()) {
+                  setPaneSymbol(input.trim().toUpperCase())
+                  setInput('')
+                }
+              }}
             >
-              {p.split(':')[1]}
-            </button>
-          ))}
-        </div>
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={`Pane ${activePane + 1} symbol`}
+                className="num w-48 rounded border border-edge bg-panel px-2 py-1 text-[length:var(--text-caption)] text-text outline-none focus:border-gold/50 t-colors"
+              />
+            </form>
 
-        <div className="ml-auto flex items-center gap-1">
-          {INTERVALS.map((iv) => (
-            <button
-              key={iv.v}
-              onClick={() => setInterval(iv.v)}
-              className={clsx(
-                'rounded px-2 py-1 text-xs',
-                interval === iv.v ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2'
-              )}
-            >
-              {iv.l}
-            </button>
-          ))}
-          <div className="mx-1 h-4 w-px bg-edge" />
-          {([1, 2, 4] as Layout[]).map((n) => (
-            <button
-              key={n}
-              onClick={() => setLayout(n)}
-              className={clsx(
-                'rounded px-2 py-1 text-xs',
-                layout === n ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2'
-              )}
-            >
-              {n}×
-            </button>
-          ))}
-        </div>
-      </div>
+            {/* Preset symbols */}
+            <div className="flex items-center gap-0.5">
+              {PRESETS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPaneSymbol(p)}
+                  className="rounded px-1.5 py-0.5 text-[length:var(--text-caption)] text-muted hover:bg-panel2 hover:text-gold t-colors"
+                >
+                  {p.split(':')[1]}
+                </button>
+              ))}
+            </div>
 
-      {/* grid */}
+            <ToolbarDivider />
+
+            {/* Interval picker */}
+            <TabBar
+              tabs={INTERVAL_TABS}
+              active={interval}
+              onTabChange={setInterval}
+              size="sm"
+            />
+
+            <ToolbarDivider />
+
+            {/* Layout picker */}
+            <Toolbar>
+              {LAYOUT_TABS.map((lt) => (
+                <IconButton
+                  key={lt.id}
+                  icon={LayoutDashboard}
+                  title={`${lt.label} layout`}
+                  active={layout === Number(lt.id)}
+                  onClick={() => setLayout(Number(lt.id) as Layout)}
+                  size="sm"
+                />
+              ))}
+            </Toolbar>
+          </div>
+        }
+      />
+
       <div
-        className={clsx(
-          'grid min-h-0 flex-1 gap-2 p-2',
-          layout === 1 && 'grid-cols-1 grid-rows-1',
-          layout === 2 && 'grid-cols-2 grid-rows-1',
-          layout === 4 && 'grid-cols-2 grid-rows-2'
-        )}
+        className={
+          layout === 1
+            ? 'grid min-h-0 flex-1 gap-2 p-2 grid-cols-1 grid-rows-1'
+            : layout === 2
+              ? 'grid min-h-0 flex-1 gap-2 p-2 grid-cols-2 grid-rows-1'
+              : 'grid min-h-0 flex-1 gap-2 p-2 grid-cols-2 grid-rows-2'
+        }
       >
         {visible.map((sym, i) => (
           <div
             key={i}
             onMouseDown={() => setActivePane(i)}
-            className={clsx(
-              'relative min-h-0',
-              layout > 1 && activePane === i && 'rounded-lg ring-1 ring-gold/50'
-            )}
+            className={
+              layout > 1 && activePane === i
+                ? 'relative min-h-0 rounded-lg ring-1 ring-gold/50'
+                : 'relative min-h-0'
+            }
           >
             {layout > 1 && (
-              <span className="num absolute left-2 top-2 z-10 rounded bg-bg/70 px-1.5 py-0.5 text-[10px] text-gold">
+              <span className="num absolute left-2 top-2 z-10 rounded bg-bg/70 px-1.5 py-0.5 text-[length:var(--text-caption)] text-gold">
                 {sym.split(':')[1] ?? sym}
               </span>
             )}

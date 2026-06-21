@@ -1,6 +1,32 @@
 import { useQuery } from '@tanstack/react-query'
 import { Network, RefreshCw } from 'lucide-react'
 import { fetchCandles } from '@/modules/conviction/engine'
+import { ModuleHeader } from '@/components/ui/ModuleHeader'
+import { ErrorBanner } from '@/components/ui/ErrorBanner'
+import { EmptyState } from '@/components/ui/EmptyState'
+
+// Cell colour constants for the correlation matrix canvas-style cells.
+// CSS vars cannot drive inline style backgroundColor safely; keep as literals.
+const CORR_COLORS = {
+  legendPos: 'rgba(22,199,132,0.5)',
+  legendMid: 'rgba(138,165,147,0.15)',
+  legendNeg: 'rgba(234,57,67,0.5)',
+  fgLight:   '#e8efe9',
+  fgDark:    '#0b1710',
+} as const
+
+function cellBg(c: number): string {
+  if (c >= 0) {
+    const a = 0.1 + c * 0.45
+    return `rgba(22,199,132,${a.toFixed(2)})`
+  }
+  const a = 0.1 + Math.abs(c) * 0.45
+  return `rgba(234,57,67,${a.toFixed(2)})`
+}
+
+function cellFg(c: number): string {
+  return Math.abs(c) > 0.55 ? CORR_COLORS.fgDark : CORR_COLORS.fgLight
+}
 
 const SYMBOLS = [
   'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT',
@@ -35,16 +61,6 @@ function pearson(a: number[], b: number[]): number {
   return denom ? cov / denom : 0
 }
 
-function cellColor(c: number): { bg: string; fg: string } {
-  // +1 green, 0 grey, -1 red
-  if (c >= 0) {
-    const a = 0.1 + c * 0.45
-    return { bg: `rgba(22,199,132,${a.toFixed(2)})`, fg: c > 0.55 ? '#0b1710' : '#e8efe9' }
-  }
-  const a = 0.1 + Math.abs(c) * 0.45
-  return { bg: `rgba(234,57,67,${a.toFixed(2)})`, fg: c < -0.55 ? '#0b1710' : '#e8efe9' }
-}
-
 export default function CorrelationModule(): React.JSX.Element {
   const { data, isFetching, refetch, error } = useQuery({
     queryKey: ['correlation'],
@@ -63,32 +79,37 @@ export default function CorrelationModule(): React.JSX.Element {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Network size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Correlation Matrix</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">
-          {DAYS}d daily returns · Pearson
-        </span>
-        <button onClick={() => refetch()} className="ml-auto rounded p-1.5 text-muted hover:bg-panel2 hover:text-text">
-          <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
-        </button>
-      </div>
+      <ModuleHeader
+        icon={Network}
+        title="Correlation matrix"
+        badge={`${DAYS}d daily returns · Pearson`}
+        actions={
+          <button
+            type="button"
+            onClick={() => refetch()}
+            title="Refresh"
+            className="inline-flex items-center justify-center rounded p-1.5 text-muted hover:bg-panel2 hover:text-text t-colors"
+          >
+            <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
       <div className="min-h-0 flex-1 overflow-auto p-4">
         {error && (
-          <div className="rounded border border-warn/30 bg-warn/10 p-3 text-xs text-warn">
-            Couldn’t load price history (possible geo-block). Retrying…
+          <div className="mb-4">
+            <ErrorBanner message="Couldn't load price history (possible geo-block). Retrying…" onRetry={() => refetch()} />
           </div>
         )}
         {!data ? (
-          <div className="flex h-40 items-center justify-center text-sm text-muted">Computing correlations…</div>
+          <EmptyState title="Computing correlations…" />
         ) : (
           <table className="border-separate" style={{ borderSpacing: 3 }}>
             <thead>
               <tr>
                 <th />
                 {data.labels.map((l) => (
-                  <th key={l} className="px-1 pb-1 text-[10px] font-semibold text-muted">
+                  <th key={l} className="px-1 pb-1 text-[length:var(--text-caption)] font-semibold text-muted">
                     {l}
                   </th>
                 ))}
@@ -97,27 +118,40 @@ export default function CorrelationModule(): React.JSX.Element {
             <tbody>
               {data.matrix.map((row, i) => (
                 <tr key={data.labels[i]}>
-                  <td className="pr-2 text-right text-[10px] font-semibold text-muted">{data.labels[i]}</td>
-                  {row.map((c, j) => {
-                    const st = cellColor(c)
-                    return (
-                      <td key={j} className="h-9 w-12 rounded text-center" style={{ background: st.bg }}>
-                        <span className="num text-[11px] font-medium" style={{ color: st.fg }}>
-                          {c.toFixed(2)}
-                        </span>
-                      </td>
-                    )
-                  })}
+                  <td className="pr-2 text-right text-[length:var(--text-caption)] font-semibold text-muted">
+                    {data.labels[i]}
+                  </td>
+                  {row.map((c, j) => (
+                    <td
+                      key={j}
+                      className="h-9 w-12 rounded text-center"
+                      style={{ background: cellBg(c) }}
+                    >
+                      <span className="num text-[11px] font-medium" style={{ color: cellFg(c) }}>
+                        {c.toFixed(2)}
+                      </span>
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
           </table>
         )}
-        <div className="mt-4 flex items-center gap-4 text-[10px] text-muted">
-          <span className="flex items-center gap-1"><span className="h-3 w-3 rounded" style={{ background: 'rgba(22,199,132,0.5)' }} /> +1 (move together)</span>
-          <span className="flex items-center gap-1"><span className="h-3 w-3 rounded" style={{ background: 'rgba(138,165,147,0.15)' }} /> 0 (uncorrelated)</span>
-          <span className="flex items-center gap-1"><span className="h-3 w-3 rounded" style={{ background: 'rgba(234,57,67,0.5)' }} /> −1 (inverse)</span>
-          <span>· diversify by pairing low-correlation assets; avoid stacking +0.9 correlated longs.</span>
+
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-[length:var(--text-caption)] text-muted">
+          <span className="flex items-center gap-1">
+            <span className="h-3 w-3 rounded" style={{ background: CORR_COLORS.legendPos }} />
+            +1 (move together)
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-3 w-3 rounded" style={{ background: CORR_COLORS.legendMid }} />
+            0 (uncorrelated)
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-3 w-3 rounded" style={{ background: CORR_COLORS.legendNeg }} />
+            −1 (inverse)
+          </span>
+          <span>Diversify by pairing low-correlation assets; avoid stacking +0.9 correlated longs.</span>
         </div>
       </div>
     </div>
