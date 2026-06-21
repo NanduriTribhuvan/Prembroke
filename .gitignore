@@ -1,0 +1,9 @@
+node_modules/
+out/
+dist/
+*.log
+.DS_Store
+
+# Local secrets — never commit
+src/renderer/src/config/keys.local.ts
+build/

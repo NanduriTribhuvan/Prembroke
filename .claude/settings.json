@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"c:/Users/TILAK CHILLARA/OneDrive/Desktop\" -maxdepth 2 -type f \\\\\\( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.svg' -o -iname '*.ico' -o -iname '*.webp' \\\\\\) 2>/dev/null | grep -iv 'node_modules' | head -60)",
+      "Read(//c/Users/TILAK CHILLARA/OneDrive/Desktop/**)",
+      "Bash(find \"c:/Users/TILAK CHILLARA/Downloads\" \"c:/Users/TILAK CHILLARA/OneDrive/Desktop/Trading-DEX/.claude\" \"c:/Users/TILAK CHILLARA/OneDrive/Desktop/Trading-DEX/.vscode\" -maxdepth 3 -type f \\\\\\( -iname '*prembroke*' -o -iname '*logo*' -o -iname '*leaf*' -o -iname '*brand*' \\\\\\) 2>/dev/null | head -40; echo \"---any prembroke folder---\"; find \"c:/Users/TILAK CHILLARA/OneDrive/Desktop\" -maxdepth 1 -iname '*prembroke*' 2>/dev/null)",
+      "Read(//c/Users/TILAK CHILLARA/Downloads/**)",
+      "Bash(find \"c:/Users/TILAK CHILLARA/OneDrive\" \"c:/Users/TILAK CHILLARA/Pictures\" \"c:/Users/TILAK CHILLARA/Downloads\" -type f \\\\\\( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.svg' -o -iname '*.webp' \\\\\\) -newermt '2026-06-12' ! -newermt '2026-06-14' 2>/dev/null | grep -iv 'node_modules\\\\|AppData' | head -40; echo \"---named prembroke anywhere---\"; find \"c:/Users/TILAK CHILLARA\" -iname '*prembroke*' 2>/dev/null | grep -iv 'node_modules\\\\|AppData\\\\|.git/' | head)",
+      "Read(//c/Users/TILAK CHILLARA/OneDrive/**)",
+      "Read(//c/Users/TILAK CHILLARA/**)"
+    ]
+  }
+}

@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+/* ── Prembroke theme ──────────────────────────────────────────────
+   Deep-forest green + gold, on a near-black green-tinted terminal.
+   Logo palette: #14532D forest · #5B7A1E olive · #C99A2E gold · #D9A521 bright gold */
+@theme {
+  --color-bg: #07100b;
+  --color-panel: #0b1710;
+  --color-panel2: #102017;
+  --color-edge: #1c3325;
+  --color-muted: #8aa593;
+  --color-text: #e8efe9;
+  --color-accent: #d9a521;
+  --color-accent2: #2f7d4f;
+  --color-leaf: #14532d;
+  --color-olive: #5b7a1e;
+  --color-gold: #c99a2e;
+  --color-up: #16c784;
+  --color-down: #ea3943;
+  --color-warn: #f0b90b;
+  /* Semantic layer (dark defaults — overridden at runtime by applyTheme()).
+     Additive only: every legacy token above keeps its exact meaning. */
+  --color-surface: #07100b;
+  --color-elevated: #1a261d;
+  --color-overlay: #212e25;
+  --color-border-subtle: rgba(28, 51, 37, 0.6);
+  --color-border-strong: #3a5043;
+  --color-text-primary: #e8efe9;
+  --color-text-secondary: #b9c9bf;
+  --color-text-tertiary: #8aa593;
+  --color-accent-strong: #ba8d1c;
+  --color-accent-soft: rgba(217, 165, 33, 0.14);
+  --color-ring: rgba(217, 165, 33, 0.45);
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ── Motion system ────────────────────────────────────────────────
+   One consistent transition timing for chrome. Opt-in helpers keep the
+   default look unchanged while giving hover/elevation a single feel. */
+:root {
+  --motion-fast: 150ms;
+  --motion-ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  /* Density-aware base spacing (overridden at runtime by applyTheme()). */
+  --space-card: 12px;
+  --space-gap: 4px;
+  --control-h: 28px;
+  --font-base: 13px;
+  --row-h: 26px;
+}
+
+.t-colors {
+  transition:
+    color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
+}
+
+.t-elevate {
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Accessible focus ring driven by the accent. The `.focus-ring` utility opts a
+   control in explicitly; `:focus-visible` gives a sane baseline everywhere. */
+.focus-ring:focus-visible,
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-ring);
+}
+
+/* Prembroke wordmark gradient (green → olive → gold) */
+.brandmark {
+  background: linear-gradient(90deg, #2f7d4f 0%, #5b7a1e 45%, #c99a2e 80%, #d9a521 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+/* Subtle terminal backdrop: faint grid + accent/leaf corner glow. The gold
+   corner now derives from --color-accent so the backdrop re-tints with the
+   chosen accent (identical to before in the default dark+gold theme). */
+.grid-backdrop {
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 55%),
+    radial-gradient(100% 70% at 0% 100%, color-mix(in srgb, var(--color-leaf) 30%, transparent), transparent 55%),
+    linear-gradient(to right, color-mix(in srgb, var(--color-edge) 25%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-edge) 25%, transparent) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    34px 34px,
+    34px 34px;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.module-enter {
+  animation: fadein 0.22s ease-out;
+}
+
+/* ── Reduce-motion kill-switch ────────────────────────────────────
+   When the root carries .reduce-motion (set by applyTheme from the setting),
+   NOTHING animates: transitions, keyframe animations (.module-enter,
+   animate-pulse), smooth scrolling and hover lifts are all frozen. The OS
+   preference is honoured as a baseline too. */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  transition: none !important;
+  animation: none !important;
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
