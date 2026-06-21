@@ -1,6 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import clsx from 'clsx'
 import { Activity, Percent, Scale, Layers } from 'lucide-react'
+import {
+  ModuleHeader,
+  SectionCard,
+  DataTable,
+  EmptyState,
+  ErrorBanner,
+  SkeletonTable
+} from '@/components/ui'
 
 const FAPI = 'https://fapi.binance.com'
 const FOCUS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DOGEUSDT']
@@ -108,98 +115,135 @@ function countdown(ts: number): string {
 }
 
 export default function DerivativesModule(): React.JSX.Element {
-  const { data: funding, error: fErr } = useFunding()
+  const { data: funding, error: fErr, refetch: refetchFunding, isFetching: fundingLoading } = useFunding()
   const { data: pos } = usePositioning()
+
+  const fundingCols = [
+    {
+      key: 'symbol',
+      header: 'Perp',
+      align: 'left' as const,
+      render: (r: FundingRow) => (
+        <span className="text-[length:var(--text-body)] font-medium text-text">{r.symbol}</span>
+      )
+    },
+    {
+      key: 'mark',
+      header: 'Mark',
+      align: 'right' as const,
+      render: (r: FundingRow) => (
+        <span className="num text-[length:var(--text-body)] text-text">
+          {r.mark.toLocaleString('en-US', { maximumFractionDigits: r.mark < 1 ? 5 : 2 })}
+        </span>
+      )
+    },
+    {
+      key: 'funding',
+      header: 'Funding 8h',
+      align: 'right' as const,
+      render: (r: FundingRow) => (
+        <span className={`num text-[length:var(--text-body)] font-semibold ${r.funding >= 0 ? 'text-up' : 'text-down'}`}>
+          {r.funding >= 0 ? '+' : ''}{r.funding.toFixed(4)}%
+        </span>
+      )
+    },
+    {
+      key: 'next',
+      header: 'Next',
+      align: 'right' as const,
+      render: (r: FundingRow) => (
+        <span className="num text-[length:var(--text-caption)] text-muted">{countdown(r.next)}</span>
+      )
+    },
+    {
+      key: 'vol',
+      header: '24h vol',
+      align: 'right' as const,
+      render: (r: FundingRow) => (
+        <span className="num text-[length:var(--text-caption)] text-muted">{fmtB(r.vol)}</span>
+      )
+    }
+  ]
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Activity size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Derivatives Desk</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">Binance futures · live</span>
-      </div>
+      <ModuleHeader
+        icon={Activity}
+        title="Derivatives desk"
+        badge="Binance futures · live"
+      />
 
       <div className="grid min-h-0 flex-1 grid-cols-3 gap-4 overflow-y-auto p-4">
-        {/* funding */}
-        <div className="col-span-2 rounded-lg border border-edge bg-panel">
-          <div className="flex items-center gap-1.5 border-b border-edge px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
-            <Percent size={13} className="text-gold" /> Funding rates &amp; mark price
-          </div>
-          {fErr && <div className="p-3 text-xs text-warn">Futures API unreachable. Retrying…</div>}
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-edge text-[10px] uppercase tracking-wider text-muted">
-                <th className="px-3 py-1.5 text-left font-semibold">Perp</th>
-                <th className="px-3 py-1.5 text-right font-semibold">Mark</th>
-                <th className="px-3 py-1.5 text-right font-semibold">Funding 8h</th>
-                <th className="px-3 py-1.5 text-right font-semibold">Next</th>
-                <th className="px-3 py-1.5 text-right font-semibold">24h vol</th>
-              </tr>
-            </thead>
-            <tbody>
-              {funding?.map((r, i) => (
-                <tr key={r.symbol} className={clsx('border-b border-edge/40', i % 2 && 'bg-panel2/30')}>
-                  <td className="px-3 py-1.5 text-[13px] font-medium text-text">{r.symbol}</td>
-                  <td className="num px-3 py-1.5 text-right text-xs text-text">
-                    {r.mark.toLocaleString('en-US', { maximumFractionDigits: r.mark < 1 ? 5 : 2 })}
-                  </td>
-                  <td
-                    className={clsx(
-                      'num px-3 py-1.5 text-right text-xs font-semibold',
-                      r.funding >= 0 ? 'text-up' : 'text-down'
-                    )}
-                  >
-                    {r.funding >= 0 ? '+' : ''}
-                    {r.funding.toFixed(4)}%
-                  </td>
-                  <td className="num px-3 py-1.5 text-right text-[11px] text-muted">{countdown(r.next)}</td>
-                  <td className="num px-3 py-1.5 text-right text-[11px] text-muted">{fmtB(r.vol)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* positioning */}
-        <div className="space-y-4">
-          <div className="rounded-lg border border-edge bg-panel p-3">
-            <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Scale size={13} className="text-gold" /> Long / short accounts
+        {/* Funding rates table */}
+        <SectionCard
+          className="col-span-2"
+          title="Funding rates & mark price"
+          icon={Percent}
+        >
+          {fErr && (
+            <ErrorBanner
+              message="Futures API unreachable."
+              onRetry={() => void refetchFunding()}
+            />
+          )}
+          {!fErr && (
+            <div className="-mx-3 -mb-3">
+              {fundingLoading && !funding ? (
+                <SkeletonTable cols={5} />
+              ) : funding && funding.length > 0 ? (
+                <DataTable
+                  cols={fundingCols}
+                  rows={funding}
+                  rowKey={(r) => r.symbol}
+                />
+              ) : !fundingLoading ? (
+                <EmptyState title="No funding data" />
+              ) : null}
             </div>
+          )}
+        </SectionCard>
+
+        {/* Positioning */}
+        <div className="space-y-4">
+          <SectionCard title="Long / short accounts" icon={Scale}>
             <div className="space-y-2.5">
               {pos?.map((p) => (
                 <div key={p.symbol}>
-                  <div className="mb-1 flex items-center justify-between text-xs">
-                    <span className="text-text">{p.symbol}</span>
-                    <span className="num text-muted">ratio {p.ratio.toFixed(2)}</span>
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-[length:var(--text-body)] text-text">{p.symbol}</span>
+                    <span className="num text-[length:var(--text-caption)] text-muted">
+                      ratio {p.ratio.toFixed(2)}
+                    </span>
                   </div>
-                  <div className="flex h-3 overflow-hidden rounded">
-                    <div className="bg-up/70 text-center" style={{ width: `${p.longPct}%` }} />
+                  <div className="flex h-2 overflow-hidden rounded-full bg-panel2">
+                    <div className="bg-up/70" style={{ width: `${p.longPct}%` }} />
                     <div className="bg-down/70" style={{ width: `${p.shortPct}%` }} />
                   </div>
-                  <div className="mt-0.5 flex justify-between text-[10px]">
-                    <span className="text-up">{p.longPct.toFixed(0)}% long</span>
-                    <span className="text-down">{p.shortPct.toFixed(0)}% short</span>
+                  <div className="mt-0.5 flex justify-between">
+                    <span className="text-[length:var(--text-caption)] text-up">{p.longPct.toFixed(0)}% long</span>
+                    <span className="text-[length:var(--text-caption)] text-down">{p.shortPct.toFixed(0)}% short</span>
                   </div>
                 </div>
               ))}
-              {!pos && <div className="text-xs text-muted">loading positioning…</div>}
+              {!pos && (
+                <span className="text-[length:var(--text-caption)] text-muted">Loading positioning…</span>
+              )}
             </div>
-          </div>
+          </SectionCard>
 
-          <div className="rounded-lg border border-edge bg-panel p-3">
-            <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Layers size={13} className="text-gold" /> Open interest (notional)
-            </div>
+          <SectionCard title="Open interest (notional)" icon={Layers}>
             <div className="space-y-1.5">
               {pos?.map((p) => (
-                <div key={p.symbol} className="flex items-center justify-between text-xs">
-                  <span className="text-text">{p.symbol}</span>
-                  <span className="num text-gold">{fmtB(p.oiNotional)}</span>
+                <div key={p.symbol} className="flex items-center justify-between">
+                  <span className="text-[length:var(--text-body)] text-text">{p.symbol}</span>
+                  <span className="num text-[length:var(--text-body)] text-gold">{fmtB(p.oiNotional)}</span>
                 </div>
               ))}
+              {!pos && (
+                <span className="text-[length:var(--text-caption)] text-muted">Loading…</span>
+              )}
             </div>
-          </div>
+          </SectionCard>
         </div>
       </div>
     </div>

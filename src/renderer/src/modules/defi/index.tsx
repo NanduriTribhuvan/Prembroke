@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import clsx from 'clsx'
-import { Vault, Percent, Layers, ShieldAlert, Loader2 } from 'lucide-react'
+import { Vault } from 'lucide-react'
+import {
+  ModuleHeader,
+  TabBar,
+  DataTable,
+  Badge,
+} from '@/components/ui'
 
 type Tab = 'yields' | 'chains' | 'hacks'
 
@@ -117,7 +122,25 @@ function fmtDate(unixSec: number): string {
   return new Date(unixSec * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+// ---- row types -------------------------------------------------------------
+
+type YieldRow = YieldPool & { _key: string }
+type ChainRow = ChainTvl & { _rank: number }
+type HackRow = Hack & { _key: string }
+
 // ---- module ----------------------------------------------------------------
+
+const MIN_TVL_OPTIONS = [
+  { id: '100000', label: '$100K' },
+  { id: '1000000', label: '$1M' },
+  { id: '10000000', label: '$10M' },
+]
+
+const TABS = [
+  { id: 'yields', label: 'Yields' },
+  { id: 'chains', label: 'Chains' },
+  { id: 'hacks', label: 'Exploits' },
+]
 
 export default function DefiModule(): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('yields')
@@ -150,157 +173,201 @@ export default function DefiModule(): React.JSX.Element {
     .sort((a, b) => (b.apy ?? 0) - (a.apy ?? 0))
     .slice(0, 80)
 
-  const loading =
-    (tab === 'yields' && yields.isLoading) ||
-    (tab === 'chains' && chains.isLoading) ||
-    (tab === 'hacks' && hacks.isLoading)
+  const activeError =
+    tab === 'yields' ? (yields.error ? (yields.error as Error).message : null) :
+    tab === 'chains' ? (chains.error ? (chains.error as Error).message : null) :
+    hacks.error ? (hacks.error as Error).message : null
 
-  const TABS: { id: Tab; label: string; icon: typeof Percent }[] = [
-    { id: 'yields', label: 'Yields', icon: Percent },
-    { id: 'chains', label: 'Chains', icon: Layers },
-    { id: 'hacks', label: 'Exploits', icon: ShieldAlert }
+  // ---- column defs -----------------------------------------------------------
+
+  const yieldCols = [
+    {
+      key: 'symbol',
+      header: 'Pool',
+      render: (row: YieldRow) => (
+        <span className="flex items-center gap-1.5 font-medium text-text">
+          {row.symbol}
+          {row.stablecoin && <Badge tone="up">Stable</Badge>}
+        </span>
+      )
+    },
+    {
+      key: 'project',
+      header: 'Project',
+      render: (row: YieldRow) => <span className="capitalize text-muted">{row.project}</span>
+    },
+    {
+      key: 'chain',
+      header: 'Chain',
+      render: (row: YieldRow) => <span className="text-muted">{row.chain}</span>
+    },
+    {
+      key: 'apy',
+      header: 'APY',
+      align: 'right' as const,
+      render: (row: YieldRow) => <span className="num font-semibold text-up">{fmtApy(row.apy)}</span>
+    },
+    {
+      key: 'apyBase',
+      header: 'Base / reward',
+      align: 'right' as const,
+      render: (row: YieldRow) => (
+        <span className="num text-muted">{fmtApy(row.apyBase)} / {fmtApy(row.apyReward)}</span>
+      )
+    },
+    {
+      key: 'tvlUsd',
+      header: 'TVL',
+      align: 'right' as const,
+      render: (row: YieldRow) => <span className="num">{fmtUsd(row.tvlUsd)}</span>
+    },
+    {
+      key: 'ilRisk',
+      header: 'Risk',
+      align: 'right' as const,
+      render: (row: YieldRow) => (
+        row.ilRisk === 'yes'
+          ? <Badge tone="warn">IL risk</Badge>
+          : <span className="text-muted">Low</span>
+      )
+    },
   ]
+
+  const chainCols = [
+    {
+      key: '_rank',
+      header: '#',
+      width: '40px',
+      render: (row: ChainRow) => <span className="num text-muted">{row._rank}</span>
+    },
+    {
+      key: 'name',
+      header: 'Chain',
+      render: (row: ChainRow) => <span className="font-medium text-text">{row.name}</span>
+    },
+    {
+      key: 'symbol',
+      header: 'Token',
+      render: (row: ChainRow) => <span className="text-muted">{row.symbol ?? '—'}</span>
+    },
+    {
+      key: 'tvl',
+      header: 'TVL',
+      align: 'right' as const,
+      render: (row: ChainRow) => <span className="num font-semibold text-gold">{fmtUsd(row.tvl)}</span>
+    },
+  ]
+
+  const hackCols = [
+    {
+      key: 'date',
+      header: 'Date',
+      render: (row: HackRow) => <span className="num text-muted">{fmtDate(row.date)}</span>
+    },
+    {
+      key: 'name',
+      header: 'Protocol',
+      render: (row: HackRow) => (
+        <span className="flex items-center gap-1.5 font-medium text-text">
+          {row.name}
+          {row.bridgeHack && <Badge tone="warn">Bridge</Badge>}
+        </span>
+      )
+    },
+    {
+      key: 'amount',
+      header: 'Lost',
+      align: 'right' as const,
+      render: (row: HackRow) => <span className="num font-semibold text-down">{fmtUsd(row.amount)}</span>
+    },
+    {
+      key: 'technique',
+      header: 'Technique',
+      render: (row: HackRow) => <span className="text-muted">{row.technique || '—'}</span>
+    },
+    {
+      key: 'chains',
+      header: 'Chain',
+      render: (row: HackRow) => <span className="text-muted">{row.chains.join(', ') || '—'}</span>
+    },
+  ]
+
+  // ---- render ----------------------------------------------------------------
+
+  const yieldRows: YieldRow[] = pools.map((p, i) => ({ ...p, _key: `${p.project}-${p.symbol}-${i}` }))
+  const chainRows: ChainRow[] = (chains.data ?? []).map((c, i) => ({ ...c, _rank: i + 1 }))
+  const hackRows: HackRow[] = (hacks.data ?? []).map((h, i) => ({ ...h, _key: `${h.name}-${i}` }))
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Vault size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">DeFi Desk</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">DeFiLlama · free</span>
-        <div className="ml-auto flex items-center gap-1">
-          {TABS.map((t) => {
-            const Icon = t.icon
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={clsx(
-                  'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs',
-                  tab === t.id ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2 hover:text-text'
-                )}
-              >
-                <Icon size={13} /> {t.label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      <ModuleHeader
+        icon={Vault}
+        title="DeFi desk"
+        badge="DeFiLlama · free"
+        actions={
+          <TabBar
+            tabs={TABS}
+            active={tab}
+            onTabChange={(id) => setTab(id as Tab)}
+            size="sm"
+          />
+        }
+      />
 
       {tab === 'yields' && (
-        <div className="flex items-center gap-3 border-b border-edge px-4 py-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 border-b border-edge px-4 py-2">
+          <TabBar
+            tabs={MIN_TVL_OPTIONS}
+            active={String(minTvl)}
+            onTabChange={(v) => setMinTvl(Number(v))}
+            size="sm"
+          />
           <button
             onClick={() => setStableOnly((s) => !s)}
-            className={clsx(
-              'rounded px-2 py-1',
-              stableOnly ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2'
-            )}
+            className={`rounded px-2 py-1 text-xs t-colors ${stableOnly ? 'bg-accent-soft text-gold' : 'text-muted hover:bg-panel2'}`}
           >
             Stablecoins only
           </button>
-          <span className="text-muted">Min TVL</span>
-          <div className="flex gap-1">
-            {[
-              { l: '$100K', v: 100_000 },
-              { l: '$1M', v: 1_000_000 },
-              { l: '$10M', v: 10_000_000 }
-            ].map((o) => (
-              <button
-                key={o.v}
-                onClick={() => setMinTvl(o.v)}
-                className={clsx('rounded px-2 py-1', minTvl === o.v ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2')}
-              >
-                {o.l}
-              </button>
-            ))}
-          </div>
-          <span className="ml-auto text-muted">Highest APY across {pools.length} vetted pools</span>
+          <span className="ml-auto text-xs text-muted">Highest APY · {pools.length} pools</span>
         </div>
       )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        {loading ? (
-          <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted">
-            <Loader2 size={16} className="animate-spin text-gold" /> Loading DeFi data…
-          </div>
-        ) : tab === 'yields' ? (
-          <table className="w-full min-w-[640px] border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-edge text-left text-[10px] uppercase tracking-wider text-muted">
-                <th className="py-2 pr-2 font-medium">Pool</th>
-                <th className="px-2 py-2 font-medium">Project</th>
-                <th className="px-2 py-2 font-medium">Chain</th>
-                <th className="px-2 py-2 text-right font-medium">APY</th>
-                <th className="px-2 py-2 text-right font-medium">Base / Reward</th>
-                <th className="px-2 py-2 text-right font-medium">TVL</th>
-                <th className="px-2 py-2 text-right font-medium">Risk</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pools.map((p, i) => (
-                <tr key={`${p.project}-${p.symbol}-${i}`} className="border-b border-edge/40 hover:bg-panel2/50">
-                  <td className="py-2 pr-2 font-medium text-text">
-                    {p.symbol}
-                    {p.stablecoin && <span className="ml-1.5 rounded bg-up/15 px-1 text-[9px] text-up">STABLE</span>}
-                  </td>
-                  <td className="px-2 py-2 capitalize text-muted">{p.project}</td>
-                  <td className="px-2 py-2 text-muted">{p.chain}</td>
-                  <td className="num px-2 py-2 text-right font-semibold text-up">{fmtApy(p.apy)}</td>
-                  <td className="num px-2 py-2 text-right text-muted">
-                    {fmtApy(p.apyBase)} / {fmtApy(p.apyReward)}
-                  </td>
-                  <td className="num px-2 py-2 text-right text-text">{fmtUsd(p.tvlUsd)}</td>
-                  <td className="px-2 py-2 text-right">
-                    <span className={clsx('text-[10px]', p.ilRisk === 'yes' ? 'text-warn' : 'text-muted')}>
-                      {p.ilRisk === 'yes' ? 'IL risk' : 'low'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : tab === 'chains' ? (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {(chains.data ?? []).map((c, i) => (
-              <div key={c.name} className="flex items-center justify-between rounded-lg border border-edge bg-panel px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <span className="num w-6 text-right text-[11px] text-muted">{i + 1}</span>
-                  <div>
-                    <div className="text-[13px] text-text">{c.name}</div>
-                    {c.symbol && <div className="text-[10px] text-muted">{c.symbol}</div>}
-                  </div>
-                </div>
-                <div className="num text-[13px] font-semibold text-gold">{fmtUsd(c.tvl)}</div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <table className="w-full min-w-[640px] border-collapse text-[12px]">
-            <thead>
-              <tr className="border-b border-edge text-left text-[10px] uppercase tracking-wider text-muted">
-                <th className="py-2 pr-2 font-medium">Date</th>
-                <th className="px-2 py-2 font-medium">Protocol</th>
-                <th className="px-2 py-2 text-right font-medium">Lost</th>
-                <th className="px-2 py-2 font-medium">Technique</th>
-                <th className="px-2 py-2 font-medium">Chain</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(hacks.data ?? []).map((h, i) => (
-                <tr key={`${h.name}-${i}`} className="border-b border-edge/40 hover:bg-panel2/50">
-                  <td className="num py-2 pr-2 text-muted">{fmtDate(h.date)}</td>
-                  <td className="px-2 py-2 font-medium text-text">
-                    {h.name}
-                    {h.bridgeHack && <span className="ml-1.5 rounded bg-warn/15 px-1 text-[9px] text-warn">BRIDGE</span>}
-                  </td>
-                  <td className="num px-2 py-2 text-right font-semibold text-down">{fmtUsd(h.amount)}</td>
-                  <td className="px-2 py-2 text-muted">{h.technique || '—'}</td>
-                  <td className="px-2 py-2 text-muted">{h.chains.join(', ') || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {tab === 'yields' && (
+          <DataTable
+            cols={yieldCols}
+            rows={yieldRows}
+            rowKey={(r) => r._key}
+            loading={yields.isLoading}
+            error={activeError}
+            onRetry={() => void yields.refetch()}
+            emptyTitle="No pools match the current filters"
+          />
+        )}
+        {tab === 'chains' && (
+          <DataTable
+            cols={chainCols}
+            rows={chainRows}
+            rowKey={(r) => r.name}
+            loading={chains.isLoading}
+            error={activeError}
+            onRetry={() => void chains.refetch()}
+            emptyTitle="No chain data available"
+          />
+        )}
+        {tab === 'hacks' && (
+          <DataTable
+            cols={hackCols}
+            rows={hackRows}
+            rowKey={(r) => r._key}
+            loading={hacks.isLoading}
+            error={activeError}
+            onRetry={() => void hacks.refetch()}
+            emptyTitle="No exploit data available"
+          />
         )}
       </div>
     </div>
   )
 }
+

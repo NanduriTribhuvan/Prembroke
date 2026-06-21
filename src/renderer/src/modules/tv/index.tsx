@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
-import { Grid2x2, Maximize2, ExternalLink, Radio, Volume2, VolumeX } from 'lucide-react'
+import { Tv, Grid2x2, Maximize2, ExternalLink, Radio, Volume2, VolumeX } from 'lucide-react'
 import { CHANNELS } from '@shared/config/channels'
 import type { LiveChannel } from '@shared/config/channels'
+import { ModuleHeader, IconButton, Toolbar, ToolbarDivider } from '@/components/ui'
 
 const ACTIVE_KEY = 'tdx.tv.channel'
 
@@ -51,41 +52,29 @@ export default function TvModule(): React.JSX.Element {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Top bar */}
-      <div className="flex items-center justify-between border-b border-edge px-6 py-3">
-        <div className="flex items-center gap-2">
-          <Radio className="h-4 w-4 text-down" />
-          <h1 className="text-[15px] font-medium text-text">Live TV</h1>
-          <span className="ml-2 rounded bg-down/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-down">
-            Live
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          {!multiview && (
-            <button
-              type="button"
-              onClick={() => setMuted((m) => !m)}
-              className="flex items-center gap-1.5 rounded border border-edge bg-panel px-2.5 py-1.5 text-[11px] text-muted transition-colors hover:border-accent hover:text-text"
-            >
-              {muted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-              {muted ? 'Muted' : 'Sound on'}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setMultiview((m) => !m)}
-            className={clsx(
-              'flex items-center gap-1.5 rounded border px-2.5 py-1.5 text-[11px] transition-colors',
-              multiview
-                ? 'border-accent bg-accent/15 text-accent'
-                : 'border-edge bg-panel text-muted hover:border-accent hover:text-text'
+      <ModuleHeader
+        icon={Tv}
+        title="Live TV"
+        actions={
+          <Toolbar>
+            {!multiview && (
+              <IconButton
+                icon={muted ? VolumeX : Volume2}
+                title={muted ? 'Unmute' : 'Mute'}
+                onClick={() => setMuted((m) => !m)}
+                active={!muted}
+              />
             )}
-          >
-            {multiview ? <Maximize2 className="h-3.5 w-3.5" /> : <Grid2x2 className="h-3.5 w-3.5" />}
-            {multiview ? 'Single view' : 'Multiview'}
-          </button>
-        </div>
-      </div>
+            <ToolbarDivider />
+            <IconButton
+              icon={multiview ? Maximize2 : Grid2x2}
+              title={multiview ? 'Single view' : 'Multiview'}
+              onClick={() => setMultiview((m) => !m)}
+              active={multiview}
+            />
+          </Toolbar>
+        }
+      />
 
       <div className="flex min-h-0 flex-1">
         {/* Player area */}
@@ -109,7 +98,7 @@ export default function TvModule(): React.JSX.Element {
                   <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-[10px] font-medium text-text">
                     {c.label}
                   </span>
-                  <span className="absolute inset-0 flex items-center justify-center bg-bg/0 opacity-0 transition-opacity group-hover:bg-bg/40 group-hover:opacity-100">
+                  <span className="absolute inset-0 flex items-center justify-center bg-bg/0 opacity-0 t-colors group-hover:bg-bg/40 group-hover:opacity-100">
                     <span className="rounded bg-accent px-3 py-1 text-[11px] font-semibold text-bg">
                       Watch
                     </span>
@@ -136,7 +125,7 @@ export default function TvModule(): React.JSX.Element {
                   type="button"
                   onClick={() => selectSingle(c.id)}
                   className={clsx(
-                    'flex w-full items-center justify-between rounded border px-3 py-2.5 text-left transition-colors',
+                    'flex w-full items-center justify-between rounded border px-3 py-2.5 text-left t-colors',
                     isActive
                       ? 'border-accent bg-accent/10'
                       : 'border-edge bg-panel hover:border-accent/50 hover:bg-panel2'
@@ -194,7 +183,7 @@ function Player({ channel, muted }: { channel: LiveChannel; muted: boolean }): R
             <button
               type="button"
               onClick={() => window.open(youtubeChannelUrl(channel), '_blank')}
-              className="flex items-center gap-1.5 rounded border border-accent bg-accent/15 px-3 py-1.5 text-[12px] text-accent transition-colors hover:bg-accent/25"
+              className="flex items-center gap-1.5 rounded border border-accent bg-accent/15 px-3 py-1.5 text-[12px] text-accent t-colors hover:bg-accent/25"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               Open on YouTube
@@ -227,7 +216,7 @@ function Player({ channel, muted }: { channel: LiveChannel; muted: boolean }): R
           <button
             type="button"
             onClick={() => window.open(youtubeChannelUrl(channel), '_blank')}
-            className="flex items-center gap-1 text-[11px] text-muted transition-colors hover:text-accent"
+            className="flex items-center gap-1 text-[11px] text-muted t-colors hover:text-accent"
           >
             <ExternalLink className="h-3 w-3" />
             YouTube
@@ -235,7 +224,7 @@ function Player({ channel, muted }: { channel: LiveChannel; muted: boolean }): R
           <button
             type="button"
             onClick={() => setFailed(true)}
-            className="text-[11px] text-muted/60 transition-colors hover:text-text"
+            className="text-[11px] text-muted/60 t-colors hover:text-text"
           >
             Stream not loading?
           </button>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import clsx from 'clsx'
 import { RefreshCw, Loader2, TrendingUp, TrendingDown } from 'lucide-react'
+import { SectionCard, Badge, EmptyState, ErrorBanner, IconButton } from '@/components/ui'
 
 interface StockTwitsMessage {
   id: number
@@ -50,23 +50,20 @@ export default function StockTwits(): React.JSX.Element {
   }, [query, fetchStream])
 
   return (
-    <div className="flex h-full min-h-0 flex-col rounded border border-edge bg-panel">
-      <div className="flex items-center justify-between border-b border-edge px-3 py-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
-          StockTwits
-        </span>
-        <button
-          type="button"
-          onClick={() => fetchStream(query)}
-          className="flex items-center gap-1 text-[10px] text-muted transition-colors hover:text-accent"
-        >
-          <RefreshCw className="h-3 w-3" />
-          Refresh
-        </button>
-      </div>
-
+    <SectionCard
+      title="StockTwits"
+      actions={
+        <IconButton
+          icon={RefreshCw}
+          title="Refresh"
+          size="sm"
+          onClick={() => void fetchStream(query)}
+        />
+      }
+      className="flex h-full min-h-0 flex-col"
+    >
       <form
-        className="flex gap-2 border-b border-edge px-3 py-2"
+        className="flex gap-2 pb-2 border-b border-edge"
         onSubmit={(e) => {
           e.preventDefault()
           setQuery(symbol.trim().toUpperCase())
@@ -80,13 +77,13 @@ export default function StockTwits(): React.JSX.Element {
         />
         <button
           type="submit"
-          className="rounded border border-edge bg-panel2 px-2.5 py-1 text-[11px] text-muted transition-colors hover:border-accent hover:text-text"
+          className="rounded border border-edge bg-panel2 px-2.5 py-1 text-[11px] text-muted t-colors hover:border-accent hover:text-text"
         >
           Load
         </button>
       </form>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto pt-2">
         {status === 'loading' && (
           <div className="flex items-center justify-center gap-2 py-10 text-[12px] text-muted">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -95,54 +92,47 @@ export default function StockTwits(): React.JSX.Element {
         )}
 
         {status === 'error' && (
-          <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
-            <span className="text-[12px] text-muted">Couldn&apos;t load {query} stream.</span>
-            <button
-              type="button"
-              onClick={() => fetchStream(query)}
-              className="flex items-center gap-1.5 rounded border border-accent bg-accent/15 px-3 py-1.5 text-[11px] text-accent transition-colors hover:bg-accent/25"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Retry
-            </button>
-          </div>
+          <ErrorBanner
+            message={`Could not load ${query} stream.`}
+            onRetry={() => void fetchStream(query)}
+          />
         )}
 
-        {status === 'ready' &&
-          (messages.length === 0 ? (
-            <div className="px-4 py-10 text-center text-[12px] text-muted">No messages.</div>
-          ) : (
-            <div className="divide-y divide-edge/50">
-              {messages.map((m) => {
-                const sentiment = (m.entities?.sentiment?.basic ?? null) as Sentiment
-                return (
-                  <div key={m.id} className="px-3 py-2.5">
-                    <div className="mb-1 flex items-center gap-2">
-                      <span className="text-[12px] font-medium text-text">{m.user.username}</span>
-                      <span className="text-[10px] text-muted">{timeAgo(m.created_at)}</span>
-                      {sentiment && (
-                        <span
-                          className={clsx(
-                            'ml-auto flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase',
-                            sentiment === 'Bullish' ? 'bg-up/15 text-up' : 'bg-down/15 text-down'
-                          )}
-                        >
-                          {sentiment === 'Bullish' ? (
-                            <TrendingUp className="h-2.5 w-2.5" />
-                          ) : (
-                            <TrendingDown className="h-2.5 w-2.5" />
-                          )}
-                          {sentiment}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[12px] leading-relaxed text-muted">{m.body}</p>
+        {status === 'ready' && messages.length === 0 && (
+          <EmptyState title="No messages" description={`No recent messages for ${query}.`} />
+        )}
+
+        {status === 'ready' && messages.length > 0 && (
+          <div className="divide-y divide-edge/50">
+            {messages.map((m) => {
+              const sentiment = (m.entities?.sentiment?.basic ?? null) as Sentiment
+              return (
+                <div key={m.id} className="px-1 py-2.5">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="text-[12px] font-medium text-text">{m.user.username}</span>
+                    <span className="text-[10px] text-muted">{timeAgo(m.created_at)}</span>
+                    {sentiment && (
+                      <span className="ml-auto">
+                        <Badge tone={sentiment === 'Bullish' ? 'up' : 'down'}>
+                          <span className="flex items-center gap-1">
+                            {sentiment === 'Bullish' ? (
+                              <TrendingUp className="h-2.5 w-2.5" />
+                            ) : (
+                              <TrendingDown className="h-2.5 w-2.5" />
+                            )}
+                            {sentiment}
+                          </span>
+                        </Badge>
+                      </span>
+                    )}
                   </div>
-                )
-              })}
-            </div>
-          ))}
+                  <p className="text-[12px] leading-relaxed text-muted">{m.body}</p>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
-    </div>
+    </SectionCard>
   )
 }

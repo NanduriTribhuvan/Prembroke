@@ -1,8 +1,16 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import clsx from 'clsx'
 import { Sigma, Search, KeyRound } from 'lucide-react'
+import clsx from 'clsx'
 import { useKeys } from '@/stores/keys'
+import {
+  ModuleHeader,
+  SectionCard,
+  ErrorBanner,
+  EmptyState,
+  SkeletonTable,
+  Badge
+} from '@/components/ui'
 
 interface Row {
   strike: number
@@ -18,7 +26,7 @@ export default function OptionsModule(): React.JSX.Element {
   const [ticker, setTicker] = useState('AAPL')
   const [query, setQuery] = useState('AAPL')
 
-  const { data, isFetching, error } = useQuery({
+  const { data, isFetching, error, refetch } = useQuery({
     queryKey: ['options', query, Boolean(token)],
     enabled: Boolean(token),
     queryFn: () => window.api.options.chain(query, token),
@@ -41,22 +49,34 @@ export default function OptionsModule(): React.JSX.Element {
     return mx || 1
   }, [strikes])
 
+  const searchForm = (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (ticker.trim()) setQuery(ticker.trim().toUpperCase())
+      }}
+      className="flex items-center gap-1.5 rounded border border-edge bg-panel px-2 py-1"
+    >
+      <Search size={13} className="text-muted" />
+      <input
+        value={ticker}
+        onChange={(e) => setTicker(e.target.value)}
+        placeholder="Ticker"
+        className="num w-32 bg-transparent text-[length:var(--text-body)] uppercase text-text outline-none placeholder:normal-case placeholder:text-muted"
+      />
+    </form>
+  )
+
   if (!token) {
     return (
       <div className="flex h-full flex-col">
-        <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-          <Sigma size={18} className="text-gold" />
-          <h1 className="text-[15px] font-semibold text-text">Options Flow</h1>
-        </div>
+        <ModuleHeader icon={Sigma} title="Options flow" />
         <div className="flex flex-1 items-center justify-center p-6">
-          <div className="max-w-md rounded-lg border border-edge bg-panel p-5 text-center">
-            <KeyRound size={26} className="mx-auto mb-3 text-gold" />
-            <div className="mb-1 text-sm font-medium text-text">Connect an options provider</div>
-            <p className="text-xs leading-relaxed text-muted">
-              Add a <b>Tradier</b> token in Settings → API keys to load live options chains (strikes, bid/ask,
-              volume, open interest, IV). Unusual Whales support slots in the same way for unusual-flow alerts.
-            </p>
-          </div>
+          <EmptyState
+            icon={KeyRound}
+            title="Connect an options provider"
+            description="Add a Tradier token in Settings → API keys to load live options chains (strikes, bid/ask, volume, open interest, IV). Unusual Whales support slots in the same way for unusual-flow alerts."
+          />
         </div>
       </div>
     )
@@ -64,84 +84,114 @@ export default function OptionsModule(): React.JSX.Element {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Sigma size={18} className="text-gold" />
-        <h1 className="text-[15px] font-semibold text-text">Options Flow</h1>
-        <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">
-          Tradier{data?.expiration ? ` · exp ${data.expiration}` : ''}
-        </span>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            if (ticker.trim()) setQuery(ticker.trim().toUpperCase())
-          }}
-          className="ml-auto flex items-center gap-1.5 rounded border border-edge bg-panel px-2 py-1"
-        >
-          <Search size={13} className="text-muted" />
-          <input
-            value={ticker}
-            onChange={(e) => setTicker(e.target.value)}
-            placeholder="Ticker"
-            className="num w-32 bg-transparent text-xs uppercase text-text outline-none placeholder:normal-case placeholder:text-muted"
-          />
-        </form>
-      </div>
+      <ModuleHeader
+        icon={Sigma}
+        title="Options flow"
+        badge={data?.expiration ? `Tradier · exp ${data.expiration}` : 'Tradier'}
+        actions={searchForm}
+      />
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {(error || data?.error) && (
-          <div className="m-4 rounded border border-warn/30 bg-warn/10 p-3 text-xs text-warn">
-            {data?.error ?? 'Options lookup failed.'}
-          </div>
+          <ErrorBanner
+            message={data?.error ?? 'Options lookup failed.'}
+            onRetry={() => void refetch()}
+          />
         )}
-        {isFetching && !data && <div className="py-10 text-center text-sm text-muted">Loading chain…</div>}
+
+        {isFetching && !data && (
+          <SectionCard>
+            <SkeletonTable cols={7} rows={10} />
+          </SectionCard>
+        )}
+
         {strikes.length > 0 && (
-          <table className="w-full">
-            <thead className="sticky top-0 z-10 bg-bg">
-              <tr className="border-b border-edge text-[10px] uppercase tracking-wider text-muted">
-                <th colSpan={3} className="py-1.5 text-center font-semibold text-up">Calls</th>
-                <th className="py-1.5 text-center font-semibold">Strike</th>
-                <th colSpan={3} className="py-1.5 text-center font-semibold text-down">Puts</th>
-              </tr>
-              <tr className="border-b border-edge text-[10px] text-muted">
-                <th className="px-2 py-1 text-right">Vol</th>
-                <th className="px-2 py-1 text-right">OI</th>
-                <th className="px-2 py-1 text-right">Bid/Ask</th>
-                <th className="px-2 py-1 text-center"></th>
-                <th className="px-2 py-1 text-left">Bid/Ask</th>
-                <th className="px-2 py-1 text-left">OI</th>
-                <th className="px-2 py-1 text-left">Vol</th>
-              </tr>
-            </thead>
-            <tbody>
-              {strikes.map(([strike, v]) => {
-                const callHot = (v.call?.volume ?? 0) > maxVol * 0.5
-                const putHot = (v.put?.volume ?? 0) > maxVol * 0.5
-                return (
-                  <tr key={strike} className="border-b border-edge/30 text-[11px]">
-                    <td className={clsx('num px-2 py-1 text-right', callHot ? 'font-bold text-gold' : 'text-up')}>
-                      {v.call?.volume ?? '—'}
-                    </td>
-                    <td className="num px-2 py-1 text-right text-muted">{v.call?.openInterest ?? '—'}</td>
-                    <td className="num px-2 py-1 text-right text-muted">
-                      {v.call ? `${v.call.bid.toFixed(2)}/${v.call.ask.toFixed(2)}` : '—'}
-                    </td>
-                    <td className="num bg-panel/40 px-2 py-1 text-center font-semibold text-text">{strike}</td>
-                    <td className="num px-2 py-1 text-left text-muted">
-                      {v.put ? `${v.put.bid.toFixed(2)}/${v.put.ask.toFixed(2)}` : '—'}
-                    </td>
-                    <td className="num px-2 py-1 text-left text-muted">{v.put?.openInterest ?? '—'}</td>
-                    <td className={clsx('num px-2 py-1 text-left', putHot ? 'font-bold text-gold' : 'text-down')}>
-                      {v.put?.volume ?? '—'}
-                    </td>
+          <SectionCard>
+            {/* Column group labels */}
+            <div className="flex border-b border-edge pb-1.5 mb-0">
+              <div className="flex-1 text-center">
+                <Badge tone="up">Calls</Badge>
+              </div>
+              <div className="w-24 text-center">
+                <span className="text-[length:var(--text-caption)] uppercase tracking-wider text-muted">
+                  Strike
+                </span>
+              </div>
+              <div className="flex-1 text-center">
+                <Badge tone="down">Puts</Badge>
+              </div>
+            </div>
+
+            {/* Sub-header */}
+            <div className="-mx-3">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-edge text-[length:var(--text-label)] uppercase tracking-wider text-muted">
+                    <th className="px-2 py-1.5 text-right font-semibold">Vol</th>
+                    <th className="px-2 py-1.5 text-right font-semibold">OI</th>
+                    <th className="px-2 py-1.5 text-right font-semibold">Bid/Ask</th>
+                    <th className="px-2 py-1.5 text-center font-semibold w-24"></th>
+                    <th className="px-2 py-1.5 text-left font-semibold">Bid/Ask</th>
+                    <th className="px-2 py-1.5 text-left font-semibold">OI</th>
+                    <th className="px-2 py-1.5 text-left font-semibold">Vol</th>
                   </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {strikes.map(([strike, v]) => {
+                    const callHot = (v.call?.volume ?? 0) > maxVol * 0.5
+                    const putHot = (v.put?.volume ?? 0) > maxVol * 0.5
+                    return (
+                      <tr
+                        key={strike}
+                        className="data-row border-b border-edge last:border-0 text-[length:var(--text-caption)]"
+                      >
+                        <td
+                          className={clsx(
+                            'num px-2 py-1.5 text-right',
+                            callHot ? 'font-bold text-gold' : 'text-up'
+                          )}
+                        >
+                          {v.call?.volume ?? '—'}
+                        </td>
+                        <td className="num px-2 py-1.5 text-right text-muted">
+                          {v.call?.openInterest ?? '—'}
+                        </td>
+                        <td className="num px-2 py-1.5 text-right text-muted">
+                          {v.call ? `${v.call.bid.toFixed(2)}/${v.call.ask.toFixed(2)}` : '—'}
+                        </td>
+                        <td className="num px-2 py-1.5 text-center font-semibold text-text bg-panel2/40 w-24">
+                          {strike}
+                        </td>
+                        <td className="num px-2 py-1.5 text-left text-muted">
+                          {v.put ? `${v.put.bid.toFixed(2)}/${v.put.ask.toFixed(2)}` : '—'}
+                        </td>
+                        <td className="num px-2 py-1.5 text-left text-muted">
+                          {v.put?.openInterest ?? '—'}
+                        </td>
+                        <td
+                          className={clsx(
+                            'num px-2 py-1.5 text-left',
+                            putHot ? 'font-bold text-gold' : 'text-down'
+                          )}
+                        >
+                          {v.put?.volume ?? '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="mt-2 text-[length:var(--text-caption)] text-muted">
+              Nearest-expiry chain. Gold = unusually high volume vs the chain. IV/greeks via Tradier.
+            </p>
+          </SectionCard>
         )}
-        <p className="px-4 py-3 text-[10px] text-muted">
-          Nearest-expiry chain. Gold = unusually high volume vs the chain. IV/greeks via Tradier.
-        </p>
+
+        {!isFetching && !error && strikes.length === 0 && data && (
+          <EmptyState title="No chain data" description="No strikes returned for this ticker and expiry." />
+        )}
       </div>
     </div>
   )

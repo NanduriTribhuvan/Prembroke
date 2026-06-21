@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
-import clsx from 'clsx'
-import { Search } from 'lucide-react'
+import { AtSign, Search } from 'lucide-react'
 import { X_ACCOUNTS, X_CATEGORIES } from '@shared/config/x-accounts'
 import type { XCategory } from '@shared/config/x-accounts'
 import XTimeline from './XTimeline'
 import StockTwits from './StockTwits'
+import { ModuleHeader, TabBar } from '@/components/ui'
 
 const TAB_KEY = 'tdx.social.tab'
 
@@ -24,8 +24,8 @@ export default function SocialModule(): React.JSX.Element {
   const [tab, setTab] = useState<XCategory>(initialTab)
   const [filter, setFilter] = useState('')
 
-  const select = (next: XCategory): void => {
-    setTab(next)
+  const select = (next: string): void => {
+    setTab(next as XCategory)
     localStorage.setItem(TAB_KEY, next)
   }
 
@@ -35,42 +35,29 @@ export default function SocialModule(): React.JSX.Element {
     return q === '' ? list : list.filter((h) => h.toLowerCase().includes(q))
   }, [tab, filter])
 
+  const tabs = X_CATEGORIES.map((c) => ({ id: c, label: LABELS[c] }))
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Header + tabs */}
-      <div className="border-b border-edge px-6 pt-4">
-        <h1 className="text-[15px] font-medium text-text">X Pulse</h1>
-        <p className="mb-3 text-[11px] text-muted">
-          Curated X timelines and StockTwits sentiment. Official embeds only — no API keys.
-        </p>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex gap-1">
-            {X_CATEGORIES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => select(c)}
-                className={clsx(
-                  'rounded-t border-b-2 px-3 py-2 text-[12px] transition-colors',
-                  tab === c
-                    ? 'border-accent text-accent'
-                    : 'border-transparent text-muted hover:text-text'
-                )}
-              >
-                {LABELS[c]}
-              </button>
-            ))}
-          </div>
-          <div className="relative mb-1 hidden sm:block">
-            <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
+      <ModuleHeader
+        icon={AtSign}
+        title="X Pulse"
+        badge="Official embeds only"
+        actions={
+          <div className="relative flex items-center">
+            <Search className="pointer-events-none absolute left-2 h-3.5 w-3.5 text-muted" />
             <input
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Filter accounts…"
-              className="w-44 rounded border border-edge bg-panel2 py-1 pl-7 pr-2 text-[12px] text-text outline-none focus:border-accent"
+              className="w-40 rounded border border-edge bg-panel2 py-1 pl-7 pr-2 text-[12px] text-text outline-none focus:border-accent"
             />
           </div>
-        </div>
+        }
+      />
+
+      <div className="border-b border-edge px-4 py-2">
+        <TabBar tabs={tabs} active={tab} onTabChange={select} size="sm" />
       </div>
 
       {/* Body: timelines (left) + StockTwits (right) */}
