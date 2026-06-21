@@ -31,6 +31,7 @@
   --color-accent-strong: #ba8d1c;
   --color-accent-soft: rgba(217, 165, 33, 0.14);
   --color-ring: rgba(217, 165, 33, 0.45);
+  --color-scrim: rgba(0, 0, 0, 0.55);
   --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
 }
@@ -56,6 +57,8 @@ body {
    default look unchanged while giving hover/elevation a single feel. */
 :root {
   --motion-fast: 150ms;
+  --motion-medium: 250ms;
+  --motion-slow: 400ms;
   --motion-ease: cubic-bezier(0.2, 0.6, 0.2, 1);
   /* Density-aware base spacing (overridden at runtime by applyTheme()). */
   --space-card: 12px;
@@ -63,6 +66,21 @@ body {
   --control-h: 28px;
   --font-base: 13px;
   --row-h: 26px;
+  /* Type scale — additive to --font-base, used via text-[var(--text-*)]. */
+  --text-display: 22px;
+  --text-heading: 15px;
+  --text-subhead: 13px;
+  --text-body: 13px;
+  --text-label: 11px;
+  --text-caption: 10px;
+  --text-micro: 9px;
+  /* Chrome dimensions — single source of truth for shell heights/widths. */
+  --sidebar-w: 176px;
+  --sidebar-collapsed-w: 48px;
+  --tape-h: 32px;
+  --cmdbar-h: 32px;
+  --statusbar-h: 24px;
+  --header-h: 36px;
 }
 
 .t-colors {
@@ -81,6 +99,15 @@ body {
 .num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+}
+
+/* Dense data-grid row — the standard row treatment across every table/list. */
+.data-row {
+  height: var(--row-h);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-edge) 50%, transparent);
+}
+.data-row:hover {
+  background-color: var(--color-panel2);
 }
 
 /* Accessible focus ring driven by the accent. The `.focus-ring` utility opts a

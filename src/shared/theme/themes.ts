@@ -91,6 +91,7 @@ export interface ThemeTokens {
   accentStrong: string
   accentSoft: string
   ring: string
+  scrim: string
 }
 
 /** A fully-resolved theme: mode + concrete tokens + density metrics. */
@@ -269,7 +270,8 @@ export function resolveTheme(mode: ThemeMode, accent: AccentId, density: Density
           textTertiary: base.muted,
           accentStrong: ramp.strong,
           accentSoft: ramp.soft,
-          ring: ramp.ring
+          ring: ramp.ring,
+          scrim: withAlpha('#000000', 0.55)
         }
       : {
           // legacy (light)
@@ -298,7 +300,8 @@ export function resolveTheme(mode: ThemeMode, accent: AccentId, density: Density
           textTertiary: base.muted,
           accentStrong: ramp.strong,
           accentSoft: ramp.soft,
-          ring: ramp.ring
+          ring: ramp.ring,
+          scrim: withAlpha('#000000', 0.4)
         }
 
   return { mode, tokens, density: resolveDensity(density) }
@@ -338,6 +341,7 @@ export function tokensToCssVars(t: ThemeTokens): Record<string, string> {
     '--color-text-tertiary': t.textTertiary,
     '--color-accent-strong': t.accentStrong,
     '--color-accent-soft': t.accentSoft,
-    '--color-ring': t.ring
+    '--color-ring': t.ring,
+    '--color-scrim': t.scrim
   }
 }
