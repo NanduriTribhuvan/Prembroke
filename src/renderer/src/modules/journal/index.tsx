@@ -4,6 +4,7 @@ import { BookOpen, Plus, Trash2, TrendingUp, Award, Loader2 } from 'lucide-react
 import { useJournal, type JournalTrade, type TradeStatus } from '@/stores/journal'
 import { fetchCandles, computeConviction } from '@/modules/conviction/engine'
 import { ModuleHeader, SectionCard, Stat, EmptyState } from '@/components/ui'
+import { edgeStats, equityCurve, edgeBy } from '@shared/analysis'
 
 function sessionLabel(d = new Date()): string {
   const h = d.getUTCHours()
@@ -25,6 +26,69 @@ const GRADE_COLOR: Record<string, string> = {
   B: 'text-accent',
   C: 'text-warn',
   skip: 'text-muted'
+}
+
+/** Cumulative-R equity curve as an inline SVG, green/red by final sign. */
+function EquitySpark({ points }: { points: { cumR: number }[] }): React.JSX.Element {
+  if (points.length < 2) {
+    return <div className="flex h-16 items-center justify-center text-[11px] text-text-tertiary">Close 2+ trades to plot your equity curve</div>
+  }
+  const ys = points.map((p) => p.cumR)
+  const min = Math.min(0, ...ys)
+  const max = Math.max(0, ...ys)
+  const range = max - min || 1
+  const w = 100
+  const h = 40
+  const path = points
+    .map((p, i) => {
+      const x = (i / (points.length - 1)) * w
+      const y = h - ((p.cumR - min) / range) * h
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`
+    })
+    .join(' ')
+  const last = ys[ys.length - 1]
+  const stroke = last >= 0 ? 'var(--color-up)' : 'var(--color-down)'
+  const zeroY = h - ((0 - min) / range) * h
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-16 w-full">
+      <line x1="0" y1={zeroY} x2={w} y2={zeroY} stroke="var(--color-edge)" strokeWidth="0.5" />
+      <path d={path} fill="none" stroke={stroke} strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
+    </svg>
+  )
+}
+
+/** A by-tag edge breakdown (grade / session / killzone): total R + win rate bar. */
+function EdgeBreakdown({
+  buckets,
+  colorOf
+}: {
+  buckets: { key: string; stats: { totalR: number; winRate: number; count: number } }[]
+  colorOf?: (key: string) => string
+}): React.JSX.Element {
+  if (buckets.length === 0) {
+    return <div className="text-[11px] text-text-tertiary">No closed trades yet.</div>
+  }
+  return (
+    <div className="space-y-2">
+      {buckets.map((b) => (
+        <div key={b.key}>
+          <div className="flex items-center justify-between text-[11px]">
+            <span className={colorOf ? colorOf(b.key) : 'text-text-secondary'}>{b.key}</span>
+            <span className="num text-text-tertiary">
+              <span className={b.stats.totalR >= 0 ? 'text-up' : 'text-down'}>
+                {b.stats.totalR >= 0 ? '+' : ''}
+                {b.stats.totalR.toFixed(1)}R
+              </span>{' '}
+              · {(b.stats.winRate * 100).toFixed(0)}% · {b.stats.count}
+            </span>
+          </div>
+          <div className="mt-1 h-1 overflow-hidden rounded-sm bg-panel2">
+            <div className="h-full bg-up/60" style={{ width: `${b.stats.winRate * 100}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export default function JournalModule(): React.JSX.Element {
@@ -84,29 +148,16 @@ export default function JournalModule(): React.JSX.Element {
   const open = trades.filter((t) => t.status === 'open')
 
   const edge = useMemo(() => {
-    const wins = closed.filter((t) => t.status === 'win')
-    const winRate = closed.length ? (wins.length / closed.length) * 100 : 0
-    const totalR = closed.reduce((s, t) => s + (t.resultR ?? 0), 0)
-    const expectancy = closed.length ? totalR / closed.length : 0
-    const byGrade = ['A+', 'A', 'B', 'C'].map((g) => {
-      const set = closed.filter((t) => t.grade === g)
-      const w = set.filter((t) => t.status === 'win').length
-      return { g, n: set.length, wr: set.length ? (w / set.length) * 100 : 0 }
-    })
-    const kz = closed.filter((t) => t.killzone)
-    const noKz = closed.filter((t) => !t.killzone)
-    const wr = (arr: JournalTrade[]): number =>
-      arr.length ? (arr.filter((t) => t.status === 'win').length / arr.length) * 100 : 0
-    return {
-      winRate,
-      totalR,
-      expectancy,
-      byGrade,
-      kzWr: wr(kz),
-      noKzWr: wr(noKz),
-      kzN: kz.length,
-      noKzN: noKz.length
-    }
+    // Real edge analytics over closed trades (R-based expectancy, profit factor,
+    // streaks, drawdown) from the shared, unit-tested analytics layer. Closed
+    // trades always carry a numeric resultR; coerce the nullable store type.
+    const ct = closed.map((t) => ({ ...t, resultR: t.resultR ?? 0 }))
+    const stats = edgeStats(ct)
+    const curve = equityCurve(ct)
+    const byGrade = edgeBy(ct, (t) => t.grade)
+    const bySession = edgeBy(ct, (t) => t.session)
+    const byKillzone = edgeBy(ct, (t) => (t.killzone ? 'In killzone' : 'Off killzone'))
+    return { stats, curve, byGrade, bySession, byKillzone }
   }, [closed])
 
   return (
@@ -127,12 +178,12 @@ export default function JournalModule(): React.JSX.Element {
                   value={symbol}
                   onChange={(e) => setSymbol(e.target.value)}
                   placeholder="BTCUSDT"
-                  className="num rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
+                  className="num rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-accent/50"
                 />
                 <select
                   value={side}
                   onChange={(e) => setSide(e.target.value as 'long' | 'short')}
-                  className="rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
+                  className="rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-accent/50"
                 >
                   <option value="long">Long</option>
                   <option value="short">Short</option>
@@ -141,31 +192,31 @@ export default function JournalModule(): React.JSX.Element {
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Note"
-                  className="rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
+                  className="rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-accent/50"
                 />
                 <input
                   value={entry}
                   onChange={(e) => setEntry(e.target.value)}
                   placeholder="Entry"
-                  className="num rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
+                  className="num rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-accent/50"
                 />
                 <input
                   value={stop}
                   onChange={(e) => setStop(e.target.value)}
                   placeholder="Stop"
-                  className="num rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
+                  className="num rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-accent/50"
                 />
                 <input
                   value={target}
                   onChange={(e) => setTarget(e.target.value)}
                   placeholder="Target"
-                  className="num rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-gold/50"
+                  className="num rounded border border-edge bg-panel2 px-2 py-1.5 text-xs text-text outline-none focus:border-accent/50"
                 />
               </div>
               <button
                 type="submit"
                 disabled={snapping}
-                className="t-colors mt-1 flex items-center gap-1.5 rounded bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent hover:bg-gold/30 disabled:opacity-50"
+                className="t-colors mt-1 flex items-center gap-1.5 rounded bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 disabled:opacity-50"
               >
                 {snapping ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
                 {snapping ? 'Capturing conviction…' : 'Log trade'}
@@ -279,52 +330,63 @@ export default function JournalModule(): React.JSX.Element {
           <div className="grid grid-cols-2 gap-2">
             <Stat
               label="Win rate"
-              value={`${edge.winRate.toFixed(0)}%`}
-              tone={edge.winRate >= 50 ? 'up' : 'down'}
-              mono
-            />
-            <Stat
-              label="Total R"
-              value={`${edge.totalR >= 0 ? '+' : ''}${edge.totalR.toFixed(1)}`}
-              tone={edge.totalR >= 0 ? 'up' : 'down'}
+              value={`${(edge.stats.winRate * 100).toFixed(0)}%`}
+              tone={edge.stats.winRate >= 0.5 ? 'up' : 'down'}
               mono
             />
             <Stat
               label="Expectancy"
-              value={`${edge.expectancy >= 0 ? '+' : ''}${edge.expectancy.toFixed(2)}R`}
-              tone={edge.expectancy >= 0 ? 'up' : 'down'}
+              value={`${edge.stats.expectancy >= 0 ? '+' : ''}${edge.stats.expectancy.toFixed(2)}R`}
+              tone={edge.stats.expectancy >= 0 ? 'up' : 'down'}
               mono
             />
-            <Stat label="Closed" value={`${closed.length}`} mono />
+            <Stat
+              label="Total R"
+              value={`${edge.stats.totalR >= 0 ? '+' : ''}${edge.stats.totalR.toFixed(1)}`}
+              tone={edge.stats.totalR >= 0 ? 'up' : 'down'}
+              mono
+            />
+            <Stat
+              label="Profit factor"
+              value={
+                edge.stats.profitFactor === Infinity
+                  ? '∞'
+                  : edge.stats.profitFactor.toFixed(2)
+              }
+              tone={edge.stats.profitFactor >= 1 ? 'up' : 'down'}
+              mono
+            />
+            <Stat
+              label="Max drawdown"
+              value={`-${edge.stats.maxDrawdownR.toFixed(1)}R`}
+              tone="down"
+              mono
+            />
+            <Stat
+              label="Win / loss streak"
+              value={`${edge.stats.maxWinStreak}W · ${edge.stats.maxLossStreak}L`}
+              mono
+            />
           </div>
 
-          <SectionCard title="Win rate by grade" icon={Award}>
-            {edge.byGrade.map((g) => (
-              <div key={g.g} className="mb-1.5">
-                <div className="flex justify-between text-[11px]">
-                  <span className={GRADE_COLOR[g.g]}>{g.g}</span>
-                  <span className="num text-muted">{g.n ? `${g.wr.toFixed(0)}% · ${g.n}` : '—'}</span>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded bg-panel2">
-                  <div className="h-full rounded bg-up/60" style={{ width: `${g.wr}%` }} />
-                </div>
-              </div>
-            ))}
+          <SectionCard title="Equity curve (R)" icon={TrendingUp}>
+            <EquitySpark points={edge.curve} />
+            <div className="mt-1 flex justify-between text-[10px] text-text-tertiary">
+              <span className="num">avg win {edge.stats.avgWin.toFixed(2)}R</span>
+              <span className="num">avg loss {edge.stats.avgLoss.toFixed(2)}R</span>
+            </div>
           </SectionCard>
 
-          <SectionCard title="Killzone edge" icon={TrendingUp}>
-            <div className="flex justify-between text-xs">
-              <span className="text-text">In killzone</span>
-              <span className="num text-up">
-                {edge.kzN ? `${edge.kzWr.toFixed(0)}% · ${edge.kzN}` : '—'}
-              </span>
-            </div>
-            <div className="mt-1 flex justify-between text-xs">
-              <span className="text-text">Outside killzone</span>
-              <span className="num text-down">
-                {edge.noKzN ? `${edge.noKzWr.toFixed(0)}% · ${edge.noKzN}` : '—'}
-              </span>
-            </div>
+          <SectionCard title="Edge by grade" icon={Award}>
+            <EdgeBreakdown buckets={edge.byGrade} colorOf={(k) => GRADE_COLOR[k] ?? 'text-text-secondary'} />
+          </SectionCard>
+
+          <SectionCard title="Edge by killzone" icon={TrendingUp}>
+            <EdgeBreakdown buckets={edge.byKillzone} />
+          </SectionCard>
+
+          <SectionCard title="Edge by session" icon={TrendingUp}>
+            <EdgeBreakdown buckets={edge.bySession} />
           </SectionCard>
         </div>
       </div>
