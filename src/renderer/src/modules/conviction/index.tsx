@@ -32,6 +32,7 @@ import {
   seasonalBias
 } from '@shared/markets'
 import type { Candle } from '@shared/indicators'
+import { anchoredVwap, ichimoku, volumeProfile } from '@shared/indicators'
 import { WEIGHTABLE_FACTORS, type AssetSignals, type FactorGroup } from '@shared/conviction'
 import {
   expiries,
@@ -455,6 +456,89 @@ function ContextChip({ factor }: { factor: ConvictionResult['factors'][number] }
   )
 }
 
+/**
+ * Pro-indicator readout — anchored VWAP, Ichimoku cloud and the Volume-Profile
+ * Point of Control, computed live from the conviction candles. Pure
+ * `@shared/indicators` math; renders a compact instrument strip.
+ */
+function ProIndicators({ candles, price }: { candles: Candle[]; price: number }): React.JSX.Element | null {
+  const pro = useMemo(() => {
+    if (candles.length < 20) return null
+    const vw = anchoredVwap(candles, 0)
+    const vwapNow = vw[vw.length - 1]
+    const ich = ichimoku(candles)
+    const last = candles.length - 1
+    const spanA = ich.senkouA[last]
+    const spanB = ich.senkouB[last]
+    let cloud: 'above' | 'below' | 'inside' | 'na' = 'na'
+    if (Number.isFinite(spanA) && Number.isFinite(spanB)) {
+      const top = Math.max(spanA, spanB)
+      const bot = Math.min(spanA, spanB)
+      cloud = price > top ? 'above' : price < bot ? 'below' : 'inside'
+    }
+    const vp = volumeProfile(candles, 24)
+    return { vwapNow, cloud, poc: vp.poc, vah: vp.vah, val: vp.val }
+  }, [candles, price])
+
+  if (!pro) return null
+  const vwapSide = Number.isFinite(pro.vwapNow) ? (price >= pro.vwapNow ? 'above' : 'below') : 'na'
+  const pocSide = Number.isFinite(pro.poc) ? (price >= pro.poc ? 'above' : 'below') : 'na'
+  const cell = (label: string, value: string, tone: 'up' | 'down' | 'muted'): React.JSX.Element => (
+    <div className="flex flex-col gap-0.5 border-r border-edge px-3 py-2 last:border-r-0">
+      <span className="text-[9px] uppercase tracking-[0.09em] text-text-tertiary">{label}</span>
+      <span
+        className={clsx(
+          'num text-[12px] font-semibold',
+          tone === 'up' ? 'text-up' : tone === 'down' ? 'text-down' : 'text-text-secondary'
+        )}
+      >
+        {value}
+      </span>
+    </div>
+  )
+
+  return (
+    <div className="mt-3 overflow-hidden rounded-sm border border-edge">
+      <div className="border-b border-edge bg-panel2 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.09em] text-text-tertiary">
+        Pro indicators
+      </div>
+      <div className="grid grid-cols-3 sm:grid-cols-5">
+        {cell(
+          'Anchored VWAP',
+          vwapSide === 'na' ? '—' : vwapSide === 'above' ? 'PRICE ABOVE' : 'PRICE BELOW',
+          vwapSide === 'above' ? 'up' : vwapSide === 'below' ? 'down' : 'muted'
+        )}
+        {cell(
+          'Ichimoku cloud',
+          pro.cloud === 'na'
+            ? '—'
+            : pro.cloud === 'above'
+              ? 'BULLISH'
+              : pro.cloud === 'below'
+                ? 'BEARISH'
+                : 'IN CLOUD',
+          pro.cloud === 'above' ? 'up' : pro.cloud === 'below' ? 'down' : 'muted'
+        )}
+        {cell(
+          'VPVR POC',
+          Number.isFinite(pro.poc) ? pro.poc.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—',
+          pocSide === 'above' ? 'up' : pocSide === 'below' ? 'down' : 'muted'
+        )}
+        {cell(
+          'Value area high',
+          Number.isFinite(pro.vah) ? pro.vah.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—',
+          'muted'
+        )}
+        {cell(
+          'Value area low',
+          Number.isFinite(pro.val) ? pro.val.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—',
+          'muted'
+        )}
+      </div>
+    </div>
+  )
+}
+
 const GROUP_ORDER: FactorGroup[] = ['Structure', 'Momentum', 'Timing', 'Asset']
 
 /** Trader-tunable factor-weight panel — persists, applies to every score. */
@@ -784,6 +868,8 @@ export default function ConvictionModule(): React.JSX.Element {
                   </div>
                 )}
               </div>
+
+              <ProIndicators candles={data.candles} price={data.price} />
 
               {data.factors.some((f) => f.key === 'newsrisk') && (
                 <div className="mt-3 flex items-center gap-2 rounded-sm border border-down/30 bg-down/10 px-4 py-2 text-xs">

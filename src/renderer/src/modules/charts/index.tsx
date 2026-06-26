@@ -8,13 +8,22 @@ import { LayoutDashboard } from 'lucide-react'
 
 // TradingView embed uses literal colours for the chart background/grid.
 // These cannot be CSS vars because the embed config is a JSON string.
+// Kept in sync with the institutional-weapon dark theme (near-black + steel grid).
 const TV_COLORS = {
-  background: '#14110b',
-  grid: 'rgba(52,44,28,0.6)',
+  background: '#0d0f13',
+  grid: 'rgba(28,33,43,0.7)',
 } as const
 
-/** Single TradingView Advanced Chart embed. Rebuilds when symbol/interval change. */
-function TVChart({ symbol, interval }: { symbol: string; interval: string }): React.JSX.Element {
+/** Single TradingView Advanced Chart embed. Rebuilds when symbol/interval/studies change. */
+function TVChart({
+  symbol,
+  interval,
+  studies
+}: {
+  symbol: string
+  interval: string
+  studies: string[]
+}): React.JSX.Element {
   const host = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -42,11 +51,11 @@ function TVChart({ symbol, interval }: { symbol: string; interval: string }): Re
       gridColor: TV_COLORS.grid,
       hide_side_toolbar: false,
       allow_symbol_change: true,
-      studies: ['STD;EMA', 'STD;RSI'],
+      studies,
       support_host: 'https://www.tradingview.com'
     })
     el.appendChild(script)
-  }, [symbol, interval])
+  }, [symbol, interval, studies])
 
   return (
     <div
@@ -82,6 +91,17 @@ const LAYOUT_TABS = [
   { id: '4', label: '4×' }
 ]
 
+/** Indicator study sets for the TradingView embed. Pro = the "add-for-pro" set. */
+const STUDY_SETS: Record<string, string[]> = {
+  default: ['STD;EMA', 'STD;RSI'],
+  pro: ['STD;Ichimoku%1Cloud', 'STD;VWAP', 'STD;EMA']
+}
+
+const STUDY_TABS = [
+  { id: 'default', label: 'EMA · RSI' },
+  { id: 'pro', label: 'Ichimoku · VWAP' }
+]
+
 export default function ChartsModule(): React.JSX.Element {
   const [layout, setLayout] = useState<Layout>(1)
   const [interval, setInterval] = useState('240')
@@ -93,6 +113,7 @@ export default function ChartsModule(): React.JSX.Element {
   ])
   const [activePane, setActivePane] = useState(0)
   const [input, setInput] = useState('')
+  const [studySet, setStudySet] = useState('default')
 
   const setPaneSymbol = (sym: string): void => {
     setSymbols((prev) => {
@@ -125,7 +146,7 @@ export default function ChartsModule(): React.JSX.Element {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={`Pane ${activePane + 1} symbol`}
-                className="num w-48 rounded border border-edge bg-panel px-2 py-1 text-[length:var(--text-caption)] text-text outline-none focus:border-gold/50 t-colors"
+                className="num w-48 rounded border border-edge bg-panel px-2 py-1 text-[length:var(--text-caption)] text-text outline-none focus:border-accent/50 t-colors"
               />
             </form>
 
@@ -150,6 +171,16 @@ export default function ChartsModule(): React.JSX.Element {
               tabs={INTERVAL_TABS}
               active={interval}
               onTabChange={setInterval}
+              size="sm"
+            />
+
+            <ToolbarDivider />
+
+            {/* Studies picker — default vs the pro indicator set */}
+            <TabBar
+              tabs={STUDY_TABS}
+              active={studySet}
+              onTabChange={setStudySet}
               size="sm"
             />
 
@@ -196,7 +227,7 @@ export default function ChartsModule(): React.JSX.Element {
                 {sym.split(':')[1] ?? sym}
               </span>
             )}
-            <TVChart symbol={sym} interval={interval} />
+            <TVChart symbol={sym} interval={interval} studies={STUDY_SETS[studySet]} />
           </div>
         ))}
       </div>
