@@ -116,7 +116,7 @@ function useRadar() {
 }
 
 function confColor(s: number): string {
-  return s >= 80 ? 'text-up' : s >= 70 ? 'text-up' : s >= 58 ? 'text-gold' : 'text-muted'
+  return s >= 80 ? 'text-up' : s >= 70 ? 'text-up' : s >= 58 ? 'text-accent' : 'text-muted'
 }
 
 export default function AlphaModule(): React.JSX.Element {
@@ -147,13 +147,13 @@ export default function AlphaModule(): React.JSX.Element {
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {/* greeting headline */}
-        <div className="mb-4 rounded-lg border border-edge bg-gradient-to-br from-leaf/20 to-gold/10 p-4">
+        <div className="mb-4 rounded-sm border border-edge bg-gradient-to-br from-leaf/20 to-gold/10 p-4">
           <div className="text-lg font-semibold text-text">
             {greeting}. {data ? (
               <>
                 I found <span className="text-up">{data.opportunities.length} opportunities</span>,{' '}
                 <span className="text-down">{data.risks.length} risks</span>, and{' '}
-                <span className="text-gold">{data.narrative.length} narrative reads</span> before the bell.
+                <span className="text-accent">{data.narrative.length} narrative reads</span> before the bell.
               </>
             ) : (
               'Scanning the market for alpha…'
@@ -195,14 +195,14 @@ export default function AlphaModule(): React.JSX.Element {
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') focus(o.symbol)
                         }}
-                        className="group flex w-full cursor-pointer items-start gap-3 rounded-lg border border-edge bg-elevated p-3 text-left hover:border-gold/40"
+                        className="group flex w-full cursor-pointer items-start gap-3 rounded-sm border border-edge bg-elevated p-3 text-left hover:border-gold/40"
                       >
                         <span className="num text-[11px] text-muted">{i + 1}</span>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-[14px] font-semibold text-text">{o.symbol.replace('USDT', '')}</span>
                             <BiasChip bias={o.bias} />
-                            {o.plan && <span className="num text-[10px] text-gold">R:R {o.plan.rr.toFixed(1)}</span>}
+                            {o.plan && <span className="num text-[10px] text-accent">R:R {o.plan.rr.toFixed(1)}</span>}
                           </div>
                           <div className="mt-1 flex flex-wrap gap-1">
                             {o.factors
@@ -226,7 +226,7 @@ export default function AlphaModule(): React.JSX.Element {
                               runResearch(o.symbol)
                             }}
                             title="Run the AI Research Team on this setup"
-                            className="flex items-center gap-1 rounded bg-gold/15 px-2 py-1 text-[10px] font-medium text-gold opacity-0 transition-opacity hover:bg-gold/25 group-hover:opacity-100"
+                            className="flex items-center gap-1 rounded bg-gold/15 px-2 py-1 text-[10px] font-medium text-accent opacity-0 transition-opacity hover:bg-gold/25 group-hover:opacity-100"
                           >
                             <Users size={11} /> Deep dive
                           </button>
@@ -246,7 +246,7 @@ export default function AlphaModule(): React.JSX.Element {
                 ) : (
                   <div className="space-y-1.5">
                     {data.risks.map((r, i) => (
-                      <div key={i} className="rounded-lg border border-down/20 bg-down/5 p-2 text-[12px] text-text">
+                      <div key={i} className="rounded-sm border border-down/20 bg-down/5 p-2 text-[12px] text-text">
                         {r}
                       </div>
                     ))}
@@ -257,7 +257,7 @@ export default function AlphaModule(): React.JSX.Element {
               <SectionCard title="Emerging narrative" icon={Radio}>
                 <div className="space-y-1.5">
                   {data.narrative.map((n, i) => (
-                    <div key={i} className="rounded-lg border border-edge bg-elevated p-2 text-[12px] text-text">
+                    <div key={i} className="rounded-sm border border-edge bg-elevated p-2 text-[12px] text-text">
                       {n}
                     </div>
                   ))}

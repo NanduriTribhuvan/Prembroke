@@ -70,26 +70,26 @@ describe('tokensToCssVars completeness', () => {
 describe('dark parity (regression lock)', () => {
   it('locks the legacy dark tokens to the exact main.css hexes', () => {
     const { tokens } = resolveTheme('dark', 'gold', 'cozy')
-    expect(tokens.bg).toBe('#0d0e11')
-    expect(tokens.panel).toBe('#15171c')
-    expect(tokens.panel2).toBe('#1d2027')
-    expect(tokens.edge).toBe('#2a2e37')
-    expect(tokens.muted).toBe('#8e94a3')
-    expect(tokens.text).toBe('#e7e9ee')
-    expect(tokens.accent2).toBe('#6b93b8')
-    expect(tokens.leaf).toBe('#15202c')
-    expect(tokens.olive).toBe('#2b4a63')
+    expect(tokens.bg).toBe('#08090c')
+    expect(tokens.panel).toBe('#0d0f13')
+    expect(tokens.panel2).toBe('#13161c')
+    expect(tokens.edge).toBe('#1c212b')
+    expect(tokens.muted).toBe('#7e8799')
+    expect(tokens.text).toBe('#f4f6fa')
+    expect(tokens.accent2).toBe('#42506a')
+    expect(tokens.leaf).toBe('#0e1620')
+    expect(tokens.olive).toBe('#1a2738')
     expect(tokens.up).toBe('#16c784')
     expect(tokens.down).toBe('#ea3943')
     expect(tokens.warn).toBe('#f0b90b')
   })
 
-  it('locks the default Gold accent + gold highlight for dark', () => {
+  it('locks the default Amber accent + gold highlight for dark', () => {
     const { tokens } = resolveTheme('dark', 'gold', 'cozy')
-    // Default accent is the legacy bright gold; the text-gold highlight is its
-    // lightened form. Both are pinned so dark never drifts.
-    expect(tokens.accent).toBe('#d9a521')
-    expect(tokens.gold).toBe('#e0b549')
+    // Default accent is the electric instrument-amber; the text-gold highlight
+    // is its lightened form. Both are pinned so dark never drifts.
+    expect(tokens.accent).toBe('#f5a524')
+    expect(tokens.gold).toBe('#f7b54b')
   })
 })
 

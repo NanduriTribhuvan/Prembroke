@@ -44,18 +44,18 @@ const MODE_OPTIONS: { id: AppThemeMode; label: string; Icon: typeof Sun }[] = [
 /**
  * A small live composition that reads the live theme CSS vars, so it re-renders
  * instantly as the user flips mode / accent / density. Demonstrates the surface
- * elevation, accent fill, focus ring, up/down, and a `text-gold` highlight.
+ * elevation, accent fill, focus ring, up/down, and a `text-accent` highlight.
  */
 function ThemePreview(): React.JSX.Element {
   return (
-    <div className="rounded-lg border border-edge bg-panel p-3">
+    <div className="rounded-sm border border-edge bg-panel p-3">
       <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-        <Sparkles size={13} className="text-gold" /> Live preview
+        <Sparkles size={13} className="text-accent" /> Live preview
       </div>
-      <div className="rounded-lg border border-border-subtle bg-elevated p-3">
+      <div className="rounded-sm border border-border-subtle bg-elevated p-3">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-[13px] font-semibold text-text">BTCUSDT</span>
-          <span className="text-gold text-[11px] font-medium">Conviction A+</span>
+          <span className="text-accent text-[11px] font-medium">Conviction A+</span>
         </div>
         <div className="mb-3 flex items-baseline gap-3">
           <span className="num text-up text-lg">64,820.50</span>
@@ -129,9 +129,9 @@ function AiEngineCard(): React.JSX.Element {
   ]
 
   return (
-    <div className="col-span-2 rounded-lg border border-edge bg-panel p-3">
+    <div className="col-span-2 rounded-sm border border-edge bg-panel p-3">
       <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-        <BrainCircuit size={13} className="text-gold" /> AI engine (free)
+        <BrainCircuit size={13} className="text-accent" /> AI engine (free)
       </div>
       <div className="mb-3 text-[11px] text-muted">
         Paste any one free key and the AI Mentor, Explain buttons, Conviction critique and Research Team turn
@@ -166,7 +166,7 @@ function AiEngineCard(): React.JSX.Element {
                   e.preventDefault()
                   window.open(p.url, '_blank')
                 }}
-                className="flex items-center gap-1 text-[13px] text-text hover:text-gold"
+                className="flex items-center gap-1 text-[13px] text-text hover:text-accent"
               >
                 {p.label} <ExternalLink size={11} />
               </a>
@@ -231,16 +231,16 @@ export default function SettingsModule(): React.JSX.Element {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <SettingsIcon size={18} className="text-gold" />
+        <SettingsIcon size={18} className="text-accent" />
         <h1 className="text-[15px] font-semibold text-text">Settings &amp; System</h1>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <div className="grid max-w-3xl grid-cols-2 gap-4">
           {/* status */}
-          <div className="rounded-lg border border-edge bg-panel p-3">
+          <div className="rounded-sm border border-edge bg-panel p-3">
             <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Activity size={13} className="text-gold" /> Data feeds
+              <Activity size={13} className="text-accent" /> Data feeds
             </div>
             <StatusRow
               label="Binance WebSocket"
@@ -256,9 +256,9 @@ export default function SettingsModule(): React.JSX.Element {
           </div>
 
           {/* about */}
-          <div className="rounded-lg border border-edge bg-panel p-3">
+          <div className="rounded-sm border border-edge bg-panel p-3">
             <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Wifi size={13} className="text-gold" /> About
+              <Wifi size={13} className="text-accent" /> About
             </div>
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between">
@@ -281,9 +281,9 @@ export default function SettingsModule(): React.JSX.Element {
           </div>
 
           {/* preferences */}
-          <div className="col-span-2 rounded-lg border border-edge bg-panel p-3">
+          <div className="col-span-2 rounded-sm border border-edge bg-panel p-3">
             <div className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Sparkles size={13} className="text-gold" /> Preferences
+              <Sparkles size={13} className="text-accent" /> Preferences
             </div>
             <div className="flex items-center justify-between border-b border-edge/40 py-2">
               <div>
@@ -297,7 +297,7 @@ export default function SettingsModule(): React.JSX.Element {
                     onClick={() => setDefaultInterval(iv)}
                     className={clsx(
                       'rounded px-2 py-1 text-xs',
-                      defaultInterval === iv ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2'
+                      defaultInterval === iv ? 'bg-gold/20 text-accent' : 'text-muted hover:bg-panel2'
                     )}
                   >
                     {iv}
@@ -337,7 +337,7 @@ export default function SettingsModule(): React.JSX.Element {
                     onClick={() => setMode(id)}
                     className={clsx(
                       'flex items-center gap-1.5 rounded px-2 py-1 text-xs',
-                      mode === id ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2'
+                      mode === id ? 'bg-gold/20 text-accent' : 'text-muted hover:bg-panel2'
                     )}
                   >
                     <Icon size={13} /> {label}
@@ -357,7 +357,7 @@ export default function SettingsModule(): React.JSX.Element {
                     onClick={() => setDensity(d.id)}
                     className={clsx(
                       'flex items-center gap-1.5 rounded px-2 py-1 text-xs',
-                      density === d.id ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2'
+                      density === d.id ? 'bg-gold/20 text-accent' : 'text-muted hover:bg-panel2'
                     )}
                   >
                     {d.id === 'cozy' && <Rows3 size={13} />}
@@ -378,7 +378,7 @@ export default function SettingsModule(): React.JSX.Element {
                     onClick={() => setZoom(z)}
                     className={clsx(
                       'num rounded px-2 py-1 text-xs',
-                      zoom === z ? 'bg-gold/20 text-gold' : 'text-muted hover:bg-panel2'
+                      zoom === z ? 'bg-gold/20 text-accent' : 'text-muted hover:bg-panel2'
                     )}
                   >
                     {Math.round(z * 100)}%
@@ -458,9 +458,9 @@ export default function SettingsModule(): React.JSX.Element {
 
           {/* live theme preview + appearance notes */}
           <ThemePreview />
-          <div className="rounded-lg border border-edge bg-panel p-3">
+          <div className="rounded-sm border border-edge bg-panel p-3">
             <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Sun size={13} className="text-gold" /> Appearance
+              <Sun size={13} className="text-accent" /> Appearance
             </div>
             <div className="space-y-1.5 text-[11px] text-muted">
               <p>
@@ -469,7 +469,7 @@ export default function SettingsModule(): React.JSX.Element {
               </p>
               <p>
                 <span className="text-text">Accent</span> recolours buttons, links, focus rings and every{' '}
-                <span className="text-gold">highlight</span> — up/down stay green/red.
+                <span className="text-accent">highlight</span> — up/down stay green/red.
               </p>
               <p>
                 <span className="text-text">Density</span> changes spacing and the canvas row height;{' '}
@@ -483,9 +483,9 @@ export default function SettingsModule(): React.JSX.Element {
 
 
           {/* api keys */}
-          <div className="col-span-2 rounded-lg border border-edge bg-panel p-3">
+          <div className="col-span-2 rounded-sm border border-edge bg-panel p-3">
             <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <KeyRound size={13} className="text-gold" /> API keys (optional, free)
+              <KeyRound size={13} className="text-accent" /> API keys (optional, free)
             </div>
             <div className="mb-3 text-[11px] text-muted">
               Paste any free key to unlock richer data. Stored locally on this machine only.
@@ -500,7 +500,7 @@ export default function SettingsModule(): React.JSX.Element {
                         e.preventDefault()
                         window.open(k.url, '_blank')
                       }}
-                      className="flex items-center gap-1 text-[13px] text-text hover:text-gold"
+                      className="flex items-center gap-1 text-[13px] text-text hover:text-accent"
                     >
                       {k.label} <ExternalLink size={11} />
                     </a>
@@ -525,9 +525,9 @@ export default function SettingsModule(): React.JSX.Element {
           </div>
 
           {/* maintenance */}
-          <div className="col-span-2 rounded-lg border border-edge bg-panel p-3">
+          <div className="col-span-2 rounded-sm border border-edge bg-panel p-3">
             <div className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Database size={13} className="text-gold" /> Maintenance
+              <Database size={13} className="text-accent" /> Maintenance
             </div>
             <div className="flex gap-2">
               <button

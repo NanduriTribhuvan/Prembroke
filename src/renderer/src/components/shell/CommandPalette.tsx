@@ -135,7 +135,7 @@ export default function CommandPalette(): React.JSX.Element | null {
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-[480px] overflow-hidden rounded-lg border border-edge bg-panel"
+        className="w-[480px] overflow-hidden rounded-sm border border-edge bg-panel"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-edge px-4">

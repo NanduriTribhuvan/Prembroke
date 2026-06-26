@@ -147,14 +147,14 @@ export default function CommandBar(): React.JSX.Element {
 
   return (
     <div
-      className="relative z-30 flex shrink-0 items-center gap-2 border-b border-border-subtle bg-bg px-3 shadow-[var(--shadow-sm)]"
+      className="relative z-30 flex shrink-0 items-center gap-2 border-b border-edge bg-panel px-3"
       style={{ height: 'var(--cmdbar-h)' }}
     >
       <div className="flex shrink-0 items-center gap-1.5">
-        <span className="num flex h-5 items-center rounded-md bg-accent-soft px-1.5 text-[10px] font-bold tracking-[0.15em] text-gold shadow-[var(--hairline)]">
-          CMD
+        <span className="num flex h-[18px] items-center rounded-sm bg-accent-soft px-1.5 text-[10px] font-bold tracking-[0.16em] text-accent">
+          PREMBROKE
         </span>
-        <ChevronRight size={13} strokeWidth={2.5} className="text-gold/70" />
+        <ChevronRight size={13} strokeWidth={2.5} className="text-accent" />
       </div>
       {input === '' && <span className="cmd-cursor shrink-0" aria-hidden />}
       <form
@@ -187,10 +187,7 @@ export default function CommandBar(): React.JSX.Element {
             }
           }}
           placeholder="Command — e.g.  ETH CONV   ·   SOL CHART   ·   DOM   ·   SCAN   ·   type HELP"
-          className={clsx(
-            'focus-ring num w-full rounded bg-transparent text-[12px] uppercase tracking-wide text-gold outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-muted',
-            input !== '' && 'text-glow'
-          )}
+          className="focus-ring num w-full rounded-sm bg-transparent text-[13px] uppercase tracking-[0.04em] text-text outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-text-tertiary"
           spellCheck={false}
         />
         {suggestions.length > 0 && (
@@ -205,12 +202,12 @@ export default function CommandBar(): React.JSX.Element {
                 }}
                 onMouseEnter={() => setSel(i)}
                 className={clsx(
-                  't-colors flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-xs',
-                  i === sel ? 'bg-accent-soft' : 'hover:bg-panel2/70'
+                  't-colors flex w-full items-center justify-between rounded-sm px-2.5 py-1.5 text-left text-xs',
+                  i === sel ? 'bg-accent-soft' : 'hover:bg-panel2'
                 )}
               >
-                <span className="num text-gold">{s.v}</span>
-                <span className="text-[10px] text-muted">{s.kind === 'sym' ? 'symbol' : 'function'}</span>
+                <span className="num text-accent">{s.v}</span>
+                <span className="text-[10px] text-text-tertiary">{s.kind === 'sym' ? 'symbol' : 'function'}</span>
               </button>
             ))}
           </div>
@@ -250,17 +247,17 @@ export default function CommandBar(): React.JSX.Element {
 
       {help && (
         <div className="surface-pop absolute left-3 top-10 z-50 w-[460px] p-3.5">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gold">Function codes</div>
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-accent">Function codes</div>
           <div className="space-y-1">
             {HELP_ROWS.map((r) => (
               <div key={r.code} className="flex items-baseline gap-3 text-xs">
-                <span className="num w-32 shrink-0 text-gold">{r.code}</span>
+                <span className="num w-32 shrink-0 text-accent">{r.code}</span>
                 <span className="text-muted">{r.desc}</span>
               </div>
             ))}
           </div>
           <div className="mt-2 border-t border-edge pt-2 text-[10px] text-muted">
-            Append GO like a real terminal (<span className="num text-gold">BTC CONV GO</span>). Bookmark icon saves
+            Append GO like a real terminal (<span className="num text-accent">BTC CONV GO</span>). Bookmark icon saves
             workspaces. Esc clears.
           </div>
         </div>
@@ -268,7 +265,7 @@ export default function CommandBar(): React.JSX.Element {
 
       {wsOpen && (
         <div className="surface-pop absolute right-16 top-10 z-50 w-64 p-3.5">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gold">Workspaces</div>
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-accent">Workspaces</div>
           <div className="space-y-1">
             {presets.map((p) => (
               <div key={p.name} className="flex items-center gap-2">
@@ -302,16 +299,16 @@ export default function CommandBar(): React.JSX.Element {
               value={presetName}
               onChange={(e) => setPresetName(e.target.value)}
               placeholder="Save current as…"
-              className="flex-1 rounded border border-edge bg-panel2 px-2 py-1 text-[11px] text-text outline-none focus:border-gold/50"
+              className="flex-1 rounded border border-edge bg-panel2 px-2 py-1 text-[11px] text-text outline-none focus:border-accent/50"
             />
-            <button type="submit" className="rounded bg-gold/20 p-1 text-gold hover:bg-gold/30">
+            <button type="submit" className="rounded bg-accent-soft p-1 text-accent hover:bg-accent/20">
               <Plus size={13} />
             </button>
           </form>
 
           {canvasEnabled && (
             <div className="mt-3 border-t border-edge pt-2">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gold">
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-accent">
                 Canvas dashboards
               </div>
               <div className="space-y-1">
@@ -324,7 +321,7 @@ export default function CommandBar(): React.JSX.Element {
                       }}
                       className={clsx(
                         'flex-1 rounded px-2 py-1 text-left text-xs hover:bg-panel2',
-                        d.id === activeDashboardId ? 'text-gold' : 'text-text'
+                        d.id === activeDashboardId ? 'text-accent' : 'text-text'
                       )}
                     >
                       {d.name}{' '}
@@ -357,9 +354,9 @@ export default function CommandBar(): React.JSX.Element {
                   value={dashName}
                   onChange={(e) => setDashName(e.target.value)}
                   placeholder="Save current canvas as…"
-                  className="flex-1 rounded border border-edge bg-panel2 px-2 py-1 text-[11px] text-text outline-none focus:border-gold/50"
+                  className="flex-1 rounded border border-edge bg-panel2 px-2 py-1 text-[11px] text-text outline-none focus:border-accent/50"
                 />
-                <button type="submit" className="rounded bg-gold/20 p-1 text-gold hover:bg-gold/30">
+                <button type="submit" className="rounded bg-accent-soft p-1 text-accent hover:bg-accent/20">
                   <Plus size={13} />
                 </button>
               </form>

@@ -236,7 +236,7 @@ export default function DerivativesModule(): React.JSX.Element {
               {pos?.map((p) => (
                 <div key={p.symbol} className="flex items-center justify-between">
                   <span className="text-[length:var(--text-body)] text-text">{p.symbol}</span>
-                  <span className="num text-[length:var(--text-body)] text-gold">{fmtB(p.oiNotional)}</span>
+                  <span className="num text-[length:var(--text-body)] text-accent">{fmtB(p.oiNotional)}</span>
                 </div>
               ))}
               {!pos && (

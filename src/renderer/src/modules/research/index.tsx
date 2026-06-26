@@ -59,7 +59,7 @@ const ANALYSTS: Analyst[] = [
     id: 'derivatives',
     name: 'Derivatives & Flow',
     icon: Activity,
-    accent: 'text-gold',
+    accent: 'text-accent',
     system:
       'You are a derivatives desk analyst. Interpret funding, open interest, long/short positioning and ' +
       'liquidation risk. Explain what the positioning implies about likely squeezes or exhaustion. No disclaimers.',
@@ -422,7 +422,7 @@ export default function ResearchModule(): React.JSX.Element {
                   onClick={() => setInterval(iv)}
                   className={clsx(
                     't-colors rounded px-1.5 py-1 text-[11px]',
-                    interval === iv ? 'bg-accent-soft text-gold' : 'text-muted hover:bg-panel2'
+                    interval === iv ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-panel2'
                   )}
                 >
                   {iv}
@@ -441,7 +441,7 @@ export default function ResearchModule(): React.JSX.Element {
             <button
               onClick={() => void run()}
               disabled={running}
-              className="t-colors flex items-center gap-1.5 rounded-lg bg-accent-soft px-3 py-1.5 text-xs font-medium text-gold hover:bg-gold/30 disabled:opacity-50"
+              className="t-colors flex items-center gap-1.5 rounded-sm bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent hover:bg-gold/30 disabled:opacity-50"
             >
               {running ? <Loader2 size={13} className="animate-spin" /> : <Play size={13} />}
               {running ? 'Researching…' : 'Run research'}
@@ -525,7 +525,7 @@ export default function ResearchModule(): React.JSX.Element {
               icon={Crown}
               actions={
                 synthesis.status === 'running' ? (
-                  <Loader2 size={13} className="animate-spin text-gold" />
+                  <Loader2 size={13} className="animate-spin text-accent" />
                 ) : undefined
               }
             >
@@ -567,7 +567,7 @@ function SnapshotStat({
   hint?: string
 }): React.JSX.Element {
   return (
-    <div className="rounded-lg border border-edge bg-panel p-2.5" title={hint}>
+    <div className="rounded-sm border border-edge bg-panel p-2.5" title={hint}>
       <div className="text-[length:var(--text-caption)] uppercase tracking-wider text-muted">{label}</div>
       <div
         className={clsx(
@@ -590,7 +590,7 @@ function AnalystCard({ run }: { run: Run }): React.JSX.Element {
         <Icon size={14} className={run.analyst.accent} />
         <span className="text-[13px] font-medium text-text">{run.analyst.name}</span>
         <span className="ml-auto">
-          {run.status === 'running' && <Loader2 size={13} className="animate-spin text-gold" />}
+          {run.status === 'running' && <Loader2 size={13} className="animate-spin text-accent" />}
           {run.status === 'done' && <Check size={13} className="text-up" />}
           {run.status === 'error' && <X size={13} className="text-down" />}
         </span>

@@ -152,7 +152,7 @@ function KeypadButton({ children, onClick, ariaLabel }: KeypadButtonProps): Reac
       type="button"
       aria-label={ariaLabel}
       onClick={onClick}
-      className="flex h-16 w-16 items-center justify-center rounded-xl border border-edge bg-panel transition-colors hover:border-accent hover:bg-panel2 active:scale-95"
+      className="flex h-16 w-16 items-center justify-center rounded-md border border-edge bg-panel transition-colors hover:border-accent hover:bg-panel2 active:scale-95"
     >
       {children}
     </button>

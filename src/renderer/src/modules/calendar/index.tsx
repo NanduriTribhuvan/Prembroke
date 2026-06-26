@@ -74,7 +74,7 @@ export default function CalendarModule(): React.JSX.Element {
           <Toolbar>
             <button
               onClick={() => setOnlyHigh((v) => !v)}
-              className={`rounded px-2 py-1 text-xs t-colors ${onlyHigh ? 'bg-accent-soft text-gold' : 'text-muted hover:bg-panel2'}`}
+              className={`rounded px-2 py-1 text-xs t-colors ${onlyHigh ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-panel2'}`}
             >
               High impact only
             </button>

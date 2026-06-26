@@ -254,7 +254,7 @@ export default function DefiModule(): React.JSX.Element {
       key: 'tvl',
       header: 'TVL',
       align: 'right' as const,
-      render: (row: ChainRow) => <span className="num font-semibold text-gold">{fmtUsd(row.tvl)}</span>
+      render: (row: ChainRow) => <span className="num font-semibold text-accent">{fmtUsd(row.tvl)}</span>
     },
   ]
 
@@ -324,7 +324,7 @@ export default function DefiModule(): React.JSX.Element {
           />
           <button
             onClick={() => setStableOnly((s) => !s)}
-            className={`rounded px-2 py-1 text-xs t-colors ${stableOnly ? 'bg-accent-soft text-gold' : 'text-muted hover:bg-panel2'}`}
+            className={`rounded px-2 py-1 text-xs t-colors ${stableOnly ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-panel2'}`}
           >
             Stablecoins only
           </button>

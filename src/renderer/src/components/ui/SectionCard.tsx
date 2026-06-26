@@ -18,11 +18,11 @@ export function SectionCard({
   children,
 }: SectionCardProps): React.JSX.Element {
   return (
-    <div className={clsx('rounded-md panel-terminal', className)}>
+    <div className={clsx('rounded-sm panel-terminal', className)}>
       {title !== undefined && (
-        <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border-subtle">
-          {Icon && <Icon size={12} className="text-gold shrink-0" />}
-          <span className="text-[length:var(--text-label)] font-semibold uppercase tracking-wider text-muted">
+        <div className="flex items-center gap-2 border-b border-edge bg-panel2/40 px-3 py-1.5">
+          {Icon && <Icon size={11} className="shrink-0 text-muted" />}
+          <span className="text-[length:var(--text-label)] font-semibold uppercase tracking-[0.09em] text-text-tertiary">
             {title}
           </span>
           {actions && <div className="ml-auto flex items-center gap-1">{actions}</div>}

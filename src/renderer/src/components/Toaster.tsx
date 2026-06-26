@@ -10,7 +10,7 @@ export default function Toaster(): React.JSX.Element {
         <div
           key={t.id}
           className={clsx(
-            'pointer-events-auto flex items-start gap-2 rounded-lg border bg-panel2 p-3 shadow-lg',
+            'pointer-events-auto flex items-start gap-2 rounded-sm border bg-panel2 p-3 shadow-lg',
             t.tone === 'up' && 'border-up/40',
             t.tone === 'down' && 'border-down/40',
             t.tone === 'gold' && 'border-gold/40'
@@ -23,7 +23,7 @@ export default function Toaster(): React.JSX.Element {
               'mt-0.5 shrink-0',
               t.tone === 'up' && 'text-up',
               t.tone === 'down' && 'text-down',
-              t.tone === 'gold' && 'text-gold'
+              t.tone === 'gold' && 'text-accent'
             )}
           />
           <div className="min-w-0 flex-1">

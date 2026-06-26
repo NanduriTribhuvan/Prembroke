@@ -62,7 +62,7 @@ export default function WidgetFrame({
   return (
     <div
       className={clsx(
-        'group t-elevate relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border bg-panel',
+        'group t-elevate relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-sm border bg-panel',
         active ? 'border-accent shadow-lg ring-2 ring-ring' : 'border-edge'
       )}
     >
@@ -104,7 +104,7 @@ export default function WidgetFrame({
             onPointerDown={stopDrag}
             onClick={() => addCanvasWidget('conviction')}
             title="Add a widget"
-            className="t-colors text-muted hover:text-gold"
+            className="t-colors text-muted hover:text-accent"
           >
             <Plus size={12} />
           </button>
@@ -112,7 +112,7 @@ export default function WidgetFrame({
             onPointerDown={stopDrag}
             onClick={() => void window.api.popout.open(widget.moduleId)}
             title="Pop out to its own window"
-            className="t-colors text-muted hover:text-gold"
+            className="t-colors text-muted hover:text-accent"
           >
             <ExternalLink size={12} />
           </button>

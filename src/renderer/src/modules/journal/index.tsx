@@ -22,7 +22,7 @@ function rrOf(t: Pick<JournalTrade, 'entry' | 'stop' | 'target'>): number {
 const GRADE_COLOR: Record<string, string> = {
   'A+': 'text-up',
   A: 'text-up',
-  B: 'text-gold',
+  B: 'text-accent',
   C: 'text-warn',
   skip: 'text-muted'
 }
@@ -165,7 +165,7 @@ export default function JournalModule(): React.JSX.Element {
               <button
                 type="submit"
                 disabled={snapping}
-                className="t-colors mt-1 flex items-center gap-1.5 rounded bg-accent-soft px-3 py-1.5 text-xs font-medium text-gold hover:bg-gold/30 disabled:opacity-50"
+                className="t-colors mt-1 flex items-center gap-1.5 rounded bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent hover:bg-gold/30 disabled:opacity-50"
               >
                 {snapping ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
                 {snapping ? 'Capturing conviction…' : 'Log trade'}

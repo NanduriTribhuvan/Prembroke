@@ -304,11 +304,11 @@ export default function ToolkitModule(): React.JSX.Element {
                       className={clsx(
                         't-colors flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-[12px]',
                         isActive
-                          ? 'bg-accent-soft text-gold'
+                          ? 'bg-accent-soft text-accent'
                           : 'text-muted hover:bg-panel2 hover:text-text'
                       )}
                     >
-                      <Icon className={clsx('h-4 w-4 shrink-0', isActive ? 'text-gold' : '')} />
+                      <Icon className={clsx('h-4 w-4 shrink-0', isActive ? 'text-accent' : '')} />
                       <span className="truncate">{tool.label}</span>
                     </button>
                   )

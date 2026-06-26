@@ -18,8 +18,8 @@ export function KpiTile({
   sparkline,
 }: KpiTileProps): React.JSX.Element {
   return (
-    <div className="rounded-lg border border-edge bg-panel p-3 flex flex-col gap-1">
-      <span className="text-[length:var(--text-caption)] uppercase tracking-wider text-muted">
+    <div className="rounded-sm border border-edge bg-panel p-3 flex flex-col gap-1">
+      <span className="text-[length:var(--text-caption)] uppercase tracking-[0.09em] text-text-tertiary">
         {label}
       </span>
       <span
@@ -27,7 +27,7 @@ export function KpiTile({
           'text-[length:var(--text-display)] font-bold num',
           tone === 'up' && 'text-up',
           tone === 'down' && 'text-down',
-          tone === 'gold' && 'text-gold',
+          tone === 'gold' && 'text-accent',
           tone === 'muted' && 'text-muted',
           tone === 'default' && 'text-text',
         )}

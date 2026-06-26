@@ -1,7 +1,6 @@
 import clsx from 'clsx'
 import { useTickers } from '@/ws/binance'
 import { Skeleton } from '@/components/ui'
-import LeafLogo from './LeafLogo'
 
 function formatPrice(price: number): string {
   if (price >= 1000) return price.toLocaleString('en-US', { maximumFractionDigits: 1 })
@@ -14,21 +13,20 @@ export default function TickerTape(): React.JSX.Element {
 
   return (
     <header
-      className="glass fade-right relative z-20 flex shrink-0 items-center overflow-x-auto border-b border-border-subtle shadow-[var(--shadow-sm)] [scrollbar-width:none]"
+      className="glass fade-right relative z-20 flex shrink-0 items-center overflow-x-auto border-b border-edge [scrollbar-width:none]"
       style={{ height: 'var(--tape-h)' }}
     >
-      <div className="sticky left-0 z-10 flex shrink-0 items-center gap-2 border-r border-border-subtle bg-panel/80 px-3 backdrop-blur">
-        <LeafLogo size={15} />
-        <span className="flex items-center gap-1">
-          <span className="glow-up h-1.5 w-1.5 animate-pulse rounded-full bg-up" />
-          <span className="num text-[9px] font-bold uppercase tracking-[0.2em] text-up">Live</span>
+      <div className="sticky left-0 z-10 flex h-full shrink-0 items-center gap-2 border-r border-edge bg-panel2 px-3">
+        <span className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-up" />
+          <span className="num text-[9px] font-bold uppercase tracking-[0.18em] text-up">Live</span>
         </span>
       </div>
 
       {ticks.length === 0 && (
         <div className="flex items-center gap-2 px-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} width="72px" height="18px" rounded />
+            <Skeleton key={i} width="72px" height="16px" rounded />
           ))}
         </div>
       )}
@@ -36,9 +34,9 @@ export default function TickerTape(): React.JSX.Element {
       {ticks.map((tick) => (
         <div
           key={tick.symbol}
-          className="t-colors group flex items-center gap-2 whitespace-nowrap border-l border-border-subtle px-3.5 hover:bg-panel2/40"
+          className="t-colors group flex h-full items-center gap-2 whitespace-nowrap border-r border-edge px-3.5 hover:bg-panel2"
         >
-          <span className="text-[length:var(--text-caption)] font-medium tracking-wide text-text-tertiary">
+          <span className="text-[length:var(--text-micro)] font-medium uppercase tracking-[0.04em] text-text-tertiary">
             {tick.label}
           </span>
           <span
@@ -55,8 +53,8 @@ export default function TickerTape(): React.JSX.Element {
               tick.changePct >= 0 ? 'text-up' : 'text-down'
             )}
           >
-            {tick.changePct >= 0 ? '▲' : '▼'}
-            {Math.abs(tick.changePct).toFixed(2)}%
+            {tick.changePct >= 0 ? '+' : ''}
+            {tick.changePct.toFixed(2)}%
           </span>
         </div>
       ))}

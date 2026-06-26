@@ -54,7 +54,7 @@ export function ScoreRing({
           fill="none"
           stroke={getStrokeVar(clamped)}
           strokeWidth={strokeWidth}
-          strokeLinecap="round"
+          strokeLinecap="butt"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           transform={`rotate(-90 ${cx} ${cy})`}

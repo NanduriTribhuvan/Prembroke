@@ -89,7 +89,7 @@ export default function WatchlistModule(): React.JSX.Element {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <Star size={18} className="text-gold" />
+        <Star size={18} className="text-accent" />
         <h1 className="text-[15px] font-semibold text-text">Watchlist</h1>
         <span className="rounded bg-panel2 px-1.5 py-0.5 text-[10px] text-muted">
           {items.length} {items.length === 1 ? 'symbol' : 'symbols'}

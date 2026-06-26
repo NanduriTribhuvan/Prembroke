@@ -7,7 +7,7 @@ import { ModuleHeader, ErrorBanner, EmptyState, Skeleton } from '@/components/ui
 const FORM_TONE: Record<string, string> = {
   '10-K': 'text-up',
   '10-Q': 'text-up',
-  '8-K': 'text-gold',
+  '8-K': 'text-accent',
   '4': 'text-text-secondary',
   S: 'text-warn'
 }

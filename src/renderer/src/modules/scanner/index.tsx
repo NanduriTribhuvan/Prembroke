@@ -37,7 +37,7 @@ function useScan(interval: string) {
 }
 
 function gradeColor(score: number): string {
-  return score >= 72 ? 'text-up' : score >= 58 ? 'text-gold' : score >= 45 ? 'text-warn' : 'text-muted'
+  return score >= 72 ? 'text-up' : score >= 58 ? 'text-accent' : score >= 45 ? 'text-warn' : 'text-muted'
 }
 
 function SetupCard({
@@ -51,7 +51,7 @@ function SetupCard({
 }): React.JSX.Element {
   const focus = useView((s) => s.focusConviction)
   return (
-    <div className="rounded-lg border border-edge bg-panel">
+    <div className="rounded-sm border border-edge bg-panel">
       <div className="flex items-center gap-1.5 border-b border-edge px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
         {icon} {title}
       </div>
@@ -130,7 +130,7 @@ export default function ScannerModule(): React.JSX.Element {
       header: 'R:R',
       align: 'right' as const,
       render: (r: ConvictionResult) => (
-        <span className="num text-xs text-gold">{r.plan ? r.plan.rr.toFixed(2) : '—'}</span>
+        <span className="num text-xs text-accent">{r.plan ? r.plan.rr.toFixed(2) : '—'}</span>
       )
     }
   ]
@@ -185,9 +185,9 @@ export default function ScannerModule(): React.JSX.Element {
           <SetupCard title="Best short setups" rows={shorts} icon={<TrendingDown size={13} className="text-down" />} />
         </div>
 
-        <div className="mt-4 rounded-lg border border-edge bg-panel">
+        <div className="mt-4 rounded-sm border border-edge bg-panel">
           <div className="flex items-center gap-1.5 border-b border-edge px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
-            <SlidersHorizontal size={13} className="text-gold" /> Full ranking · {interval}
+            <SlidersHorizontal size={13} className="text-accent" /> Full ranking · {interval}
           </div>
           <DataTable<ConvictionResult>
             cols={tableCols}

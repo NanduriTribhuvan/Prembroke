@@ -90,7 +90,7 @@ export default function NewsModule(): React.JSX.Element {
               {timeAgo(n.ts)}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="text-[13px] leading-snug text-text group-hover:text-gold t-colors">
+              <div className="text-[13px] leading-snug text-text group-hover:text-accent t-colors">
                 {n.title}
               </div>
               <div className="mt-1 flex items-center gap-2">

@@ -101,7 +101,7 @@ export default function BacktestModule(): React.JSX.Element {
       key: 'grade',
       header: 'Grade',
       render: (row: GradeStat) => (
-        <span className={clsx('text-[13px] font-semibold', row.grade.startsWith('A') ? 'text-up' : 'text-gold')}>
+        <span className={clsx('text-[13px] font-semibold', row.grade.startsWith('A') ? 'text-up' : 'text-accent')}>
           {row.grade}
         </span>
       )
@@ -121,7 +121,7 @@ export default function BacktestModule(): React.JSX.Element {
           'num font-semibold',
           !row.n ? 'text-muted' :
           row.winRate >= 55 ? 'text-up' :
-          row.winRate >= 45 ? 'text-gold' : 'text-down'
+          row.winRate >= 45 ? 'text-accent' : 'text-down'
         )}>
           {row.n ? `${row.winRate.toFixed(0)}%` : '—'}
         </span>
@@ -214,7 +214,7 @@ export default function BacktestModule(): React.JSX.Element {
                 target/stop from the engine&apos;s plan, {LOOKFORWARD}-bar horizon
               </p>
             )}
-            <div className="max-w-2xl overflow-hidden rounded-lg border border-edge">
+            <div className="max-w-2xl overflow-hidden rounded-sm border border-edge">
               <DataTable
                 cols={cols}
                 rows={stats}

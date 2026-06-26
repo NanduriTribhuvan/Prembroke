@@ -20,7 +20,7 @@ export function Stat({ label, value, tone = 'default', mono = false }: StatProps
           mono && 'num',
           tone === 'up' && 'text-up',
           tone === 'down' && 'text-down',
-          tone === 'gold' && 'text-gold',
+          tone === 'gold' && 'text-accent',
           tone === 'muted' && 'text-muted',
           tone === 'default' && 'text-text',
         )}

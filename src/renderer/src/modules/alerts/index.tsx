@@ -110,7 +110,7 @@ export default function AlertsModule(): React.JSX.Element {
               </div>
               <button
                 type="submit"
-                className="t-colors mt-1 flex items-center gap-1.5 rounded bg-accent-soft px-3 py-1.5 text-xs font-medium text-gold hover:bg-gold/30"
+                className="t-colors mt-1 flex items-center gap-1.5 rounded bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent hover:bg-gold/30"
               >
                 <Plus size={13} /> Add alert
               </button>
@@ -137,7 +137,7 @@ export default function AlertsModule(): React.JSX.Element {
                     className={clsx(
                       'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
                       a.triggeredAt
-                        ? 'bg-gold/15 text-gold'
+                        ? 'bg-gold/15 text-accent'
                         : a.enabled
                           ? 'bg-up/15 text-up'
                           : 'bg-panel2 text-muted'
@@ -149,7 +149,7 @@ export default function AlertsModule(): React.JSX.Element {
                     <div className="text-[13px] text-text">
                       <span className="font-medium">{a.symbol}</span>{' '}
                       <span className="text-muted">{ALERT_KIND_LABEL[a.kind]}</span>{' '}
-                      <span className="num text-gold">{a.value}</span>
+                      <span className="num text-accent">{a.value}</span>
                     </div>
                     <div className="mt-0.5 flex items-center gap-2">
                       <Badge
@@ -177,7 +177,7 @@ export default function AlertsModule(): React.JSX.Element {
                   {a.triggeredAt ? (
                     <button
                       onClick={() => rearm(a.id)}
-                      className="t-colors rounded px-2 py-1 text-[11px] text-gold hover:bg-panel2"
+                      className="t-colors rounded px-2 py-1 text-[11px] text-accent hover:bg-panel2"
                     >
                       Re-arm
                     </button>

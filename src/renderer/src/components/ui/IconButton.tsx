@@ -29,7 +29,7 @@ export function IconButton({
         'inline-flex items-center justify-center rounded t-colors',
         size === 'sm' ? 'p-1' : 'p-1.5',
         active
-          ? 'text-gold bg-accent-soft'
+          ? 'text-accent bg-accent-soft'
           : 'text-muted hover:bg-panel2 hover:text-text',
         disabled && 'opacity-40 cursor-not-allowed pointer-events-none',
       )}

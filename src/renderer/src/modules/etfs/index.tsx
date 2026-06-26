@@ -80,7 +80,7 @@ export default function EtfsModule(): React.JSX.Element {
       />
 
       {!key ? (
-        <div className="m-4 flex items-start gap-2 rounded-lg border border-warn/30 bg-warn/10 p-3 text-[length:var(--text-caption)] text-warn">
+        <div className="m-4 flex items-start gap-2 rounded-sm border border-warn/30 bg-warn/10 p-3 text-[length:var(--text-caption)] text-warn">
           <KeyRound size={14} className="mt-0.5 shrink-0" />
           <span>
             Add your Finnhub key in Settings → API keys to load ETF quotes. Sector groupings show
@@ -101,7 +101,7 @@ export default function EtfsModule(): React.JSX.Element {
                   return (
                     <div
                       key={s.id}
-                      className="flex items-center justify-between rounded-lg border border-edge bg-panel2 p-2.5"
+                      className="flex items-center justify-between rounded-sm border border-edge bg-panel2 p-2.5"
                     >
                       <div className="min-w-0">
                         <div className="text-[length:var(--text-body)] font-semibold text-text">{s.id}</div>
@@ -129,7 +129,7 @@ export default function EtfsModule(): React.JSX.Element {
           </SectionCard>
         ))}
 
-        <div className="rounded-lg border border-edge bg-panel p-3 text-[length:var(--text-caption)] text-muted">
+        <div className="rounded-sm border border-edge bg-panel p-3 text-[length:var(--text-caption)] text-muted">
           Holdings &amp; weightings are deferred — add a Financial Modeling Prep (FMP) key in Settings to
           unlock per-ETF constituent breakdowns.
         </div>

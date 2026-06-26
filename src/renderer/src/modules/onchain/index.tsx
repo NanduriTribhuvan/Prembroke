@@ -243,7 +243,7 @@ export default function OnchainModule(): React.JSX.Element {
                   { l: 'Fast', v: gas.data?.fast }
                 ].map((g) => (
                   <div key={g.l} className="rounded bg-panel2 p-2 text-center">
-                    <div className="num text-xl font-bold text-gold">
+                    <div className="num text-xl font-bold text-accent">
                       {g.v != null ? g.v.toFixed(2) : '—'}
                     </div>
                     <div className="text-[length:var(--text-caption)] text-muted">{g.l}</div>
@@ -260,7 +260,7 @@ export default function OnchainModule(): React.JSX.Element {
                     onClick={() =>
                       window.open(`https://etherscan.io/tx/${t.hash}`, '_blank')
                     }
-                    className="flex w-full items-center justify-between text-[11px] t-colors hover:text-gold"
+                    className="flex w-full items-center justify-between text-[11px] t-colors hover:text-accent"
                   >
                     <span className="num text-muted">{t.hash.slice(0, 10)}…</span>
                     <span className="num font-semibold text-text">{t.eth.toFixed(2)} ETH</span>

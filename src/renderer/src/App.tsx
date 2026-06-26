@@ -31,23 +31,23 @@ function Pane({ index }: { index: number }): React.JSX.Element {
     <div
       onMouseDown={() => setActive(index)}
       className={clsx(
-        't-elevate flex min-h-0 min-w-0 flex-col overflow-hidden',
-        tiled && 'rounded-md panel-terminal',
-        tiled && (isActive ? 'lit' : 'border-border-strong')
+        'flex min-h-0 min-w-0 flex-col overflow-hidden bg-panel',
+        tiled && 'panel-terminal',
+        tiled && (isActive ? 'lit' : '')
       )}
     >
       {tiled && (
         <div
           className={clsx(
-            't-colors flex items-center gap-2 border-b border-border-subtle px-2.5 py-1.5',
-            isActive ? 'bg-panel2/80' : 'bg-panel/50'
+            't-colors flex items-center gap-2 border-b border-edge px-2.5 py-1.5',
+            isActive ? 'bg-panel2' : 'bg-panel2/50'
           )}
         >
-          <Icon size={13} className={isActive ? 'text-gold' : 'text-muted'} />
+          <Icon size={12} className={isActive ? 'text-accent' : 'text-muted'} />
           <select
             value={id}
             onChange={(e) => setPaneView(index, e.target.value as (typeof panes)[number])}
-            className="num cursor-pointer bg-transparent text-[11px] font-semibold uppercase tracking-wide text-text outline-none"
+            className="num cursor-pointer bg-transparent text-[11px] font-semibold uppercase tracking-[0.06em] text-text outline-none"
           >
             {MODULES.map((m) => (
               <option key={m.id} value={m.id}>
@@ -61,16 +61,11 @@ function Pane({ index }: { index: number }): React.JSX.Element {
               void window.api.popout.open(id)
             }}
             title="Pop out to its own window"
-            className="t-colors ml-auto rounded-md p-1 text-muted hover:bg-panel2 hover:text-gold"
+            className="t-colors ml-auto rounded-sm p-1 text-muted hover:bg-panel hover:text-accent"
           >
             <ExternalLink size={12} />
           </button>
-          {isActive && (
-            <span
-              className="h-1.5 w-1.5 rounded-full bg-gold shadow-[0_0_6px_1px_var(--color-gold)]"
-              title="Active pane"
-            />
-          )}
+          {isActive && <span className="h-1.5 w-1.5 rounded-full bg-accent" title="Active pane" />}
         </div>
       )}
       <div key={id} className="module-enter min-h-0 flex-1 overflow-hidden">
@@ -99,7 +94,7 @@ export default function App(): React.JSX.Element {
       <FunctionKeyBar />
       <div className="flex min-h-0 flex-1">
         <Sidebar />
-        <main className="grid-backdrop scanlines relative min-w-0 flex-1 overflow-hidden p-1">
+        <main className="grid-backdrop scanlines relative min-w-0 flex-1 overflow-hidden">
           {canvasEnabled ? (
             showApps ? (
               <AppsGallery />
@@ -107,7 +102,7 @@ export default function App(): React.JSX.Element {
               <WidgetCanvas />
             )
           ) : (
-            <div className={clsx('grid h-full gap-[var(--space-gap)]', grid)}>
+            <div className={clsx('grid h-full gap-px bg-edge', grid)}>
               {Array.from({ length: layout }).map((_, i) => (
                 <Pane key={i} index={i} />
               ))}

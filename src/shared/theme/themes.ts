@@ -101,9 +101,11 @@ export interface ResolvedTheme {
   density: DensityMetrics
 }
 
-/** Accent base hexes + labels. The base is recoloured per mode by the ramp. */
+/** Accent base hexes + labels. The base is recoloured per mode by the ramp.
+ *  The default `gold` is an electric amber — cold-instrument signal, not warm
+ *  cozy gold (institutional-weapon design language). The other five remain. */
 export const ACCENTS: Record<AccentId, { label: string; base: string }> = {
-  gold: { label: 'Gold', base: '#d9a521' },
+  gold: { label: 'Amber', base: '#f5a524' },
   emerald: { label: 'Emerald', base: '#10b981' },
   teal: { label: 'Teal', base: '#14b8a6' },
   azure: { label: 'Azure', base: '#3b9ef5' },
@@ -127,17 +129,18 @@ export const DENSITIES: Record<DensityId, { label: string; metrics: DensityMetri
   }
 }
 
-/** The dark base palette — cool neutral (OpenBB-style), locked by a parity test. */
+/** The dark base palette — cold monochrome "institutional weapon" spine
+ *  (near-black, blue-steel undertone, hairline edges). Locked by a parity test. */
 const DARK_BASE = {
-  bg: '#0d0e11',
-  panel: '#15171c',
-  panel2: '#1d2027',
-  edge: '#2a2e37',
-  muted: '#8e94a3',
-  text: '#e7e9ee',
-  accent2: '#6b93b8',
-  leaf: '#15202c',
-  olive: '#2b4a63',
+  bg: '#08090c',
+  panel: '#0d0f13',
+  panel2: '#13161c',
+  edge: '#1c212b',
+  muted: '#7e8799',
+  text: '#f4f6fa',
+  accent2: '#42506a',
+  leaf: '#0e1620',
+  olive: '#1a2738',
   warn: '#f0b90b'
 } as const
 
@@ -259,19 +262,21 @@ export function resolveTheme(mode: ThemeMode, accent: AccentId, density: Density
           up: UP,
           down: DOWN,
           warn: base.warn,
-          // semantic (dark) — elevation rises bg < panel < elevated < overlay
-          surface: base.bg,
-          elevated: lighten(base.panel, 0.05),
-          overlay: lighten(base.panel, 0.09),
-          borderSubtle: withAlpha(base.edge, 0.6),
-          borderStrong: lighten(base.edge, 0.18),
+          // semantic (dark) — cold structural layer. Surfaces are opaque values
+          // (not glass); borders are cool blue-steel hairlines. elevation rises
+          // bg < panel < elevated < overlay.
+          surface: base.panel,
+          elevated: base.panel2,
+          overlay: lighten(base.panel2, 0.06),
+          borderSubtle: withAlpha('#7b8ca8', 0.1),
+          borderStrong: withAlpha('#7b8ca8', 0.22),
           textPrimary: base.text,
-          textSecondary: '#b4bac6',
+          textSecondary: '#c5ccd9',
           textTertiary: base.muted,
           accentStrong: ramp.strong,
           accentSoft: ramp.soft,
           ring: ramp.ring,
-          scrim: withAlpha('#000000', 0.55)
+          scrim: withAlpha('#02040a', 0.66)
         }
       : {
           // legacy (light)

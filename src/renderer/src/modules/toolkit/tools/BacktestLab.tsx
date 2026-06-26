@@ -229,7 +229,7 @@ export default function BacktestLab(): React.JSX.Element {
             <div className="mb-2 flex items-center justify-between">
               <SectionHeader>Equity curve · {candles.length} bars</SectionHeader>
               <div className="flex items-center gap-3 text-[10px]">
-                <span className="flex items-center gap-1 text-gold">
+                <span className="flex items-center gap-1 text-accent">
                   <span className="h-0.5 w-3 bg-gold" /> Strategy
                 </span>
                 <span className="flex items-center gap-1 text-muted">

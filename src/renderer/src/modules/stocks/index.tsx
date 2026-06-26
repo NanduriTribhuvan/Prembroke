@@ -110,7 +110,7 @@ export default function StocksModule(): React.JSX.Element {
             )}
             <div className="grid grid-cols-2 gap-2">
               {quotes.data?.map((q) => (
-                <div key={q.s} className="flex items-center justify-between rounded-lg border border-edge bg-panel p-3">
+                <div key={q.s} className="flex items-center justify-between rounded-sm border border-edge bg-panel p-3">
                   <div>
                     <div className="text-[13px] font-semibold text-text">{q.s}</div>
                     <div className="text-[11px] text-muted">{q.n}</div>
@@ -136,7 +136,7 @@ export default function StocksModule(): React.JSX.Element {
 
           <aside className="w-80 shrink-0 overflow-y-auto border-l border-edge">
             <div className="flex items-center gap-1.5 border-b border-edge px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Newspaper size={13} className="text-gold" /> Market news
+              <Newspaper size={13} className="text-accent" /> Market news
             </div>
             {news.data?.map((n, i) => (
               <button
@@ -146,7 +146,7 @@ export default function StocksModule(): React.JSX.Element {
               >
                 <span className="num mt-0.5 w-7 shrink-0 text-[10px] text-muted">{timeAgo(n.datetime)}</span>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[12px] leading-snug text-text group-hover:text-gold">{n.headline}</div>
+                  <div className="text-[12px] leading-snug text-text group-hover:text-accent">{n.headline}</div>
                   <div className="text-[10px] text-muted">{n.source}</div>
                 </div>
                 <ExternalLink size={11} className="mt-0.5 shrink-0 text-muted opacity-0 group-hover:opacity-100" />

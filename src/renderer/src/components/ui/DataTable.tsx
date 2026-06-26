@@ -75,7 +75,7 @@ export function DataTable<T>({
                 <th
                   key={col.key}
                   className={clsx(
-                    'text-[length:var(--text-label)] uppercase tracking-wider text-muted font-semibold px-3',
+                    'text-[length:var(--text-label)] uppercase tracking-[0.09em] text-text-tertiary font-semibold px-3',
                     'whitespace-nowrap select-none',
                     alignClass[col.align ?? 'left'],
                     canSort && 'cursor-pointer hover:text-text t-colors',

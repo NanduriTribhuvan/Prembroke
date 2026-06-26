@@ -148,7 +148,7 @@ function PairTable({ pairs, variant }: { pairs: DexPair[]; variant: Tab }): Reac
                   {fmtAge(p.pairCreatedAt)}
                 </td>
               ) : variant === 'trending' ? (
-                <td className="num px-2 py-2 text-right text-gold">
+                <td className="num px-2 py-2 text-right text-accent">
                   {p.boost ? `${p.boost}` : '—'}
                 </td>
               ) : (
@@ -159,7 +159,7 @@ function PairTable({ pairs, variant }: { pairs: DexPair[]; variant: Tab }): Reac
               <td className="px-1 py-2 text-right">
                 <button
                   onClick={() => window.open(p.url, '_blank')}
-                  className="text-muted hover:text-gold t-colors"
+                  className="text-muted hover:text-accent t-colors"
                   title="Open on DexScreener"
                 >
                   <ExternalLink size={13} />
@@ -243,7 +243,7 @@ export default function DexModule(): React.JSX.Element {
             />
             <button
               type="submit"
-              className="rounded-lg bg-accent-soft px-3 py-1 text-xs font-medium text-gold t-colors hover:bg-gold/30"
+              className="rounded-sm bg-accent-soft px-3 py-1 text-xs font-medium text-accent t-colors hover:bg-gold/30"
             >
               Search
             </button>

@@ -35,14 +35,14 @@ export default function WidgetCanvas(): React.JSX.Element {
   if (canvas.widgets.length === 0) {
     return (
       <div className="grid h-full place-items-center p-6">
-        <div className="max-w-sm rounded-lg border border-border-subtle bg-elevated p-6 text-center">
+        <div className="max-w-sm rounded-sm border border-border-subtle bg-elevated p-6 text-center">
           <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-accent-soft">
             <LayoutGrid size={22} className="text-accent" />
           </div>
           <div className="text-[14px] font-semibold text-text">No widgets on this canvas</div>
           <p className="mt-1.5 text-[12px] leading-relaxed text-text-secondary">
-            Open <span className="text-gold">Apps</span> to load a curated dashboard, or add a widget from any
-            frame's <span className="text-gold">+</span> button to start building your workspace.
+            Open <span className="text-accent">Apps</span> to load a curated dashboard, or add a widget from any
+            frame's <span className="text-accent">+</span> button to start building your workspace.
           </p>
         </div>
       </div>
@@ -82,7 +82,7 @@ export default function WidgetCanvas(): React.JSX.Element {
 
       {preview && (
         <div
-          className="pointer-events-none rounded-lg border border-dashed border-accent bg-accent-soft"
+          className="pointer-events-none rounded-sm border border-dashed border-accent bg-accent-soft"
           style={{ ...areaOf(preview.rect), zIndex: 10 }}
         />
       )}

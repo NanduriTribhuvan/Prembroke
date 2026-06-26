@@ -33,7 +33,7 @@ export function TabBar({
                 ? 'text-[length:var(--text-caption)] py-0.5'
                 : 'text-[length:var(--text-label)] py-1',
               isActive
-                ? 'text-gold bg-accent-soft'
+                ? 'text-accent bg-accent-soft'
                 : 'text-muted hover:text-text',
             )}
           >

@@ -53,7 +53,7 @@ export default function AppsGallery(): React.JSX.Element {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b border-edge px-4 py-3">
-        <LayoutGrid size={18} className="text-gold" />
+        <LayoutGrid size={18} className="text-accent" />
         <h1 className="text-[15px] font-semibold text-text">Apps</h1>
         <span className="text-[11px] text-text-tertiary">Curated dashboards — load one to start</span>
       </div>
@@ -65,14 +65,14 @@ export default function AppsGallery(): React.JSX.Element {
             return (
               <div
                 key={t.id}
-                className="t-elevate relative flex flex-col overflow-hidden rounded-lg border border-edge bg-panel p-3 pl-4 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lg"
+                className="t-elevate relative flex flex-col overflow-hidden rounded-sm border border-edge bg-panel p-3 pl-4 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lg"
               >
                 {/* persona accent strip */}
                 <span className="absolute inset-y-0 left-0 w-1 bg-accent" aria-hidden />
 
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2.5">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-accent-soft">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-sm bg-accent-soft">
                       <Icon size={16} className="text-accent" />
                     </span>
                     <div>
@@ -104,7 +104,7 @@ export default function AppsGallery(): React.JSX.Element {
                       title="Ask the AI Mentor"
                       className="t-colors flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] text-text-secondary hover:bg-accent-soft hover:text-text"
                     >
-                      <MessageSquarePlus size={11} className="shrink-0 text-gold" />
+                      <MessageSquarePlus size={11} className="shrink-0 text-accent" />
                       <span className="truncate">{p}</span>
                     </button>
                   ))}

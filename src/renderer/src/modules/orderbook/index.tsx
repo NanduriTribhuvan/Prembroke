@@ -120,7 +120,7 @@ export default function OrderBookModule(): React.JSX.Element {
                   onClick={() => setSymbol(s)}
                   className={clsx(
                     'rounded px-2 py-1 text-[11px] t-colors',
-                    symbol === s ? 'bg-accent-soft text-gold' : 'text-muted hover:bg-panel2'
+                    symbol === s ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-panel2'
                   )}
                 >
                   {s.replace('USDT', '')}

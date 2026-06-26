@@ -48,7 +48,7 @@ function TVChart({ symbol }: { symbol: string }): React.JSX.Element {
   return (
     <div
       ref={host}
-      className="tradingview-widget-container h-full w-full overflow-hidden rounded-lg border border-edge"
+      className="tradingview-widget-container h-full w-full overflow-hidden rounded-sm border border-edge"
       style={{ height: '100%', width: '100%' }}
     />
   )
@@ -132,7 +132,7 @@ export default function CommoditiesModule(): React.JSX.Element {
       <div className="flex min-h-0 flex-1">
         <aside className="w-72 shrink-0 overflow-y-auto border-r border-edge p-3">
           {!key && (
-            <div className="mb-3 flex items-start gap-2 rounded-lg border border-warn/30 bg-warn/10 p-3 text-[length:var(--text-caption)] text-warn">
+            <div className="mb-3 flex items-start gap-2 rounded-sm border border-warn/30 bg-warn/10 p-3 text-[length:var(--text-caption)] text-warn">
               <KeyRound size={14} className="mt-0.5 shrink-0" />
               <span>
                 Add your Twelve Data key in Settings → API keys for delayed commodity quotes. Charts
@@ -160,7 +160,7 @@ export default function CommoditiesModule(): React.JSX.Element {
                       type="button"
                       onClick={() => setActive(s)}
                       className={clsx(
-                        't-colors flex w-full items-center justify-between rounded-lg border p-2.5 text-left',
+                        't-colors flex w-full items-center justify-between rounded-sm border p-2.5 text-left',
                         isActive
                           ? 'border-gold/30 bg-accent-soft'
                           : 'border-edge bg-panel hover:bg-panel2'

@@ -71,7 +71,7 @@ export default function PlaybookModule(): React.JSX.Element {
               >
                 <span className="flex items-center gap-1.5 text-[13px] font-medium text-text">
                   {c.name}
-                  {c.abbrev && <span className="num text-[10px] text-gold">{c.abbrev}</span>}
+                  {c.abbrev && <span className="num text-[10px] text-accent">{c.abbrev}</span>}
                 </span>
                 <span className="text-[10px] text-muted">{c.category}</span>
               </button>
@@ -124,7 +124,7 @@ export default function PlaybookModule(): React.JSX.Element {
             onClick={() =>
               askMentor(`Explain ${sel.name} (${sel.abbrev ?? ''}) in depth with a concrete example I can apply.`)
             }
-            className="mt-5 flex items-center gap-1.5 rounded-lg bg-accent-soft px-3 py-2 text-[13px] font-medium text-gold t-colors hover:bg-gold/25"
+            className="mt-5 flex items-center gap-1.5 rounded-sm bg-accent-soft px-3 py-2 text-[13px] font-medium text-accent t-colors hover:bg-gold/25"
           >
             <Sparkles size={14} />
             Ask the mentor about {sel.name}

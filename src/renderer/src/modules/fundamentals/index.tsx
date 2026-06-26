@@ -158,7 +158,7 @@ export default function FundamentalsModule(): React.JSX.Element {
                     {p.weburl && (
                       <button
                         onClick={() => window.open(p.weburl, '_blank')}
-                        className="inline-flex items-center gap-0.5 text-gold hover:underline t-colors ml-1"
+                        className="inline-flex items-center gap-0.5 text-accent hover:underline t-colors ml-1"
                       >
                         Site <ExternalLink size={10} />
                       </button>

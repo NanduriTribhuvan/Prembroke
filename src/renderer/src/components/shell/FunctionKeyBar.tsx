@@ -50,7 +50,7 @@ export default function FunctionKeyBar(): React.JSX.Element {
 
   return (
     <div
-      className="deck relative z-20 flex shrink-0 items-stretch overflow-x-auto border-b border-border-subtle [scrollbar-width:none]"
+      className="deck relative z-20 flex shrink-0 items-stretch overflow-x-auto border-b border-edge [scrollbar-width:none]"
       style={{ height: 'var(--deck-h)' }}
     >
       {FKEYS.map((f) => {
@@ -61,24 +61,24 @@ export default function FunctionKeyBar(): React.JSX.Element {
             onClick={() => openInActive(f.id)}
             title={`F${f.n} · ${f.code}`}
             className={clsx(
-              'fkey group relative flex items-center gap-1.5 border-r border-border-subtle px-2.5 text-[10px] uppercase tracking-wide',
-              on ? 'bg-accent-soft text-gold' : 'text-text-tertiary hover:bg-panel2/60 hover:text-text'
+              'group relative flex items-center gap-1.5 border-r border-edge px-2.5 text-[10px] uppercase tracking-[0.04em]',
+              on ? 'bg-accent-soft text-accent' : 'text-text-tertiary hover:bg-panel hover:text-text'
             )}
           >
             <span
               className={clsx(
-                'num rounded-sm px-1 text-[9px] font-bold',
-                on ? 'bg-gold/25 text-gold' : 'bg-panel2 text-muted group-hover:text-gold'
+                'num text-[9px] font-bold',
+                on ? 'text-accent' : 'text-accent2 group-hover:text-text-secondary'
               )}
             >
               F{f.n}
             </span>
             <span className="font-semibold">{f.code}</span>
-            {on && <span className="glow-accent absolute inset-x-0 bottom-0 h-[2px] bg-accent" />}
+            {on && <span className="absolute inset-x-0 bottom-0 h-[2px] bg-accent" />}
           </button>
         )
       })}
-      <div className="ml-auto flex items-center gap-1.5 px-3 text-[9px] uppercase tracking-[0.22em] text-text-tertiary">
+      <div className="ml-auto flex items-center gap-1.5 px-3 text-[9px] uppercase tracking-[0.18em] text-text-tertiary">
         <span className="hud-sep" />
         <span className="num">F-keys</span>
       </div>

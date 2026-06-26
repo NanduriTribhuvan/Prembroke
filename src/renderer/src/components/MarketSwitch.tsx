@@ -28,7 +28,7 @@ export default function MarketSwitch(): React.JSX.Element {
             onClick={() => setMarket(o.mode)}
             className={clsx(
               'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors',
-              active ? 'bg-gold/20 text-gold' : 'text-muted hover:text-text'
+              active ? 'bg-gold/20 text-accent' : 'text-muted hover:text-text'
             )}
           >
             <Icon className="h-3.5 w-3.5" />

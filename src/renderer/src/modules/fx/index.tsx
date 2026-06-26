@@ -180,7 +180,7 @@ export default function FxModule(): React.JSX.Element {
             }
           >
             {!key ? (
-              <div className="flex items-start gap-2 rounded-lg border border-warn/30 bg-warn/10 p-3 text-[length:var(--text-caption)] text-warn">
+              <div className="flex items-start gap-2 rounded-sm border border-warn/30 bg-warn/10 p-3 text-[length:var(--text-caption)] text-warn">
                 <KeyRound size={14} className="mt-0.5 shrink-0" />
                 <span>
                   Add your Twelve Data key in Settings → API keys to load delayed FX quotes. Currency
@@ -192,7 +192,7 @@ export default function FxModule(): React.JSX.Element {
                 {quotes.data?.map((q) => (
                   <div
                     key={q.symbol}
-                    className="flex items-center justify-between rounded-lg border border-edge bg-panel2 p-2.5"
+                    className="flex items-center justify-between rounded-sm border border-edge bg-panel2 p-2.5"
                   >
                     <span className="text-[length:var(--text-body)] font-semibold text-text">{q.symbol}</span>
                     <div className="text-right">

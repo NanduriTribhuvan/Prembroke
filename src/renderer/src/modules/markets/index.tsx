@@ -117,7 +117,7 @@ function LiveFx(): React.JSX.Element {
   return (
     <div className="border-b border-edge p-3">
       <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-        <Banknote size={13} className="text-gold" /> Live forex
+        <Banknote size={13} className="text-accent" /> Live forex
       </div>
       {!key && <div className="text-[11px] text-muted">Add Twelve Data key in Settings.</div>}
       <div className="space-y-1">
@@ -143,7 +143,7 @@ function CurrencyStrength(): React.JSX.Element {
   return (
     <div className="p-3">
       <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-        <Activity size={13} className="text-gold" /> Currency strength
+        <Activity size={13} className="text-accent" /> Currency strength
       </div>
       <div className="mb-3 text-[10px] text-muted">
         {data ? `8 majors · ECB daily, as of ${data.asOf}` : error ? 'FX data unavailable' : 'Loading…'}

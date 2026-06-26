@@ -12,7 +12,7 @@ export default function Popout({ moduleId }: { moduleId: string }): React.JSX.El
         <LeafLogo size={14} />
         <span className="brandmark text-[11px]">PREMBROKE</span>
         <span className="mx-1 h-3 w-px bg-edge" />
-        <Icon size={12} className="text-gold" />
+        <Icon size={12} className="text-accent" />
         <span className="text-[11px] text-muted">{mod.label}</span>
         <span className="num ml-auto text-[10px] text-muted">pop-out</span>
       </div>

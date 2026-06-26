@@ -94,12 +94,12 @@ export default function StrategyOptimizer(): React.JSX.Element {
         <>
           <Panel>
             <div className="flex items-center gap-3">
-              <Trophy className="h-5 w-5 text-gold" />
+              <Trophy className="h-5 w-5 text-accent" />
               <div>
                 <SectionHeader>Best parameters</SectionHeader>
                 <div className="text-[15px] text-text">
-                  SMA <span className="num text-gold">{result.best.params.fast}</span> /{' '}
-                  <span className="num text-gold">{result.best.params.slow}</span> · Sharpe{' '}
+                  SMA <span className="num text-accent">{result.best.params.fast}</span> /{' '}
+                  <span className="num text-accent">{result.best.params.slow}</span> · Sharpe{' '}
                   <span className="num text-accent">{fmt(result.best.sharpe, 3)}</span> · Return{' '}
                   <span className={clsx('num', result.best.totalReturnPct >= 0 ? 'text-up' : 'text-down')}>
                     {fmt(result.best.totalReturnPct, 1)}%

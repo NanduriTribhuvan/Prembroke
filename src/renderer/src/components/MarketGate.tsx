@@ -55,15 +55,15 @@ export default function MarketGate(): React.JSX.Element {
               type="button"
               onClick={() => setMarket(c.mode)}
               className={clsx(
-                'group flex flex-col rounded-xl border border-edge bg-panel p-6 text-left transition-all',
+                'group flex flex-col rounded-md border border-edge bg-panel p-6 text-left transition-all',
                 'hover:-translate-y-0.5 hover:border-gold hover:bg-panel2'
               )}
             >
               <div className="flex items-center justify-between">
-                <span className="flex h-12 w-12 items-center justify-center rounded-lg border border-edge bg-panel2 text-gold">
+                <span className="flex h-12 w-12 items-center justify-center rounded-sm border border-edge bg-panel2 text-accent">
                   <Icon className="h-6 w-6" />
                 </span>
-                <ArrowRight className="h-5 w-5 text-muted transition-colors group-hover:text-gold" />
+                <ArrowRight className="h-5 w-5 text-muted transition-colors group-hover:text-accent" />
               </div>
               <div className="mt-4 text-lg font-semibold text-text">{c.title}</div>
               <div className="mt-1 text-[13px] text-muted">{c.desc}</div>

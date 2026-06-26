@@ -51,7 +51,7 @@ function TVChart({ symbol, interval }: { symbol: string; interval: string }): Re
   return (
     <div
       ref={host}
-      className="tradingview-widget-container h-full w-full overflow-hidden rounded-lg border border-edge"
+      className="tradingview-widget-container h-full w-full overflow-hidden rounded-sm border border-edge"
       style={{ height: '100%', width: '100%' }}
     />
   )
@@ -136,7 +136,7 @@ export default function ChartsModule(): React.JSX.Element {
                   key={p}
                   type="button"
                   onClick={() => setPaneSymbol(p)}
-                  className="rounded px-1.5 py-0.5 text-[length:var(--text-caption)] text-muted hover:bg-panel2 hover:text-gold t-colors"
+                  className="rounded px-1.5 py-0.5 text-[length:var(--text-caption)] text-muted hover:bg-panel2 hover:text-accent t-colors"
                 >
                   {p.split(':')[1]}
                 </button>
@@ -187,12 +187,12 @@ export default function ChartsModule(): React.JSX.Element {
             onMouseDown={() => setActivePane(i)}
             className={
               layout > 1 && activePane === i
-                ? 'relative min-h-0 rounded-lg ring-1 ring-gold/50'
+                ? 'relative min-h-0 rounded-sm ring-1 ring-accent/50'
                 : 'relative min-h-0'
             }
           >
             {layout > 1 && (
-              <span className="num absolute left-2 top-2 z-10 rounded bg-bg/70 px-1.5 py-0.5 text-[length:var(--text-caption)] text-gold">
+              <span className="num absolute left-2 top-2 z-10 rounded bg-bg/70 px-1.5 py-0.5 text-[length:var(--text-caption)] text-accent">
                 {sym.split(':')[1] ?? sym}
               </span>
             )}

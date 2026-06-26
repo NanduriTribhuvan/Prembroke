@@ -62,16 +62,16 @@ function OptionsStat(props: {
 }): React.JSX.Element {
   const tone = props.tone ?? 'text'
   return (
-    <div className="rounded-lg border border-edge bg-panel p-3">
+    <div className="rounded-sm border border-edge bg-panel p-3">
       <div className="mb-1.5 flex items-center gap-1.5 text-[length:var(--text-caption)] font-semibold uppercase tracking-wider text-muted">
-        <props.icon size={12} className="text-gold" /> {props.label}
+        <props.icon size={12} className="text-accent" /> {props.label}
       </div>
       <div
         className={clsx(
           'num text-[length:var(--text-display)] font-semibold',
           tone === 'up' && 'text-up',
           tone === 'down' && 'text-down',
-          tone === 'gold' && 'text-gold',
+          tone === 'gold' && 'text-accent',
           tone === 'text' && 'text-text'
         )}
       >
@@ -151,7 +151,7 @@ export default function CryptoOptionsModule(): React.JSX.Element {
           <div className="flex items-center gap-2">
             {view && (
               <span className="num text-[13px] text-text">
-                {currency} <span className="text-gold">{fmtUsd(view.spot)}</span>
+                {currency} <span className="text-accent">{fmtUsd(view.spot)}</span>
               </span>
             )}
             <TabBar
@@ -302,7 +302,7 @@ export default function CryptoOptionsModule(): React.JSX.Element {
                       <span
                         className={clsx(
                           'num w-16 shrink-0 text-center',
-                          atSpot ? 'font-semibold text-gold' : 'text-muted'
+                          atSpot ? 'font-semibold text-accent' : 'text-muted'
                         )}
                       >
                         {fmtInt(s)}

@@ -170,7 +170,7 @@ export default function FlowModule(): React.JSX.Element {
             <span
               className={clsx(
                 'num w-24 text-right text-sm font-semibold',
-                l.notional > 250_000 ? 'text-gold' : 'text-text'
+                l.notional > 250_000 ? 'text-accent' : 'text-text'
               )}
             >
               {fmtUsd(l.notional)}

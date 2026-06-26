@@ -188,7 +188,7 @@ export default function CoinsModule(): React.JSX.Element {
         <aside className="w-64 shrink-0 space-y-4 overflow-y-auto border-l border-edge p-3">
           <div>
             <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Flame size={13} className="text-gold" /> Trending
+              <Flame size={13} className="text-accent" /> Trending
             </div>
             <div className="space-y-1.5">
               {trending.data?.map((t) => (
@@ -206,7 +206,7 @@ export default function CoinsModule(): React.JSX.Element {
 
           <div>
             <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              <Boxes size={13} className="text-gold" /> Sector rotation (24h)
+              <Boxes size={13} className="text-accent" /> Sector rotation (24h)
             </div>
             <div className="space-y-1">
               {topCats.map((c) => (

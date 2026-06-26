@@ -139,7 +139,7 @@ export default function AiModule(): React.JSX.Element {
           <div className="flex items-center gap-3">
             {current && (
               <div className="flex items-center gap-1.5 rounded bg-panel2 px-2 py-1">
-                <Cpu size={12} className="text-gold" />
+                <Cpu size={12} className="text-accent" />
                 <select
                   value={selected}
                   onChange={(e) => setSelected(e.target.value as AiProviderId)}
@@ -179,7 +179,7 @@ export default function AiModule(): React.JSX.Element {
       <div ref={scroller} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
         {messages.length === 0 && (
           <div className="mx-auto max-w-xl pt-6 text-center">
-            <GraduationCap size={28} className="mx-auto mb-3 text-gold/60" />
+            <GraduationCap size={28} className="mx-auto mb-3 text-accent/60" />
             <p className="text-sm text-muted">
               Ask anything about ICT, Smart Money Concepts, SMT, structure, liquidity, or the live
               tape. The Mentor pulls the relevant Playbook concepts into its answer.
@@ -203,7 +203,7 @@ export default function AiModule(): React.JSX.Element {
                   key={q}
                   onClick={() => ask(q)}
                   disabled={busy || !current}
-                  className="t-colors block w-full rounded-lg border border-edge bg-panel px-3 py-2 text-left text-xs text-text hover:border-gold/40 disabled:opacity-50"
+                  className="t-colors block w-full rounded-sm border border-edge bg-panel px-3 py-2 text-left text-xs text-text hover:border-gold/40 disabled:opacity-50"
                 >
                   {q}
                 </button>
@@ -216,7 +216,7 @@ export default function AiModule(): React.JSX.Element {
           <div key={i} className={clsx('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
             <div
               className={clsx(
-                'max-w-[80%] whitespace-pre-wrap rounded-lg px-3 py-2 text-[13px] leading-relaxed',
+                'max-w-[80%] whitespace-pre-wrap rounded-sm px-3 py-2 text-[13px] leading-relaxed',
                 m.role === 'user'
                   ? 'bg-accent-soft text-text'
                   : m.error
@@ -231,8 +231,8 @@ export default function AiModule(): React.JSX.Element {
 
         {busy && messages[messages.length - 1]?.role !== 'ai' && (
           <div className="flex justify-start">
-            <div className="flex items-center gap-2 rounded-lg border border-edge bg-panel px-3 py-2 text-[13px] text-muted">
-              <Loader2 size={14} className="animate-spin text-gold" /> Mentor is thinking…
+            <div className="flex items-center gap-2 rounded-sm border border-edge bg-panel px-3 py-2 text-[13px] text-muted">
+              <Loader2 size={14} className="animate-spin text-accent" /> Mentor is thinking…
             </div>
           </div>
         )}
@@ -250,12 +250,12 @@ export default function AiModule(): React.JSX.Element {
           onChange={(e) => setInput(e.target.value)}
           placeholder={noProviders ? 'Set up a free AI provider to chat…' : 'Ask the Mentor anything…'}
           disabled={busy || !current}
-          className="flex-1 rounded-lg border border-edge bg-panel px-3 py-2 text-[13px] text-text outline-none focus:border-gold/50 disabled:opacity-50"
+          className="flex-1 rounded-sm border border-edge bg-panel px-3 py-2 text-[13px] text-text outline-none focus:border-gold/50 disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={busy || !input.trim() || !current}
-          className="t-colors flex items-center gap-1.5 rounded-lg bg-accent-soft px-3 py-2 text-[13px] font-medium text-gold hover:bg-gold/30 disabled:opacity-40"
+          className="t-colors flex items-center gap-1.5 rounded-sm bg-accent-soft px-3 py-2 text-[13px] font-medium text-accent hover:bg-gold/30 disabled:opacity-40"
         >
           <Send size={14} /> Send
         </button>

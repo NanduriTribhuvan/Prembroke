@@ -3,7 +3,6 @@ import clsx from 'clsx'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useWorkspace } from '@/stores/workspace'
 import { MODULES } from '@/modules'
-import LeafLogo from './LeafLogo'
 
 /** Modules grouped for the labelled rail. */
 const GROUPS: { heading: string; ids: string[] }[] = [
@@ -77,46 +76,45 @@ export default function Sidebar(): React.JSX.Element {
   return (
     <nav
       className={clsx(
-        'relative flex shrink-0 flex-col border-r border-border-subtle bg-panel transition-[width] duration-[250ms]',
+        'relative flex shrink-0 flex-col border-r border-edge bg-panel transition-[width] duration-[200ms]',
         collapsed ? 'w-[var(--sidebar-collapsed-w)]' : 'w-[var(--sidebar-w)]'
       )}
     >
       {/* Brand lockup */}
       <div
         className={clsx(
-          'relative flex items-center px-3 py-3.5',
+          'relative flex items-center border-b border-edge px-3 py-3',
           collapsed ? 'justify-center' : 'gap-2.5'
         )}
       >
-        <LeafLogo size={collapsed ? 22 : 24} />
+        <span className="relative flex h-[18px] w-[18px] shrink-0 items-center justify-center border border-accent">
+          <span className="h-2 w-2 bg-accent" />
+        </span>
         {!collapsed && (
           <div className="min-w-0 leading-none">
-            <div className="brandmark text-[15px]">PREMBROKE</div>
+            <div className="brandmark text-[13px]">PREMBROKE</div>
             <div className="mt-1.5 flex items-center gap-1.5">
-              <span className="glow-up h-1 w-1 animate-pulse rounded-full bg-up" />
-              <span className="num text-[8px] uppercase tracking-[0.26em] text-text-tertiary">
+              <span className="h-1 w-1 animate-pulse rounded-full bg-up" />
+              <span className="num text-[8px] uppercase tracking-[0.2em] text-text-tertiary">
                 Terminal online
               </span>
             </div>
           </div>
         )}
-        {/* gradient hairline under the brand */}
-        <span className="pointer-events-none absolute inset-x-3 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/45 to-transparent" />
       </div>
 
       {/* Nav groups */}
-      <div className="flex-1 overflow-y-auto px-2 py-2">
+      <div className="flex-1 overflow-y-auto px-1.5 py-2">
         {GROUPS.map((group) => (
           <div key={group.heading} className="mb-2">
             {!collapsed && (
-              <div className="flex items-center gap-1.5 px-2 pb-1.5 pt-2">
-                <span className="h-px w-2 bg-accent/50" />
-                <span className="text-[length:var(--text-micro)] font-semibold uppercase tracking-[0.18em] text-text-tertiary">
+              <div className="px-2 pb-1 pt-2">
+                <span className="text-[length:var(--text-micro)] font-semibold uppercase tracking-[0.16em] text-text-tertiary">
                   {group.heading}
                 </span>
               </div>
             )}
-            <div className="space-y-0.5">
+            <div className="space-y-px">
               {group.ids.map((id) => {
                 const mod = MODULES.find((m) => m.id === id)
                 if (!mod) return null
@@ -128,20 +126,20 @@ export default function Sidebar(): React.JSX.Element {
                     onClick={() => setView(mod.id)}
                     title={mod.label}
                     className={clsx(
-                      't-colors relative flex w-full items-center rounded-md text-[13px]',
-                      collapsed ? 'justify-center px-0 py-2' : 'gap-2.5 px-2.5 py-1.5',
+                      't-colors relative flex w-full items-center rounded-sm text-[12px]',
+                      collapsed ? 'justify-center px-0 py-2' : 'gap-2.5 px-2.5 py-[5px]',
                       active
-                        ? 'bg-accent-soft font-medium text-text shadow-[var(--hairline)]'
-                        : 'text-text-tertiary hover:bg-panel2/70 hover:text-text'
+                        ? 'bg-accent-soft font-medium text-text'
+                        : 'text-text-tertiary hover:bg-panel2 hover:text-text'
                     )}
                   >
                     {active && (
-                      <span className="absolute bottom-1.5 left-0 top-1.5 w-[3px] rounded-r-full bg-accent shadow-[var(--accent-glow)]" />
+                      <span className="absolute inset-y-0 left-0 w-[2px] bg-accent" />
                     )}
                     <Icon
-                      size={16}
+                      size={15}
                       strokeWidth={active ? 2 : 1.75}
-                      className={clsx('shrink-0 t-colors', active ? 'text-gold' : '')}
+                      className={clsx('shrink-0 t-colors', active ? 'text-accent' : '')}
                     />
                     {!collapsed && <span className="truncate">{mod.label}</span>}
                   </button>
@@ -155,7 +153,7 @@ export default function Sidebar(): React.JSX.Element {
       {/* Toggle + version */}
       <div
         className={clsx(
-          'flex items-center border-t border-border-subtle py-2',
+          'flex items-center border-t border-edge py-2',
           collapsed ? 'justify-center px-0' : 'justify-between px-3'
         )}
       >
@@ -165,7 +163,7 @@ export default function Sidebar(): React.JSX.Element {
         <button
           onClick={toggleCollapsed}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="t-colors flex items-center justify-center rounded-lg p-1.5 text-text-tertiary hover:bg-panel2 hover:text-text"
+          className="t-colors flex items-center justify-center rounded-sm p-1.5 text-text-tertiary hover:bg-panel2 hover:text-text"
         >
           {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>

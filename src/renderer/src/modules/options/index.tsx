@@ -148,7 +148,7 @@ export default function OptionsModule(): React.JSX.Element {
                         <td
                           className={clsx(
                             'num px-2 py-1.5 text-right',
-                            callHot ? 'font-bold text-gold' : 'text-up'
+                            callHot ? 'font-bold text-accent' : 'text-up'
                           )}
                         >
                           {v.call?.volume ?? '—'}
@@ -171,7 +171,7 @@ export default function OptionsModule(): React.JSX.Element {
                         <td
                           className={clsx(
                             'num px-2 py-1.5 text-left',
-                            putHot ? 'font-bold text-gold' : 'text-down'
+                            putHot ? 'font-bold text-accent' : 'text-down'
                           )}
                         >
                           {v.put?.volume ?? '—'}

@@ -67,7 +67,7 @@ export default function ExplainButton({
       <button
         onClick={run}
         disabled={loading}
-        className="flex items-center gap-1.5 rounded-lg bg-gold/20 px-3 py-1.5 text-xs font-medium text-gold hover:bg-gold/30 disabled:opacity-50"
+        className="flex items-center gap-1.5 rounded-sm bg-gold/20 px-3 py-1.5 text-xs font-medium text-accent hover:bg-gold/30 disabled:opacity-50"
       >
         {loading ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
         {loading ? 'Analysing…' : 'Explain with AI'}
@@ -75,7 +75,7 @@ export default function ExplainButton({
       {text && (
         <div
           className={clsx(
-            'mt-2 whitespace-pre-wrap rounded-lg border p-3 text-[13px] leading-relaxed',
+            'mt-2 whitespace-pre-wrap rounded-sm border p-3 text-[13px] leading-relaxed',
             err ? 'border-warn/30 bg-warn/10 text-warn' : 'border-edge bg-panel text-text'
           )}
         >

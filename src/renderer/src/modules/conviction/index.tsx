@@ -304,7 +304,7 @@ function DevilsAdvocate({ data }: { data: ConvictionResult }): React.JSX.Element
   }
 
   return (
-    <div className="mt-5 rounded-lg border border-edge bg-panel p-3">
+    <div className="mt-5 rounded-sm border border-edge bg-panel p-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
           <Swords size={13} className="text-down" /> Devil&apos;s advocate
@@ -340,7 +340,7 @@ function DevilsAdvocate({ data }: { data: ConvictionResult }): React.JSX.Element
 const GRADE_COLOR: Record<ConvictionResult['grade'], string> = {
   'A+': 'text-up',
   A: 'text-up',
-  B: 'text-gold',
+  B: 'text-accent',
   C: 'text-warn',
   skip: 'text-muted'
 }
@@ -365,7 +365,7 @@ function CryptoWatchRow({
       onClick={onClick}
       className={clsx(
         'flex w-full items-center justify-between rounded px-2.5 py-2 text-left t-colors',
-        active ? 'bg-panel2 ring-1 ring-gold/40' : 'hover:bg-panel2'
+        active ? 'bg-panel2 ring-1 ring-accent/40' : 'hover:bg-panel2'
       )}
     >
       <div className="flex flex-col">
@@ -379,7 +379,7 @@ function CryptoWatchRow({
         <span
           className={clsx(
             'num w-7 text-right text-sm font-bold',
-            data ? (data.score >= 72 ? 'text-up' : data.score >= 58 ? 'text-gold' : 'text-muted') : 'text-muted'
+            data ? (data.score >= 72 ? 'text-up' : data.score >= 58 ? 'text-accent' : 'text-muted') : 'text-muted'
           )}
         >
           {isLoading ? '··' : data ? data.score : '—'}
@@ -412,7 +412,7 @@ function StaticWatchRow({
       onClick={onClick}
       className={clsx(
         'flex w-full items-center justify-between rounded px-2.5 py-2 text-left t-colors',
-        active ? 'bg-panel2 ring-1 ring-gold/40' : 'hover:bg-panel2'
+        active ? 'bg-panel2 ring-1 ring-accent/40' : 'hover:bg-panel2'
       )}
     >
       <span className="truncate text-[13px] font-medium text-text">{item.label}</span>
@@ -428,8 +428,8 @@ const ASSET_FACTOR_KEYS = ['carry', 'seasonal', 'termstructure', 'skew', 'fundin
 /** Compact chip for an asset-class context factor. */
 function ContextChip({ factor }: { factor: ConvictionResult['factors'][number] }): React.JSX.Element {
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-edge bg-panel px-4 py-2.5">
-      <Sparkles size={14} className="text-gold" />
+    <div className="flex items-center gap-2 rounded-sm border border-edge bg-panel px-4 py-2.5">
+      <Sparkles size={14} className="text-accent" />
       <span className="text-[11px] uppercase tracking-wider text-muted">{factor.label}</span>
       <span className={clsx('text-xs font-semibold', factor.points >= 0 ? 'text-up' : 'text-down')}>
         {factor.detail}
@@ -447,10 +447,10 @@ function WeightsPanel(): React.JSX.Element {
   const reset = useConvictionWeights((s) => s.reset)
 
   return (
-    <div className="mb-5 rounded-lg border border-edge bg-panel p-4">
+    <div className="mb-5 rounded-sm border border-edge bg-panel p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-          <Sliders size={13} className="text-gold" /> Tune your conviction model
+          <Sliders size={13} className="text-accent" /> Tune your conviction model
         </div>
         <button
           onClick={reset}
@@ -483,7 +483,7 @@ function WeightsPanel(): React.JSX.Element {
                     <span
                       className={clsx(
                         'num w-8 shrink-0 text-right text-[11px] font-semibold',
-                        w === 1 ? 'text-muted' : w === 0 ? 'text-down' : 'text-gold'
+                        w === 1 ? 'text-muted' : w === 0 ? 'text-down' : 'text-accent'
                       )}
                     >
                       ×{w.toFixed(1)}
@@ -566,7 +566,7 @@ export default function ConvictionModule(): React.JSX.Element {
               title="Tune factor weights"
               className={clsx(
                 'rounded p-1.5 hover:bg-panel2 t-colors',
-                showWeights || isCustomWeights ? 'text-gold' : 'text-muted hover:text-text'
+                showWeights || isCustomWeights ? 'text-accent' : 'text-muted hover:text-text'
               )}
             >
               <Sliders size={14} />
@@ -593,7 +593,7 @@ export default function ConvictionModule(): React.JSX.Element {
                 onClick={() => selectTab(t.id)}
                 className={clsx(
                   'rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide t-colors',
-                  tab === t.id ? 'bg-accent-soft text-gold' : 'text-muted hover:bg-panel2 hover:text-text'
+                  tab === t.id ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-panel2 hover:text-text'
                 )}
               >
                 {t.label}
@@ -629,7 +629,7 @@ export default function ConvictionModule(): React.JSX.Element {
         <section className="min-w-0 flex-1 overflow-y-auto p-5">
           {showWeights && <WeightsPanel />}
           {needsKey && (
-            <div className="flex items-start gap-3 rounded-lg border border-warn/30 bg-warn/10 p-4 text-sm text-warn">
+            <div className="flex items-start gap-3 rounded-sm border border-warn/30 bg-warn/10 p-4 text-sm text-warn">
               <KeyRound size={16} className="mt-0.5 shrink-0" />
               <div>
                 <div className="font-semibold text-text">Twelve Data key required</div>
@@ -683,8 +683,8 @@ export default function ConvictionModule(): React.JSX.Element {
                 </div>
 
                 {data.plan && (
-                  <div className="ml-auto rounded-lg border border-edge bg-panel p-4">
-                    <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-gold">
+                  <div className="ml-auto rounded-sm border border-edge bg-panel p-4">
+                    <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-accent">
                       <Crosshair size={13} /> Suggested plan ({data.plan.side})
                     </div>
                     <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
@@ -695,7 +695,7 @@ export default function ConvictionModule(): React.JSX.Element {
                       <span className="text-muted">Target</span>
                       <span className="num text-right text-up">{fmtPrice(active, tab, data.plan.target)}</span>
                       <span className="text-muted">R:R</span>
-                      <span className="num text-right text-gold">{data.plan.rr.toFixed(2)}</span>
+                      <span className="num text-right text-accent">{data.plan.rr.toFixed(2)}</span>
                       {tab === 'crypto' && (
                         <>
                           <span className="text-muted">Size (1% / $10k)</span>
@@ -710,8 +710,8 @@ export default function ConvictionModule(): React.JSX.Element {
               {/* context row: MTF + asset factors + draw target */}
               <div className="mt-4 flex flex-wrap items-stretch gap-3">
                 {data.mtf && (
-                  <div className="flex items-center gap-3 rounded-lg border border-edge bg-panel px-4 py-2.5">
-                    <Layers size={14} className="text-gold" />
+                  <div className="flex items-center gap-3 rounded-sm border border-edge bg-panel px-4 py-2.5">
+                    <Layers size={14} className="text-accent" />
                     <span className="text-[11px] uppercase tracking-wider text-muted">MTF</span>
                     {(['h4', 'd1'] as const).map((tf) => (
                       <div key={tf} className="flex items-center gap-1.5">
@@ -727,7 +727,7 @@ export default function ConvictionModule(): React.JSX.Element {
                   <ContextChip key={f.key} factor={f} />
                 ))}
                 {data.drawTarget != null && (
-                  <div className="flex items-center gap-2 rounded-lg border border-edge bg-panel px-4 py-2.5">
+                  <div className="flex items-center gap-2 rounded-sm border border-edge bg-panel px-4 py-2.5">
                     <Target size={14} className="text-accent2" />
                     <span className="text-[11px] uppercase tracking-wider text-muted">Draw on liquidity</span>
                     <span className="num text-xs font-semibold text-accent2">
@@ -736,7 +736,7 @@ export default function ConvictionModule(): React.JSX.Element {
                   </div>
                 )}
                 {data.smt && data.smt.dir && (
-                  <div className="flex items-center gap-2 rounded-lg border border-edge bg-panel px-4 py-2.5">
+                  <div className="flex items-center gap-2 rounded-sm border border-edge bg-panel px-4 py-2.5">
                     <span className="text-[11px] uppercase tracking-wider text-muted">
                       SMT vs {data.smt.correlate}
                     </span>
@@ -753,7 +753,7 @@ export default function ConvictionModule(): React.JSX.Element {
               </div>
 
               {data.factors.some((f) => f.key === 'newsrisk') && (
-                <div className="mt-3 flex items-center gap-2 rounded-lg border border-down/30 bg-down/10 px-4 py-2 text-xs">
+                <div className="mt-3 flex items-center gap-2 rounded-sm border border-down/30 bg-down/10 px-4 py-2 text-xs">
                   <AlertTriangle size={14} className="text-down" />
                   <span className="text-text">
                     {data.factors.find((f) => f.key === 'newsrisk')?.detail} — expect volatility, size down.
@@ -787,7 +787,7 @@ export default function ConvictionModule(): React.JSX.Element {
                     </span>
                   </div>
                 </div>
-                <div className="h-64 rounded-lg border border-edge bg-panel">
+                <div className="h-64 rounded-sm border border-edge bg-panel">
                   <SmcChart result={data} />
                 </div>
               </div>
@@ -797,7 +797,7 @@ export default function ConvictionModule(): React.JSX.Element {
                 <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
                   Confluence checklist
                 </div>
-                <div className="overflow-hidden rounded-lg border border-edge">
+                <div className="overflow-hidden rounded-sm border border-edge">
                   {data.factors.map((f, i) => (
                     <div
                       key={f.key}
@@ -831,7 +831,7 @@ export default function ConvictionModule(): React.JSX.Element {
 
               {/* SMC context */}
               <div className="mt-5 grid grid-cols-2 gap-4">
-                <div className="rounded-lg border border-edge bg-panel p-3">
+                <div className="rounded-sm border border-edge bg-panel p-3">
                   <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
                     Recent fair-value gaps
                   </div>
@@ -852,7 +852,7 @@ export default function ConvictionModule(): React.JSX.Element {
                     </ul>
                   )}
                 </div>
-                <div className="rounded-lg border border-edge bg-panel p-3">
+                <div className="rounded-sm border border-edge bg-panel p-3">
                   <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
                     Structure
                   </div>
