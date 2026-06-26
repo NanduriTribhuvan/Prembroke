@@ -1,33 +1,33 @@
 @import "tailwindcss";
 
-/* ── Prembroke theme ──────────────────────────────────────────────
-   Deep-forest green + gold, on a near-black green-tinted terminal.
-   Logo palette: #14532D forest · #5B7A1E olive · #C99A2E gold · #D9A521 bright gold */
+/* ── Pembroke theme ───────────────────────────────────────────────
+   Gold + bronze on a warm near-black terminal (mountain-and-north-star brand).
+   Logo palette: #0E0D0A summit · #6E4F1E bronze · #C99A2E gold · #D9A521 bright gold · #F3EEE3 cream */
 @theme {
-  --color-bg: #07100b;
-  --color-panel: #0b1710;
-  --color-panel2: #102017;
-  --color-edge: #1c3325;
-  --color-muted: #8aa593;
-  --color-text: #e8efe9;
+  --color-bg: #0b0a07;
+  --color-panel: #14110b;
+  --color-panel2: #1d1810;
+  --color-edge: #342c1c;
+  --color-muted: #a99a7d;
+  --color-text: #f2ece0;
   --color-accent: #d9a521;
-  --color-accent2: #2f7d4f;
-  --color-leaf: #14532d;
-  --color-olive: #5b7a1e;
-  --color-gold: #c99a2e;
+  --color-accent2: #9c7b2f;
+  --color-leaf: #4a3811;
+  --color-olive: #8a6a24;
+  --color-gold: #e0b549;
   --color-up: #16c784;
   --color-down: #ea3943;
   --color-warn: #f0b90b;
   /* Semantic layer (dark defaults — overridden at runtime by applyTheme()).
      Additive only: every legacy token above keeps its exact meaning. */
-  --color-surface: #07100b;
-  --color-elevated: #1a261d;
-  --color-overlay: #212e25;
-  --color-border-subtle: rgba(28, 51, 37, 0.6);
-  --color-border-strong: #3a5043;
-  --color-text-primary: #e8efe9;
-  --color-text-secondary: #b9c9bf;
-  --color-text-tertiary: #8aa593;
+  --color-surface: #0b0a07;
+  --color-elevated: #1f1a11;
+  --color-overlay: #261f14;
+  --color-border-subtle: rgba(52, 44, 28, 0.6);
+  --color-border-strong: #4a3f28;
+  --color-text-primary: #f2ece0;
+  --color-text-secondary: #cdc2a8;
+  --color-text-tertiary: #a99a7d;
   --color-accent-strong: #ba8d1c;
   --color-accent-soft: rgba(217, 165, 33, 0.14);
   --color-ring: rgba(217, 165, 33, 0.45);
@@ -96,6 +96,64 @@ body {
     box-shadow var(--motion-fast) var(--motion-ease);
 }
 
+/* ── Premium elevation + surface system ───────────────────────────
+   Layered depth tuned for a dark terminal: a soft drop shadow plus a
+   1px top highlight (the "machined-glass" edge) so panels read as
+   physical, not flat. Additive — no colour token is touched, so the
+   theme-parity lock stays green. Consumed by chrome + cards app-wide. */
+:root {
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md:
+    0 6px 16px -4px rgba(0, 0, 0, 0.5),
+    0 2px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg:
+    0 18px 44px -12px rgba(0, 0, 0, 0.66),
+    0 6px 16px -6px rgba(0, 0, 0, 0.5);
+  --hairline: inset 0 1px 0 0 rgba(255, 255, 255, 0.045);
+  --accent-glow: 0 0 24px -6px color-mix(in srgb, var(--color-accent) 42%, transparent);
+}
+
+/* Frosted-glass chrome (translucent + blur). */
+.glass {
+  background: color-mix(in srgb, var(--color-panel) 72%, transparent);
+  backdrop-filter: blur(16px) saturate(1.25);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+}
+
+/* Premium floating surface for popovers / menus / help. */
+.surface-pop {
+  background: color-mix(in srgb, var(--color-overlay) 85%, transparent);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg), var(--hairline);
+}
+
+/* Physical lift for cards / tiles. */
+.elevate-1 {
+  box-shadow: var(--shadow-sm), var(--hairline);
+}
+.elevate-2 {
+  box-shadow: var(--shadow-md), var(--hairline);
+}
+
+/* Accent-lit ring for the active / focused premium element. */
+.lit {
+  border-color: color-mix(in srgb, var(--color-accent) 48%, transparent) !important;
+  box-shadow: var(--accent-glow), var(--hairline);
+}
+
+/* Edge-fade mask — softens the right edge of horizontal scrollers
+   (ticker tape) so content dissolves instead of hard-clipping. */
+.fade-right {
+  -webkit-mask-image: linear-gradient(to right, #000 92%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 92%, transparent 100%);
+}
+
 .num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -118,9 +176,9 @@ body {
   box-shadow: 0 0 0 2px var(--color-ring);
 }
 
-/* Prembroke wordmark gradient (green → olive → gold) */
+/* Pembroke wordmark gradient (bright gold → bronze, matching the logo) */
 .brandmark {
-  background: linear-gradient(90deg, #2f7d4f 0%, #5b7a1e 45%, #c99a2e 80%, #d9a521 100%);
+  background: linear-gradient(95deg, #e8c764 0%, #d9a521 42%, #a87d2c 74%, #6e4f1e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -134,29 +192,112 @@ body {
 .grid-backdrop {
   background-color: var(--color-bg);
   background-image:
-    radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 55%),
-    radial-gradient(100% 70% at 0% 100%, color-mix(in srgb, var(--color-leaf) 30%, transparent), transparent 55%),
-    linear-gradient(to right, color-mix(in srgb, var(--color-edge) 25%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--color-edge) 25%, transparent) 1px, transparent 1px);
+    radial-gradient(140% 90% at 100% 0%, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 50%),
+    radial-gradient(110% 78% at 0% 100%, color-mix(in srgb, var(--color-leaf) 24%, transparent), transparent 52%),
+    radial-gradient(125% 125% at 50% 46%, transparent 54%, rgba(0, 0, 0, 0.42) 100%),
+    linear-gradient(to right, color-mix(in srgb, var(--color-edge) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-edge) 22%, transparent) 1px, transparent 1px);
   background-size:
     100% 100%,
     100% 100%,
-    34px 34px,
-    34px 34px;
+    100% 100%,
+    32px 32px,
+    32px 32px;
 }
 
 @keyframes fadein {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(6px) scale(0.996);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 .module-enter {
-  animation: fadein 0.22s ease-out;
+  animation: fadein 0.28s var(--motion-ease);
+}
+
+/* ── Terminal command-deck system (Pass 24) ──────────────────────────
+   Additive utilities that give the shell a true trading-terminal feel: a
+   function-key deck, phosphor glow on live elements, crisp squared data
+   panels, a blinking command cursor and market-session HUD pills. No design
+   token is touched, so the theme-parity lock stays green. All animations are
+   auto-frozen by the .reduce-motion / prefers-reduced-motion kill-switch. */
+:root {
+  --deck-h: 30px;
+}
+
+/* Blinking block cursor for the command prompt. */
+@keyframes cmd-blink {
+  0%,
+  48% {
+    opacity: 1;
+  }
+  49%,
+  100% {
+    opacity: 0;
+  }
+}
+.cmd-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  background: var(--color-gold);
+  box-shadow: 0 0 8px -1px var(--color-gold);
+  animation: cmd-blink 1.1s steps(1) infinite;
+  vertical-align: -2px;
+}
+
+/* Phosphor glow for live / active elements. */
+.text-glow {
+  text-shadow: 0 0 14px color-mix(in srgb, var(--color-gold) 55%, transparent);
+}
+.glow-up {
+  box-shadow: 0 0 8px 0 color-mix(in srgb, var(--color-up) 75%, transparent);
+}
+.glow-down {
+  box-shadow: 0 0 8px 0 color-mix(in srgb, var(--color-down) 75%, transparent);
+}
+.glow-accent {
+  box-shadow: 0 0 10px -1px color-mix(in srgb, var(--color-accent) 70%, transparent);
+}
+
+/* Crisp squared data panel — the terminal alternative to soft cards. */
+.panel-terminal {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--hairline);
+}
+
+/* Function-key deck + HUD surfaces (translucent, blurred chrome). */
+.deck {
+  background: color-mix(in srgb, var(--color-panel) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+
+/* Thin vertical HUD divider. */
+.hud-sep {
+  display: inline-block;
+  width: 1px;
+  height: 13px;
+  background: var(--color-border-subtle);
+}
+
+/* Subtle CRT scanline veil — only where .scanlines is applied (a positioned ancestor). */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.014) 0 1px,
+    transparent 1px 3px
+  );
 }
 
 /* ── Reduce-motion kill-switch ────────────────────────────────────
@@ -183,8 +324,8 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 11px;
+  height: 11px;
 }
 
 ::-webkit-scrollbar-track {
@@ -192,10 +333,17 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-strong);
-  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-border-strong) 78%, transparent);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 9px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 65%, transparent);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }

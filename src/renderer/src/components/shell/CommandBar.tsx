@@ -147,10 +147,16 @@ export default function CommandBar(): React.JSX.Element {
 
   return (
     <div
-      className="relative flex shrink-0 items-center gap-2 border-b border-edge bg-bg px-3"
+      className="relative z-30 flex shrink-0 items-center gap-2 border-b border-border-subtle bg-bg px-3 shadow-[var(--shadow-sm)]"
       style={{ height: 'var(--cmdbar-h)' }}
     >
-      <ChevronRight size={14} className="text-gold shrink-0" />
+      <div className="flex shrink-0 items-center gap-1.5">
+        <span className="num flex h-5 items-center rounded-md bg-accent-soft px-1.5 text-[10px] font-bold tracking-[0.15em] text-gold shadow-[var(--hairline)]">
+          CMD
+        </span>
+        <ChevronRight size={13} strokeWidth={2.5} className="text-gold/70" />
+      </div>
+      {input === '' && <span className="cmd-cursor shrink-0" aria-hidden />}
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -181,11 +187,14 @@ export default function CommandBar(): React.JSX.Element {
             }
           }}
           placeholder="Command — e.g.  ETH CONV   ·   SOL CHART   ·   DOM   ·   SCAN   ·   type HELP"
-          className="focus-ring num w-full rounded bg-transparent text-[12px] uppercase tracking-wide text-gold outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-muted"
+          className={clsx(
+            'focus-ring num w-full rounded bg-transparent text-[12px] uppercase tracking-wide text-gold outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-muted',
+            input !== '' && 'text-glow'
+          )}
           spellCheck={false}
         />
         {suggestions.length > 0 && (
-          <div className="absolute left-0 top-7 z-50 w-64 overflow-hidden rounded-lg border border-border-subtle bg-overlay shadow-xl">
+          <div className="surface-pop absolute left-0 top-8 z-50 w-64 overflow-hidden p-1">
             {suggestions.map((s, i) => (
               <button
                 key={s.v}
@@ -196,8 +205,8 @@ export default function CommandBar(): React.JSX.Element {
                 }}
                 onMouseEnter={() => setSel(i)}
                 className={clsx(
-                  't-colors flex w-full items-center justify-between px-3 py-1.5 text-left text-xs',
-                  i === sel ? 'bg-panel2' : ''
+                  't-colors flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-xs',
+                  i === sel ? 'bg-accent-soft' : 'hover:bg-panel2/70'
                 )}
               >
                 <span className="num text-gold">{s.v}</span>
@@ -240,7 +249,7 @@ export default function CommandBar(): React.JSX.Element {
       </Toolbar>
 
       {help && (
-        <div className="absolute left-3 top-9 z-50 w-[460px] rounded-lg border border-border-subtle bg-overlay p-3 shadow-xl">
+        <div className="surface-pop absolute left-3 top-10 z-50 w-[460px] p-3.5">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gold">Function codes</div>
           <div className="space-y-1">
             {HELP_ROWS.map((r) => (
@@ -258,7 +267,7 @@ export default function CommandBar(): React.JSX.Element {
       )}
 
       {wsOpen && (
-        <div className="absolute right-16 top-9 z-50 w-64 rounded-lg border border-border-subtle bg-overlay p-3 shadow-xl">
+        <div className="surface-pop absolute right-16 top-10 z-50 w-64 p-3.5">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gold">Workspaces</div>
           <div className="space-y-1">
             {presets.map((p) => (

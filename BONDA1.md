@@ -411,3 +411,95 @@ Shipped green at every step (`typecheck` + **281 tests** + `build`). **No new de
 Steps 7–9 (Conviction per-asset-class generalization, all-asset screener surfacing, non-crypto candle seam) + the FRED/Macro desk are intentionally **not** started here.
 
 _Last updated by Claude (Opus 4.8) — Prembroke pass 21. Keep this file current as you build._
+
+---
+
+## 20. Pass 22 — Conviction Engine goes all-asset (Opus 4.8)
+
+Shipped green (`typecheck` + **318 tests** + `build`). The crown-jewel engine now scores **crypto, FX, futures, indices and commodities** — not just crypto. The all-asset desks (pass 21) finally feed the Conviction read. **No new dependency.** Crypto behaviour is byte-identical when no asset context is supplied (every new factor is gated on `opts.asset`, exactly like `mtf`/`smt`/`newsRisk`), so all 9 existing engine consumers (alpha, scanner, heatmap, backtest, journal, research, alerts, correlation, watchlist) are untouched.
+
+### New shared brain: `src/shared/conviction/**` (Kiro zone — pure, UI-free, unit-tested)
+The asset-class factor logic lives in `@shared` (not the renderer engine) so it runs in the existing vitest harness (no config/alias — relative-import tests only). The engine composes it.
+- `types.ts` — `FactorSpec` (structurally identical to the engine's `ConvictionFactor`), `FactorBias`, the signal types (`CarrySignal`, `SeasonalSignal`, `TermStructureSignal`, `SkewSignal`, `FundingSignal`), and `AssetSignals` (the optional bundle handed to the engine). `ConvictionAssetClass` is redeclared locally to avoid coupling to `markets/asset-class`.
+- `asset-factors.ts` — `buildAssetFactors(signals, bias): FactorSpec[]` plus the `skewRegime(rr)` / `fundingRegime(pct)` classifiers. Deterministic; a signal only emits a factor when it has a **directional** read the bias confirms/contradicts (flat/absent signal or neutral bias → nothing). Weights (modest vs. structure 22 / premdisc 14 / sweep 15): carry +8/−6, seasonal +6/−4, termstructure +5/−3, skew +7/−5, funding +6/−4.
+  - **carry** (FX): rate-differential bias aligned with the engine bias.
+  - **seasonal** (futures/commodities/indices): static `SEASONAL_TABLE` month bias.
+  - **termstructure** (futures): backwardation→bullish, contango→bearish (wired in the brain; fires only when curve points exist — free tier usually has none).
+  - **skew** (crypto): 25Δ risk reversal — puts bid (RR≥1)→fear/short tilt, calls bid (RR≤−1)→greed/long tilt.
+  - **funding** (crypto): contrarian — negative funding→long (squeeze fuel), richly positive→short.
+- `index.ts` barrel → `@shared/conviction`, also folded into the root `@shared` barrel.
+- `__tests__/asset-factors.test.ts` — **25 cases**: every regime classifier, per-signal aligned/opposed/flat, gating (neutral bias / empty signals → `[]`), full composition order, purity/deep-equal.
+- `markets/rate-context.ts` gained `DEFAULT_POLICY_RATES` (seeded as-of-2026 major policy rates) so FX carry works out of the box.
+
+### Engine (`modules/conviction/engine.ts`) — additive only
+- `ConvictionOpts` gained `asset?: AssetSignals`; after the existing factor blocks the engine does `for (const f of buildAssetFactors(opts.asset, bias)) add(...)`. Nothing else changed — the score sum already picks the factors up. **Regression-safe by construction.**
+- New **candle-source router** `fetchCandlesFor(symbolId, interval, limit, tdKey?)`: crypto → existing `fetchCandles` (Binance, live/free); FX/index/commodity/future → Twelve Data `/time_series` (own-key, delayed, CORS-open like the desks' `/quote` calls), mapped to `Candle[]` and sorted ascending. Helpers `twelveDataSymbol(id)` (future→underlying's TD symbol, forex→`EUR/USD` slash form, else `info.twelvedata`) + `TD_INTERVAL` map + exported `TWELVEDATA_KEY_REQUIRED` sentinel. **`fetchCandles` (Binance) is untouched** so the 9 consumers are unaffected.
+
+### Module (`modules/conviction/index.tsx`) — asset-class aware
+- **Asset-class switcher** (Crypto · FX · Futures · Indices · Commodities) as a wrapping pill row above the watchlist; per-class curated watchlists.
+- **Crypto** keeps the rich live path (MTF + SMT + news) and now also gathers **Deribit 25Δ skew** (BTC/ETH) + **Binance perp funding** (`fapi premiumIndex`) into `asset`. Watch rows use a **lightweight** one-fetch score (`useRowScore`) so per-row cost dropped (was 4 fetches/row).
+- **Non-crypto** fetches the active symbol's candles via `fetchCandlesFor` (Twelve Data) and builds `asset` from **pure local** context — `rateDifferential` (FX carry) / `seasonalBias` (futures; indices & commodities borrow their futures table via `SEASONAL_PROXY`). Watch rows show that local context with **zero network** (no TD quota burn). Keyless non-crypto shows a clean "add Twelve Data key" panel.
+- Asset-context factors surface both in the **confluence checklist** (automatic) and as dedicated **context chips** next to MTF/SMT. Price formatting + plan card adapt per class (no crypto `sampleQty` for non-crypto).
+
+### Decisions / honest caveats
+- Crypto = live & free. Non-crypto candles are **Twelve Data own-key, delayed** (consistent with §19's "real-time is the premium upgrade"); graceful key + rate-limit states, never a crash.
+- Scanner/Heatmap/Alpha intentionally **stay crypto-only** this pass (they batch 16–40 symbols; generalizing them is a clean follow-up now that the engine path is proven).
+- Term-structure factor is wired in the brain but dormant until a free curve source exists. Open-interest / long-short crypto factors are deliberately deferred (extra network per view).
+
+### Definition of done met
+`npm run typecheck && npm test && npm run build` all green; crypto Conviction output identical except the additive skew/funding context.
+
+_Last updated by Claude (Opus 4.8) — Prembroke pass 22. Keep this file current as you build._
+
+---
+
+## 21. Pass 23 — Tunable model + crowd positioning (Opus 4.8)
+
+Shipped green (`typecheck` + **330 tests** + `build`). Two trader-facing additions on top of pass 22, both **default-safe** (no behaviour change until used).
+
+### A. Customizable factor weights (the promised "pros tune their own model")
+- `src/shared/conviction/weights.ts` (pure, tested): `FactorWeights` (per-factor multiplier map, absent → 1), `WEIGHTABLE_FACTORS` catalog (19 factors grouped Structure / Momentum / Timing / Asset), `clampWeight` (0–2), and `applyWeights(factors, weights)` — scales each factor's points (preserves `hit`/`detail`, rounds to int, never mutates). An empty map is a no-op.
+- Engine (`engine.ts`): `ConvictionOpts.weights?` — after factors assemble, `const scored = opts.weights ? applyWeights(factors, opts.weights) : factors`, score sums `scored`, and the result returns `factors: scored` so the UI shows the tuned points. **No weights → byte-identical** (the 9 consumers are unaffected).
+- Store `stores/conviction.ts`: `useConvictionWeights` (persisted `prembroke.conviction-weights`) — `weights`, `setWeight` (clamped), `isCustom`, `reset`. Empty by default.
+- Module UI: a `Sliders` toggle in the header (gold when custom) opens a **WeightsPanel** — grouped sliders (0–2, ×N.N readout, red at 0, gold when tuned) + "Reset to default". Grade thresholds stay fixed; only the point mix changes.
+
+### B. Crypto crowd positioning (long/short ratio)
+- Brain: `LongShortSignal { ratio }` on `AssetSignals`; `longShortRegime(ratio)` (≥2 crowded-long → fade/short, ≤0.6 crowded-short → squeeze/long, else flat) and a `longshort` factor (+5 / −4). Contrarian, like funding/skew.
+- Module: `cryptoSignals()` now also pulls `fapi/futures/data/globalLongShortAccountRatio` (1h, graceful on failure). Surfaces as a context chip + checklist row + a weightable factor.
+
+### Performance seam (important pattern)
+The module now **splits fetch from scoring**: `useConvictionInputs` (TanStack Query) returns `{ candles, opts }` keyed *without* weights; a `useMemo` runs `computeConviction(..., { ...opts, weights })`. So moving a weight slider **recomputes instantly with zero network** (no refetch, no TD-quota burn). Crypto watch rows do the same (cached candles → weighted `useMemo`).
+
+### Tests added (shared, +12 over 318 → **330**)
+`asset-factors.test.ts` extended: `longShortRegime` bands + factor alignment; `applyWeights` (empty no-op, weight-0 disable, ×1.5 round, clamp, no-mutate, `clampWeight` sentinels); `WEIGHTABLE_FACTORS` unique-key/label integrity.
+
+_Last updated by Claude (Opus 4.8) — Prembroke pass 23. Keep this file current as you build._
+
+---
+
+## 22. Pass 24 — Command-deck terminal UI (Opus 4.8)
+
+Shipped green (`typecheck` + **330 tests** + `build`). A next-level **trading-terminal** shell that out-Bloombergs the dense-amber-on-black look. **No design token touched** (the theme-parity lock stays green) — every change is additive CSS utilities + shell components, so it re-tints with any accent/mode and cascades across all 39 modules.
+
+### New CSS (additive, `assets/main.css`)
+A "Terminal command-deck system" block: `--deck-h`, `@keyframes cmd-blink` + `.cmd-cursor` (blinking command cursor), `.text-glow` / `.glow-up` / `.glow-down` / `.glow-accent` (phosphor glow on live elements), `.panel-terminal` (crisp squared hairline data panel — the terminal alternative to soft cards), `.deck` (blurred function-key surface), `.hud-sep` (HUD divider), `.scanlines::after` (ultra-subtle CRT veil). The `.grid-backdrop` was refined (finer 32px grid, stronger vignette). All animations auto-freeze under the existing reduce-motion kill-switch.
+
+### New component: `components/shell/FunctionKeyBar.tsx`
+The signature Bloomberg move — an **F1–F10 function-key deck** below the command bar (ALPHA/CONV/CHART/SCAN/HEAT/MKT/DOM/NEWS/RT/AI). Click or press the physical F-key to jump the active pane; the current view's key is lit. Mounted in `App.tsx` between `CommandBar` and the workspace.
+
+### Shell upgrades
+- **CommandBar** → command deck: a mono `CMD` prompt chip + gold chevron, a blinking `.cmd-cursor` when empty, and `.text-glow` on live input.
+- **StatusBar** → live **market-session HUD**: feed status (left), Sydney/Tokyo/London/New York session pills that glow when open (centre, via `@shared/markets` `activeSessions`), UTC + local clocks (right).
+- **TickerTape**: a glowing `LIVE` pulse replaces the old `PB` chip.
+- **Sidebar**: live "Terminal online" status lockup, hairline-tick group headings, sharper `rounded-md` nav rows.
+- **App.tsx**: tiled panes are now `panel-terminal` (squared, lit when active); the workspace carries the `.scanlines` veil.
+
+### Primitive cascade (touches every module for free)
+- `ModuleHeader`: a glowing accent rail + subtle top gradient — every module's header now reads as a terminal deck.
+- `SectionCard`: `rounded-md panel-terminal` (crisp hairline) instead of the soft card — cascades to all data panels app-wide.
+
+### Notes
+- Sentence-case titles and the green/red up/down invariant are preserved; only chrome/texture changed.
+- Density default unchanged; the new chrome is denser by design. Light mode + all six accents still resolve (glow/scanline utilities use `color-mix` over the live tokens).
+
+_Last updated by Claude (Opus 4.8) — Prembroke pass 24. Keep this file current as you build._

@@ -18,9 +18,9 @@ export function SectionCard({
   children,
 }: SectionCardProps): React.JSX.Element {
   return (
-    <div className={clsx('rounded-lg border border-edge bg-panel', className)}>
+    <div className={clsx('rounded-md panel-terminal', className)}>
       {title !== undefined && (
-        <div className="flex items-center gap-1.5 px-3 py-2 border-b border-edge">
+        <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border-subtle">
           {Icon && <Icon size={12} className="text-gold shrink-0" />}
           <span className="text-[length:var(--text-label)] font-semibold uppercase tracking-wider text-muted">
             {title}

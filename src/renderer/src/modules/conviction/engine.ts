@@ -12,6 +12,8 @@
 import type { Candle } from '@shared/indicators'
 import { ema, rsi, atr } from '@shared/indicators'
 import { rMultiple, positionSizeCrypto } from '@shared/calc'
+import { buildAssetFactors, applyWeights, type AssetSignals, type FactorWeights } from '@shared/conviction'
+import { assetClassOf, bySymbolId } from '@shared/markets'
 
 export type Bias = 'long' | 'short' | 'neutral'
 
@@ -76,6 +78,18 @@ export interface ConvictionOpts {
   mtf?: MtfContext
   newsRisk?: NewsRiskContext
   smt?: SmtContext
+  /**
+   * Optional asset-class context (FX carry, futures seasonality / term
+   * structure, crypto options skew / funding). When present, the engine appends
+   * the matching factors; when absent, scoring is byte-identical to a plain
+   * crypto-candle call.
+   */
+  asset?: AssetSignals
+  /**
+   * Optional per-factor weight multipliers (0 = ignore, 1 = default, 2 =
+   * double). Absent or all-`1` leaves scoring unchanged.
+   */
+  weights?: FactorWeights
 }
 
 export interface ConvictionFactor {
@@ -488,7 +502,17 @@ export function computeConviction(
     )
   }
 
-  const raw = factors.reduce((sum, f) => sum + f.points, 0)
+  // Asset-class context (FX carry, futures seasonality / term structure, crypto
+  // skew / funding). Gated on `opts.asset` so existing crypto calls are unchanged.
+  if (opts.asset) {
+    for (const f of buildAssetFactors(opts.asset, bias)) {
+      add(f.key, f.label, f.detail, f.points, f.hit)
+    }
+  }
+
+  // Optional trader-tuned factor weights (default = unchanged).
+  const scored = opts.weights ? applyWeights(factors, opts.weights) : factors
+  const raw = scored.reduce((sum, f) => sum + f.points, 0)
   const score = Math.max(0, Math.min(100, Math.round(50 + raw)))
   const grade = bias === 'neutral' ? 'skip' : gradeFor(score)
 
@@ -516,7 +540,7 @@ export function computeConviction(
     bias,
     score,
     grade,
-    factors,
+    factors: scored,
     plan,
     structure: { swings, lastEvent: structure.lastEvent },
     fvgs,
@@ -581,4 +605,89 @@ export async function fetchCandles(
       volume: parseFloat(k[5])
     }
   })
+}
+
+/** Map an engine interval token to a Twelve Data `/time_series` interval. */
+const TD_INTERVAL: Record<string, string> = {
+  '1m': '1min',
+  '5m': '5min',
+  '15m': '15min',
+  '30m': '30min',
+  '1h': '1h',
+  '2h': '2h',
+  '4h': '4h',
+  '1d': '1day',
+  '1w': '1week'
+}
+
+/** Thrown by {@link fetchCandlesFor} when a non-crypto symbol needs a key. */
+export const TWELVEDATA_KEY_REQUIRED = 'twelvedata-key-required'
+
+/** Resolve the Twelve Data symbol for a non-crypto registry id, or `undefined`. */
+export function twelveDataSymbol(symbolId: string): string | undefined {
+  const info = bySymbolId(symbolId)
+  if (!info) return undefined
+  if (info.kind === 'future') return info.underlying ? bySymbolId(info.underlying)?.twelvedata : undefined
+  if (info.kind === 'forex') return `${info.id.slice(0, 3)}/${info.id.slice(3, 6)}`
+  return info.twelvedata
+}
+
+/** Fetch OHLCV candles from Twelve Data `/time_series` (own-key, delayed). */
+async function fetchTwelveDataCandles(
+  tdSymbol: string,
+  interval: string,
+  limit: number,
+  key: string
+): Promise<Candle[]> {
+  const iv = TD_INTERVAL[interval] ?? '1h'
+  const url =
+    `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(tdSymbol)}` +
+    `&interval=${iv}&outputsize=${limit}&order=ASC&apikey=${key}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Twelve Data ${res.status}`)
+  const j = (await res.json()) as {
+    status?: string
+    message?: string
+    values?: { datetime: string; open: string; high: string; low: string; close: string; volume?: string }[]
+  }
+  if (j.status === 'error' || !Array.isArray(j.values)) {
+    throw new Error(j.message ?? 'Twelve Data error')
+  }
+  return j.values
+    .map((v) => ({
+      time: Date.parse(v.datetime),
+      open: parseFloat(v.open),
+      high: parseFloat(v.high),
+      low: parseFloat(v.low),
+      close: parseFloat(v.close),
+      volume: v.volume ? parseFloat(v.volume) : 0
+    }))
+    .filter((c) => Number.isFinite(c.close))
+    .sort((a, b) => a.time - b.time)
+}
+
+/**
+ * Asset-class-aware candle loader. Routes crypto to Binance (live, free) and
+ * FX / indices / commodities / futures to Twelve Data `/time_series` (own-key,
+ * delayed). Crypto symbols may be passed as a Binance pair (`"BTCUSDT"`) or a
+ * registry id (`"BTCUSD"`); non-crypto symbols use their registry id.
+ *
+ * @throws {@link TWELVEDATA_KEY_REQUIRED} when a non-crypto symbol has a data
+ *         source but no key was supplied.
+ */
+export async function fetchCandlesFor(
+  symbolId: string,
+  interval: string,
+  limit = 250,
+  tdKey?: string
+): Promise<Candle[]> {
+  const cls = assetClassOf(symbolId)
+  if (!cls || cls === 'crypto') {
+    const pair = bySymbolId(symbolId)?.binance ?? symbolId
+    return fetchCandles(pair, interval, limit)
+  }
+  const td = twelveDataSymbol(symbolId)
+  if (!td) throw new Error(`No free candle source for ${symbolId}`)
+  if (!tdKey) throw new Error(TWELVEDATA_KEY_REQUIRED)
+  return fetchTwelveDataCandles(td, interval, limit, tdKey)
 }

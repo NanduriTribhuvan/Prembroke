@@ -106,7 +106,7 @@ export const ACCENTS: Record<AccentId, { label: string; base: string }> = {
   gold: { label: 'Gold', base: '#d9a521' },
   emerald: { label: 'Emerald', base: '#10b981' },
   teal: { label: 'Teal', base: '#14b8a6' },
-  azure: { label: 'Azure', base: '#3b82f6' },
+  azure: { label: 'Azure', base: '#3b9ef5' },
   violet: { label: 'Violet', base: '#8b5cf6' },
   rose: { label: 'Rose', base: '#f43f5e' }
 }
@@ -127,31 +127,31 @@ export const DENSITIES: Record<DensityId, { label: string; metrics: DensityMetri
   }
 }
 
-/** The dark base palette — extracted VERBATIM from `assets/main.css` (locked). */
+/** The dark base palette — cool neutral (OpenBB-style), locked by a parity test. */
 const DARK_BASE = {
-  bg: '#07100b',
-  panel: '#0b1710',
-  panel2: '#102017',
-  edge: '#1c3325',
-  muted: '#8aa593',
-  text: '#e8efe9',
-  accent2: '#2f7d4f',
-  leaf: '#14532d',
-  olive: '#5b7a1e',
+  bg: '#0d0e11',
+  panel: '#15171c',
+  panel2: '#1d2027',
+  edge: '#2a2e37',
+  muted: '#8e94a3',
+  text: '#e7e9ee',
+  accent2: '#6b93b8',
+  leaf: '#15202c',
+  olive: '#2b4a63',
   warn: '#f0b90b'
 } as const
 
 /** The light base palette — hand-tuned warm-neutral (not an inversion). */
 const LIGHT_BASE = {
-  bg: '#f7f8f6',
-  panel: '#ffffff',
-  panel2: '#eef1ee',
-  edge: '#d8e0d8',
-  muted: '#5a6b5f',
-  text: '#0e1a12',
-  accent2: '#2a7147',
-  leaf: '#14532d',
-  olive: '#526e1b',
+  bg: '#f3eee3',
+  panel: '#fffdf7',
+  panel2: '#ece4d4',
+  edge: '#ddd2bd',
+  muted: '#6e6147',
+  text: '#1a150c',
+  accent2: '#8a6a24',
+  leaf: '#c9a23a',
+  olive: '#7a5e1e',
   warn: '#b8860b'
 } as const
 
@@ -266,7 +266,7 @@ export function resolveTheme(mode: ThemeMode, accent: AccentId, density: Density
           borderSubtle: withAlpha(base.edge, 0.6),
           borderStrong: lighten(base.edge, 0.18),
           textPrimary: base.text,
-          textSecondary: '#b9c9bf',
+          textSecondary: '#b4bac6',
           textTertiary: base.muted,
           accentStrong: ramp.strong,
           accentSoft: ramp.soft,
@@ -296,7 +296,7 @@ export function resolveTheme(mode: ThemeMode, accent: AccentId, density: Density
           borderSubtle: withAlpha('#9fb0a4', 0.5),
           borderStrong: darken(base.edge, 0.22),
           textPrimary: base.text,
-          textSecondary: '#3f4d45',
+          textSecondary: '#4a4030',
           textTertiary: base.muted,
           accentStrong: ramp.strong,
           accentSoft: ramp.soft,

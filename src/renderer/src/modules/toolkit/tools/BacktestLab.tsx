@@ -64,7 +64,7 @@ function CurveChart({ strat, hold }: { strat: number[]; hold: number[] }): React
       .join(' ')
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-40 w-full">
-      <path d={path(hold)} fill="none" stroke="#8aa593" strokeWidth={1} strokeDasharray="3 2" vectorEffect="non-scaling-stroke" />
+      <path d={path(hold)} fill="none" stroke="#a99a7d" strokeWidth={1} strokeDasharray="3 2" vectorEffect="non-scaling-stroke" />
       <path d={path(strat)} fill="none" stroke="#c99a2e" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
     </svg>
   )

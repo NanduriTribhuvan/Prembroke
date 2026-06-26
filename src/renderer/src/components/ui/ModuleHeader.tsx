@@ -17,15 +17,21 @@ export function ModuleHeader({
 }: ModuleHeaderProps): React.JSX.Element {
   return (
     <div
-      className="flex items-center gap-2 border-b border-edge px-4 shrink-0"
+      className="relative flex items-center gap-2.5 border-b border-border-subtle bg-gradient-to-b from-panel/50 to-transparent px-4 shrink-0"
       style={{ height: 'var(--header-h)' }}
     >
-      {Icon && <Icon size={14} className="text-muted shrink-0" />}
-      <span className="text-[length:var(--text-heading)] font-semibold text-text truncate">
+      <span className="glow-accent h-4 w-[3px] shrink-0 rounded-full bg-accent" />
+      {Icon && (
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent-soft text-gold shadow-[var(--hairline)]">
+          <Icon size={14} strokeWidth={2} />
+        </span>
+      )}
+      <span className="truncate text-[length:var(--text-heading)] font-semibold tracking-tight text-text">
         {title}
       </span>
       {badge !== undefined && <Badge>{badge}</Badge>}
       {actions && <div className="ml-auto flex items-center gap-1">{actions}</div>}
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-accent/40 via-transparent to-transparent" />
     </div>
   )
 }

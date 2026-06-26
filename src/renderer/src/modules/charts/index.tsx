@@ -9,8 +9,8 @@ import { LayoutDashboard } from 'lucide-react'
 // TradingView embed uses literal colours for the chart background/grid.
 // These cannot be CSS vars because the embed config is a JSON string.
 const TV_COLORS = {
-  background: '#0b1710',
-  grid: 'rgba(28,51,37,0.6)',
+  background: '#14110b',
+  grid: 'rgba(52,44,28,0.6)',
 } as const
 
 /** Single TradingView Advanced Chart embed. Rebuilds when symbol/interval change. */

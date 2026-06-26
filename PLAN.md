@@ -201,7 +201,7 @@ PLAN  entry 64,200 · stop 63,400 · TP 66,800 · R:R 3.2
 - **Grading** A+/A/B/skip with **customizable factor weights** — pros tune their own model.
 - **Auto trade plan**: entry/stop/targets/R:R, position size pulled from the Toolkit.
 - **Explainable**: every factor is clickable and teaches. It grades; it does not advise.
-- **All-asset generalization (next):** the engine is asset-agnostic over OHLCV. Extend factor inputs per class — funding/OI/skew (crypto), COT/rate-differentials/DXY (FX), earnings-proximity/short-interest/options-skew (equities), term-structure/seasonality (futures).
+- **All-asset generalization (done):** the engine is asset-agnostic over OHLCV and now scores crypto, FX, futures, indices and commodities. Factor inputs extend per class — funding/skew (crypto), carry/rate-differentials (FX), seasonality/term-structure (futures/commodities) — via a pure, unit-tested `@shared/conviction` brain that the engine composes (gated, so crypto stays byte-identical).
 - **Build discipline:** ship a few concepts done right (structure + FVG + liquidity sweep) before 30 sloppy ones. Detection quality is the trust.
 
 ---
@@ -308,7 +308,7 @@ This is what turns ~30 siloed module screens into **one composable everything-ap
 
 **Next**
 7. **AI Portfolio Manager** (capital + risk + themes → monitored allocation).
-8. **Backtester / replay** for the Conviction Engine; feed Deribit 25Δ skew into the score.
+8. **Backtester / replay** for the Conviction Engine; feed Deribit 25Δ skew into the score (skew + perp funding now feed the crypto Conviction read — done).
 9. **Volume Profile / VPVR, anchored VWAP, Ichimoku** and the "add-for-pro" indicator set.
 
 **Later (premium / harder)**

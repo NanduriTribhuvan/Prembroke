@@ -11,6 +11,10 @@ import { registerExchangeIpc } from './exchange'
 import { registerDeribitIpc } from './deribit'
 import { registerDexIpc } from './dex'
 
+/** Window/taskbar icon. In dev this resolves to the repo's build resource; in a
+ *  packaged build the embedded exe icon is used (this path is absent and ignored). */
+const APP_ICON = join(__dirname, '../../build/icon.ico')
+
 function loadRenderer(win: BrowserWindow, query?: string): void {
   if (process.env['ELECTRON_RENDERER_URL']) {
     win.loadURL(process.env['ELECTRON_RENDERER_URL'] + (query ? `?${query}` : ''))
@@ -26,8 +30,9 @@ function createWindow(): void {
     minWidth: 1240,
     minHeight: 720,
     show: false,
-    backgroundColor: '#07100b',
+    backgroundColor: '#0b0a07',
     title: 'Prembroke — Conviction Terminal',
+    icon: APP_ICON,
     autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -51,8 +56,9 @@ function createPopout(moduleId: string): void {
     width: 760,
     height: 560,
     show: false,
-    backgroundColor: '#07100b',
+    backgroundColor: '#0b0a07',
     title: `Prembroke · ${moduleId}`,
+    icon: APP_ICON,
     autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

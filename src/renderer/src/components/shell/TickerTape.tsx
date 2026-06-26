@@ -14,11 +14,15 @@ export default function TickerTape(): React.JSX.Element {
 
   return (
     <header
-      className="flex shrink-0 items-center overflow-x-auto border-b border-edge bg-panel [scrollbar-width:none]"
+      className="glass fade-right relative z-20 flex shrink-0 items-center overflow-x-auto border-b border-border-subtle shadow-[var(--shadow-sm)] [scrollbar-width:none]"
       style={{ height: 'var(--tape-h)' }}
     >
-      <div className="flex shrink-0 items-center border-r border-edge px-3">
-        <LeafLogo size={16} />
+      <div className="sticky left-0 z-10 flex shrink-0 items-center gap-2 border-r border-border-subtle bg-panel/80 px-3 backdrop-blur">
+        <LeafLogo size={15} />
+        <span className="flex items-center gap-1">
+          <span className="glow-up h-1.5 w-1.5 animate-pulse rounded-full bg-up" />
+          <span className="num text-[9px] font-bold uppercase tracking-[0.2em] text-up">Live</span>
+        </span>
       </div>
 
       {ticks.length === 0 && (
@@ -32,12 +36,14 @@ export default function TickerTape(): React.JSX.Element {
       {ticks.map((tick) => (
         <div
           key={tick.symbol}
-          className="t-colors flex items-center gap-2 whitespace-nowrap border-l border-border-subtle px-3"
+          className="t-colors group flex items-center gap-2 whitespace-nowrap border-l border-border-subtle px-3.5 hover:bg-panel2/40"
         >
-          <span className="text-[length:var(--text-caption)] text-text-tertiary">{tick.label}</span>
+          <span className="text-[length:var(--text-caption)] font-medium tracking-wide text-text-tertiary">
+            {tick.label}
+          </span>
           <span
             className={clsx(
-              'num text-[length:var(--text-caption)]',
+              'num text-[length:var(--text-caption)] font-semibold',
               tick.dir > 0 ? 'text-up' : tick.dir < 0 ? 'text-down' : 'text-text'
             )}
           >
@@ -45,12 +51,12 @@ export default function TickerTape(): React.JSX.Element {
           </span>
           <span
             className={clsx(
-              'num text-[length:var(--text-caption)]',
+              'num text-[length:var(--text-micro)] tabular-nums',
               tick.changePct >= 0 ? 'text-up' : 'text-down'
             )}
           >
-            {tick.changePct >= 0 ? '+' : ''}
-            {tick.changePct.toFixed(2)}%
+            {tick.changePct >= 0 ? '▲' : '▼'}
+            {Math.abs(tick.changePct).toFixed(2)}%
           </span>
         </div>
       ))}

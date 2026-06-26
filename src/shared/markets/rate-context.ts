@@ -33,6 +33,24 @@ export interface RateDifferential {
   carryBias: CarryBias
 }
 
+/**
+ * A seeded, point-in-time map of major-currency policy rates (percent).
+ *
+ * Free FX feeds do not publish a live policy-rate series, so this static seed
+ * powers carry context out of the box. Approximate, as-of-2026; override by
+ * passing your own map to {@link rateDifferential} / {@link rankByCarry}.
+ */
+export const DEFAULT_POLICY_RATES: Partial<Record<Currency, number>> = {
+  USD: 4.5,
+  EUR: 3.15,
+  GBP: 4.75,
+  JPY: 0.25,
+  CHF: 1.0,
+  CAD: 3.25,
+  AUD: 4.35,
+  NZD: 4.25
+}
+
 function isCurrency(code: string): code is Currency {
   return (MAJOR_CURRENCIES as readonly string[]).includes(code)
 }

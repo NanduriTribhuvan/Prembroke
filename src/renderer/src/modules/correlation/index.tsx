@@ -9,10 +9,10 @@ import { EmptyState } from '@/components/ui/EmptyState'
 // CSS vars cannot drive inline style backgroundColor safely; keep as literals.
 const CORR_COLORS = {
   legendPos: 'rgba(22,199,132,0.5)',
-  legendMid: 'rgba(138,165,147,0.15)',
+  legendMid: 'rgba(169,154,125,0.15)',
   legendNeg: 'rgba(234,57,67,0.5)',
-  fgLight:   '#e8efe9',
-  fgDark:    '#0b1710',
+  fgLight:   '#f2ece0',
+  fgDark:    '#14110b',
 } as const
 
 function cellBg(c: number): string {

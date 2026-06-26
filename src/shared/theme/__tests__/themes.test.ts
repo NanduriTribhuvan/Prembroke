@@ -70,15 +70,15 @@ describe('tokensToCssVars completeness', () => {
 describe('dark parity (regression lock)', () => {
   it('locks the legacy dark tokens to the exact main.css hexes', () => {
     const { tokens } = resolveTheme('dark', 'gold', 'cozy')
-    expect(tokens.bg).toBe('#07100b')
-    expect(tokens.panel).toBe('#0b1710')
-    expect(tokens.panel2).toBe('#102017')
-    expect(tokens.edge).toBe('#1c3325')
-    expect(tokens.muted).toBe('#8aa593')
-    expect(tokens.text).toBe('#e8efe9')
-    expect(tokens.accent2).toBe('#2f7d4f')
-    expect(tokens.leaf).toBe('#14532d')
-    expect(tokens.olive).toBe('#5b7a1e')
+    expect(tokens.bg).toBe('#0d0e11')
+    expect(tokens.panel).toBe('#15171c')
+    expect(tokens.panel2).toBe('#1d2027')
+    expect(tokens.edge).toBe('#2a2e37')
+    expect(tokens.muted).toBe('#8e94a3')
+    expect(tokens.text).toBe('#e7e9ee')
+    expect(tokens.accent2).toBe('#6b93b8')
+    expect(tokens.leaf).toBe('#15202c')
+    expect(tokens.olive).toBe('#2b4a63')
     expect(tokens.up).toBe('#16c784')
     expect(tokens.down).toBe('#ea3943')
     expect(tokens.warn).toBe('#f0b90b')
@@ -130,7 +130,7 @@ describe('coherent accent ramp', () => {
   it('non-gold accents are not green (the accent reflects the base hue)', () => {
     // Azure/violet/rose should keep a non-green channel dominance in dark mode.
     const azure = deriveAccentRamp(ACCENTS.azure.base, 'dark').accent
-    expect(azure).toBe('#3b82f6')
+    expect(azure).toBe('#3b9ef5')
     const rose = deriveAccentRamp(ACCENTS.rose.base, 'dark').accent
     expect(rose).toBe('#f43f5e')
   })

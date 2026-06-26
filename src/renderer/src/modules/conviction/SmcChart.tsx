@@ -11,8 +11,8 @@ export const SMC_COLORS = {
   up: '#16c784',
   down: '#ea3943',
   gold: '#d9a521',
-  grid: 'rgba(28,51,37,0.55)',
-  text: '#8aa593',
+  grid: 'rgba(52,44,28,0.55)',
+  text: '#a99a7d',
   bullFvg: 'rgba(22,199,132,0.13)',
   bearFvg: 'rgba(234,57,67,0.13)',
   premium: 'rgba(234,57,67,0.06)',
@@ -201,7 +201,7 @@ export default function SmcChart({ result }: { result: ConvictionResult }): Reac
         ctx.setLineDash([])
         ctx.fillStyle = color
         ctx.fillRect(plotW, y(price) - 7, padR, 14)
-        ctx.fillStyle = '#07100b'
+        ctx.fillStyle = '#0b0a07'
         ctx.fillText(label, plotW + 4, y(price))
       }
       if (result.plan) {

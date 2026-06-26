@@ -5,6 +5,7 @@ import Sidebar from '@/components/shell/Sidebar'
 import StatusBar from '@/components/shell/StatusBar'
 import CommandPalette from '@/components/shell/CommandPalette'
 import CommandBar from '@/components/shell/CommandBar'
+import FunctionKeyBar from '@/components/shell/FunctionKeyBar'
 import AlertsEngine from '@/components/AlertsEngine'
 import Toaster from '@/components/Toaster'
 import WidgetCanvas from '@/components/canvas/WidgetCanvas'
@@ -30,23 +31,23 @@ function Pane({ index }: { index: number }): React.JSX.Element {
     <div
       onMouseDown={() => setActive(index)}
       className={clsx(
-        'flex min-h-0 min-w-0 flex-col overflow-hidden',
-        tiled && 'rounded-lg border',
-        tiled && (isActive ? 'border-accent/50' : 'border-edge')
+        't-elevate flex min-h-0 min-w-0 flex-col overflow-hidden',
+        tiled && 'rounded-md panel-terminal',
+        tiled && (isActive ? 'lit' : 'border-border-strong')
       )}
     >
       {tiled && (
         <div
           className={clsx(
-            'flex items-center gap-2 border-b border-edge px-2 py-1',
-            isActive ? 'bg-panel2' : 'bg-panel'
+            't-colors flex items-center gap-2 border-b border-border-subtle px-2.5 py-1.5',
+            isActive ? 'bg-panel2/80' : 'bg-panel/50'
           )}
         >
           <Icon size={13} className={isActive ? 'text-gold' : 'text-muted'} />
           <select
             value={id}
             onChange={(e) => setPaneView(index, e.target.value as (typeof panes)[number])}
-            className="bg-transparent text-[11px] font-medium text-text outline-none"
+            className="num cursor-pointer bg-transparent text-[11px] font-semibold uppercase tracking-wide text-text outline-none"
           >
             {MODULES.map((m) => (
               <option key={m.id} value={m.id}>
@@ -60,11 +61,16 @@ function Pane({ index }: { index: number }): React.JSX.Element {
               void window.api.popout.open(id)
             }}
             title="Pop out to its own window"
-            className="ml-auto text-muted hover:text-gold"
+            className="t-colors ml-auto rounded-md p-1 text-muted hover:bg-panel2 hover:text-gold"
           >
             <ExternalLink size={12} />
           </button>
-          {isActive && <span className="h-1.5 w-1.5 rounded-full bg-gold" title="Active pane" />}
+          {isActive && (
+            <span
+              className="h-1.5 w-1.5 rounded-full bg-gold shadow-[0_0_6px_1px_var(--color-gold)]"
+              title="Active pane"
+            />
+          )}
         </div>
       )}
       <div key={id} className="module-enter min-h-0 flex-1 overflow-hidden">
@@ -90,9 +96,10 @@ export default function App(): React.JSX.Element {
     <div className="flex h-screen flex-col bg-bg text-text">
       <TickerTape />
       <CommandBar />
+      <FunctionKeyBar />
       <div className="flex min-h-0 flex-1">
         <Sidebar />
-        <main className="grid-backdrop min-w-0 flex-1 overflow-hidden p-1">
+        <main className="grid-backdrop scanlines relative min-w-0 flex-1 overflow-hidden p-1">
           {canvasEnabled ? (
             showApps ? (
               <AppsGallery />

@@ -18,8 +18,8 @@ import { ErrorBanner } from '@/components/ui/ErrorBanner'
 
 // TradingView embed literal colours — cannot use CSS vars in JSON config.
 const TV_COLORS = {
-  background: '#0b1710',
-  grid: 'rgba(28,51,37,0.6)',
+  background: '#14110b',
+  grid: 'rgba(52,44,28,0.6)',
 } as const
 
 function TVChart({ symbol }: { symbol: string }): React.JSX.Element {
