@@ -84,7 +84,24 @@ export function registerHermesIpc(): void {
 
       child.on('error', (e) => {
         clearTimeout(timer)
-        resolve({ ok: false, text: `Could not start Hermes: ${e.message}` })
+        const msg = e.message || String(e)
+        // Windows Smart App Control / WDAC blocks unsigned executables (like the
+        // Hermes Python venv exe). Spawn fails with EACCES / an Application
+        // Control message. Surface a specific, actionable error instead of a
+        // cryptic one so the user knows it's an OS policy, not a Prembroke bug.
+        const blocked =
+          /application control|EACCES|not permitted|blocked this file|EPERM/i.test(msg)
+        if (blocked) {
+          return resolve({
+            ok: false,
+            text:
+              'Hermes is blocked by Windows Smart App Control. Either add a free cloud key ' +
+              '(Settings → AI engine: Groq, Gemini, Cerebras or OpenRouter) to use AI without ' +
+              'a local model, or turn off Smart App Control in Windows Security → App & browser ' +
+              'control (note: that is permanent and cannot be re-enabled without resetting the PC).'
+          })
+        }
+        resolve({ ok: false, text: `Could not start Hermes: ${msg}` })
       })
 
       child.on('close', (code) => {
