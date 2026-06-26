@@ -13,7 +13,8 @@ import {
   KeyRound,
   Sparkles,
   Sliders,
-  RotateCcw
+  RotateCcw,
+  ShieldCheck
 } from 'lucide-react'
 import {
   computeConviction,
@@ -45,6 +46,9 @@ import { useView } from '@/stores/view'
 import { useSettings } from '@/stores/settings'
 import { useKeys } from '@/stores/keys'
 import { useConvictionWeights } from '@/stores/conviction'
+import { useJournal } from '@/stores/journal'
+import { useRiskConfig } from '@/stores/risk'
+import { riskVerdict, type RiskState, type ProposedTrade } from '@shared/risk'
 import { askAI } from '@/lib/ai'
 import { ModuleHeader, ScoreRing, BiasChip, TabBar } from '@/components/ui'
 
@@ -541,6 +545,80 @@ function ProIndicators({ candles, price }: { candles: Candle[]; price: number })
 
 const GROUP_ORDER: FactorGroup[] = ['Structure', 'Momentum', 'Timing', 'Asset']
 
+/** Start of the current UTC day, epoch ms. */
+function startOfTodayUtc(): number {
+  const d = new Date()
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+}
+
+/**
+ * Risk & discipline gate readout for the active plan. Derives the live day-state
+ * (today's realised R, current loss streak, open positions) from the journal and
+ * runs the proposed plan through the shared, unit-tested risk rules.
+ */
+function RiskGate({ plan }: { plan: ProposedTrade | null }): React.JSX.Element | null {
+  const trades = useJournal((s) => s.trades)
+  const enabled = useRiskConfig((s) => s.enabled)
+  const limits = useRiskConfig((s) => s.limits)
+
+  const verdict = useMemo(() => {
+    const dayStart = startOfTodayUtc()
+    const closedToday = trades
+      .filter((t) => t.status !== 'open' && (t.closedAt ?? 0) >= dayStart)
+      .sort((a, b) => (a.closedAt ?? 0) - (b.closedAt ?? 0))
+    const realisedTodayR = closedToday.reduce((s, t) => s + (t.resultR ?? 0), 0)
+    // Consecutive losses = trailing run of losers across all closed trades.
+    const allClosed = trades
+      .filter((t) => t.status !== 'open')
+      .sort((a, b) => (b.closedAt ?? 0) - (a.closedAt ?? 0))
+    let consecutiveLosses = 0
+    for (const t of allClosed) {
+      if ((t.resultR ?? 0) < 0) consecutiveLosses += 1
+      else break
+    }
+    const openPositions = trades.filter((t) => t.status === 'open').length
+    const state: RiskState = { realisedTodayR, consecutiveLosses, openPositions }
+    return riskVerdict(plan, state, limits)
+  }, [trades, plan, limits])
+
+  if (!enabled) return null
+
+  const tone =
+    verdict.severity === 'block'
+      ? { bd: 'border-down/40', bg: 'bg-down/10', tx: 'text-down', label: 'LOCKED' }
+      : verdict.severity === 'warn'
+        ? { bd: 'border-warn/40', bg: 'bg-warn/10', tx: 'text-warn', label: 'CAUTION' }
+        : { bd: 'border-up/30', bg: 'bg-up/5', tx: 'text-up', label: 'CLEAR' }
+
+  const dot = (s: string): string =>
+    s === 'block' ? 'bg-down' : s === 'warn' ? 'bg-warn' : 'bg-up'
+
+  return (
+    <div className={clsx('mt-3 overflow-hidden rounded-sm border', tone.bd)}>
+      <div className={clsx('flex items-center justify-between border-b px-3 py-1.5', tone.bd, tone.bg)}>
+        <div className="flex items-center gap-1.5">
+          <ShieldCheck size={13} className={tone.tx} />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.09em] text-text-tertiary">
+            Risk &amp; discipline
+          </span>
+        </div>
+        <span className={clsx('num text-[11px] font-bold', tone.tx)}>{tone.label}</span>
+      </div>
+      <div className="divide-y divide-edge/60">
+        {verdict.checks.map((c) => (
+          <div key={c.id} className="flex items-start gap-2 px-3 py-1.5">
+            <span className={clsx('mt-1 h-1.5 w-1.5 shrink-0 rounded-full', dot(c.severity))} />
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-medium text-text-secondary">{c.label}</span>
+              <span className="ml-2 text-[11px] text-text-tertiary">{c.detail}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 /** Trader-tunable factor-weight panel — persists, applies to every score. */
 function WeightsPanel(): React.JSX.Element {
   const weights = useConvictionWeights((s) => s.weights)
@@ -870,6 +948,20 @@ export default function ConvictionModule(): React.JSX.Element {
               </div>
 
               <ProIndicators candles={data.candles} price={data.price} />
+
+              <RiskGate
+                plan={
+                  data.plan
+                    ? {
+                        entry: data.plan.entry,
+                        stop: data.plan.stop,
+                        target: data.plan.target,
+                        accountEquity: 10_000,
+                        quantity: tab === 'crypto' ? data.plan.sampleQty : undefined
+                      }
+                    : null
+                }
+              />
 
               {data.factors.some((f) => f.key === 'newsrisk') && (
                 <div className="mt-3 flex items-center gap-2 rounded-sm border border-down/30 bg-down/10 px-4 py-2 text-xs">
