@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import {
-  Check,
-  X,
   Gauge,
   Crosshair,
   RefreshCw,
@@ -337,12 +335,31 @@ function DevilsAdvocate({ data }: { data: ConvictionResult }): React.JSX.Element
   )
 }
 
-const GRADE_COLOR: Record<ConvictionResult['grade'], string> = {
-  'A+': 'text-up',
-  A: 'text-up',
-  B: 'text-accent',
-  C: 'text-warn',
-  skip: 'text-muted'
+/** Short uppercase group label for a factor key — drives the matrix Group column. */
+const FACTOR_GROUP: Record<string, string> = {
+  structure: 'Structure',
+  premdisc: 'Structure',
+  mtf: 'Structure',
+  sweep: 'Liquidity',
+  fvg: 'Liquidity',
+  orderblock: 'Liquidity',
+  ote: 'Liquidity',
+  displacement: 'Liquidity',
+  trend: 'Momentum',
+  rsi: 'Momentum',
+  smt: 'Momentum',
+  killzone: 'Timing',
+  newsrisk: 'Catalyst',
+  funding: 'Derivs',
+  skew: 'Derivs',
+  longshort: 'Derivs',
+  carry: 'Macro',
+  seasonal: 'Macro',
+  termstructure: 'Macro'
+}
+
+function factorGroup(key: string): string {
+  return FACTOR_GROUP[key] ?? 'Signal'
 }
 
 /** Crypto watch row — fetches a lightweight score. */
@@ -656,53 +673,69 @@ export default function ConvictionModule(): React.JSX.Element {
           )}
           {!needsKey && data && (
             <>
-              {/* top row: ring + plan */}
+              {/* top row: score readout + plan */}
               <div className="flex flex-wrap items-center gap-6">
-                <div className="flex flex-col items-center gap-1">
-                  <ScoreRing score={data.score} size={140} />
+                <div className="flex flex-col items-center gap-1.5">
+                  <ScoreRing score={data.score} size={132} />
                   <span
                     className={clsx(
-                      'text-xs font-semibold',
-                      GRADE_COLOR[data.grade as ConvictionResult['grade']]
+                      'num w-14 rounded-sm border px-0 py-0.5 text-center text-[13px] font-bold',
+                      data.grade === 'A+' || data.grade === 'A'
+                        ? 'border-up text-up'
+                        : data.grade === 'B'
+                          ? 'border-accent text-accent'
+                          : data.grade === 'C'
+                            ? 'border-warn text-warn'
+                            : 'border-edge text-muted'
                     )}
                   >
                     {data.grade.toUpperCase()}
                   </span>
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-text">{activeLabel}</span>
-                    <span className="num text-sm text-muted">{active}</span>
+                    <span className="text-[length:var(--text-heading)] font-semibold text-text">
+                      {activeLabel}
+                    </span>
+                    <span className="num text-[11px] text-text-tertiary">{active}</span>
                     <BiasChip bias={data.bias} />
                   </div>
-                  <span className="num text-2xl font-bold text-text">
+                  <span className="num text-[length:var(--text-display)] font-bold leading-none text-text">
                     {tab === 'fx' ? '' : '$'}
                     {fmtPrice(active, tab, data.price)}
                   </span>
-                  <span className="text-xs text-muted">{data.structure.lastEvent}</span>
+                  <span className="text-[11px] text-text-tertiary">{data.structure.lastEvent}</span>
                 </div>
 
                 {data.plan && (
-                  <div className="ml-auto rounded-sm border border-edge bg-panel p-4">
-                    <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-accent">
-                      <Crosshair size={13} /> Suggested plan ({data.plan.side})
+                  <div className="ml-auto overflow-hidden rounded-sm border border-edge">
+                    <div className="flex items-center gap-1.5 border-b border-edge bg-panel2 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.09em] text-accent">
+                      <Crosshair size={12} /> Plan · {data.plan.side}
                     </div>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
-                      <span className="text-muted">Entry</span>
-                      <span className="num text-right text-text">{fmtPrice(active, tab, data.plan.entry)}</span>
-                      <span className="text-muted">Stop</span>
-                      <span className="num text-right text-down">{fmtPrice(active, tab, data.plan.stop)}</span>
-                      <span className="text-muted">Target</span>
-                      <span className="num text-right text-up">{fmtPrice(active, tab, data.plan.target)}</span>
-                      <span className="text-muted">R:R</span>
-                      <span className="num text-right text-accent">{data.plan.rr.toFixed(2)}</span>
-                      {tab === 'crypto' && (
-                        <>
-                          <span className="text-muted">Size (1% / $10k)</span>
-                          <span className="num text-right text-text">{data.plan.sampleQty.toFixed(4)}</span>
-                        </>
-                      )}
+                    <div className="grid grid-cols-4">
+                      <div className="border-r border-edge px-3 py-2">
+                        <div className="text-[9px] uppercase tracking-[0.09em] text-text-tertiary">Entry</div>
+                        <div className="num text-[14px] font-semibold text-text">{fmtPrice(active, tab, data.plan.entry)}</div>
+                      </div>
+                      <div className="border-r border-edge px-3 py-2">
+                        <div className="text-[9px] uppercase tracking-[0.09em] text-text-tertiary">Stop</div>
+                        <div className="num text-[14px] font-semibold text-down">{fmtPrice(active, tab, data.plan.stop)}</div>
+                      </div>
+                      <div className="border-r border-edge px-3 py-2">
+                        <div className="text-[9px] uppercase tracking-[0.09em] text-text-tertiary">Target</div>
+                        <div className="num text-[14px] font-semibold text-up">{fmtPrice(active, tab, data.plan.target)}</div>
+                      </div>
+                      <div className="px-3 py-2">
+                        <div className="text-[9px] uppercase tracking-[0.09em] text-text-tertiary">R : R</div>
+                        <div className="num text-[14px] font-semibold text-accent">{data.plan.rr.toFixed(2)}</div>
+                      </div>
                     </div>
+                    {tab === 'crypto' && (
+                      <div className="flex items-center justify-between border-t border-edge px-3 py-1.5 text-[10px]">
+                        <span className="text-text-tertiary">Size · 1% / $10k</span>
+                        <span className="num text-text-secondary">{data.plan.sampleQty.toFixed(4)}</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -792,40 +825,78 @@ export default function ConvictionModule(): React.JSX.Element {
                 </div>
               </div>
 
-              {/* factors */}
-              <div className="mt-6">
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  Confluence checklist
+              {/* confluence matrix — the data-theater hero */}
+              <div className="mt-6 overflow-hidden rounded-sm border border-edge">
+                <div className="flex items-center justify-between border-b border-edge bg-panel2 px-3 py-1.5">
+                  <span className="text-[length:var(--text-label)] font-semibold uppercase tracking-[0.09em] text-text-tertiary">
+                    Confluence matrix
+                  </span>
+                  <span className="num text-[10px] text-text-tertiary">
+                    {data.factors.filter((f) => f.hit).length}/{data.factors.length} signals
+                  </span>
                 </div>
-                <div className="overflow-hidden rounded-sm border border-edge">
-                  {data.factors.map((f, i) => (
+                {/* column header */}
+                <div className="grid grid-cols-[20px_1fr_88px_56px] items-center gap-2 border-b border-edge bg-panel px-3 py-1 text-[9px] uppercase tracking-[0.09em] text-text-tertiary">
+                  <span />
+                  <span>Factor</span>
+                  <span>Group</span>
+                  <span className="text-right">Points</span>
+                </div>
+                {data.factors.map((f) => {
+                  const grp = factorGroup(f.key)
+                  const pct = Math.min(100, Math.round((Math.abs(f.points) / 22) * 100))
+                  return (
                     <div
                       key={f.key}
-                      className={clsx('flex items-center gap-3 px-3 py-2.5', i % 2 === 1 && 'bg-panel/40')}
+                      className="grid grid-cols-[20px_1fr_88px_56px] items-center gap-2 border-b border-edge/60 px-3 py-1.5 last:border-0 hover:bg-panel2"
                     >
                       <span
                         className={clsx(
-                          'flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
-                          f.hit ? 'bg-up/15 text-up' : f.points < 0 ? 'bg-down/15 text-down' : 'bg-panel2 text-muted'
+                          'text-[13px] font-bold',
+                          f.hit ? 'text-up' : f.points < 0 ? 'text-down' : 'text-text-tertiary'
                         )}
                       >
-                        {f.hit ? <Check size={12} /> : <X size={12} />}
+                        {f.hit ? '✓' : '✗'}
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[13px] text-text">{f.label}</div>
-                        <div className="text-[11px] text-muted">{f.detail}</div>
+                      <span className="min-w-0 truncate text-[12px] text-text-secondary" title={f.detail}>
+                        {f.label}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="num w-[52px] shrink-0 text-[9px] uppercase tracking-[0.04em] text-text-tertiary">
+                          {grp}
+                        </span>
+                        <div className="hidden h-[3px] flex-1 bg-panel2 sm:block">
+                          <div
+                            className={clsx('h-full', f.points < 0 ? 'bg-down' : 'bg-up')}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
                       </div>
                       <span
                         className={clsx(
-                          'num text-sm font-semibold',
-                          f.points > 0 ? 'text-up' : f.points < 0 ? 'text-down' : 'text-muted'
+                          'num text-right text-[13px] font-semibold tabular-nums',
+                          f.points > 0 ? 'text-up' : f.points < 0 ? 'text-down' : 'text-text-tertiary'
                         )}
                       >
                         {f.points > 0 ? '+' : ''}
                         {f.points}
                       </span>
                     </div>
-                  ))}
+                  )
+                })}
+                {/* net total bar */}
+                <div className="flex items-center justify-between border-t border-edge bg-panel2 px-3 py-2">
+                  <span className="text-[9px] uppercase tracking-[0.09em] text-text-tertiary">
+                    Net conviction · base 50 + factors
+                  </span>
+                  <span
+                    className={clsx(
+                      'num text-[16px] font-bold tabular-nums',
+                      data.score >= 72 ? 'text-up' : data.score >= 58 ? 'text-accent' : 'text-text-secondary'
+                    )}
+                  >
+                    {data.score} / 100
+                  </span>
                 </div>
               </div>
 
