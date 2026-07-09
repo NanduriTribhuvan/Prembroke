@@ -19,6 +19,6 @@ export const useAiConfig = create<AiConfigState>()(
       setPrimary: (primary) => set({ primary }),
       setModel: (id, model) => set((s) => ({ models: { ...s.models, [id]: model.trim() } }))
     }),
-    { name: 'prembroke.ai' }
+    { name: 'prembroke.com' }
   )
 )

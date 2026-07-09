@@ -14,6 +14,7 @@ export interface ApiKeys {
   tradier: string
   fmp: string
   benzinga: string
+  fred: string
   // Free AI provider keys — surfaced in a dedicated "AI engine" card, not the generic list.
   groq: string
   gemini: string
@@ -31,7 +32,8 @@ export const KEY_META: { id: keyof ApiKeys; label: string; url: string; unlocks:
   { id: 'tradier', label: 'Tradier', url: 'https://documentation.tradier.com/', unlocks: 'Options chains & flow' },
   { id: 'unusualwhales', label: 'Unusual Whales', url: 'https://unusualwhales.com/api', unlocks: 'Unusual options flow' },
   { id: 'fmp', label: 'Financial Modeling Prep', url: 'https://site.financialmodelingprep.com/developer/docs', unlocks: 'Deep fundamentals & ratios' },
-  { id: 'benzinga', label: 'Benzinga', url: 'https://www.benzinga.com/apis/', unlocks: 'Pro news & ratings' }
+  { id: 'benzinga', label: 'Benzinga', url: 'https://www.benzinga.com/apis/', unlocks: 'Pro news & ratings' },
+  { id: 'fred', label: 'FRED (St. Louis Fed)', url: 'https://fredaccount.stlouisfed.org/apikeys', unlocks: 'Macro desk — rates, CPI, jobs, yields, GDP' }
 ]
 
 interface KeysState extends ApiKeys {
@@ -49,6 +51,7 @@ const KEY_IDS: (keyof ApiKeys)[] = [
   'tradier',
   'fmp',
   'benzinga',
+  'fred',
   'groq',
   'gemini',
   'cerebras',

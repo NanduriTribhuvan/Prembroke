@@ -8,6 +8,9 @@
     "skipLibCheck": true,
     "noEmit": true,
     "isolatedModules": true,
+    "paths": {
+      "@shared/*": ["./src/shared/*"]
+    },
     "types": ["node"]
   },
   "include": ["src/main", "src/preload", "electron.vite.config.ts"]

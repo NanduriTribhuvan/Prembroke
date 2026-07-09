@@ -111,6 +111,9 @@ declare global {
         trending: () => Promise<{ pairs: DexPair[]; error?: string }>
         newPairs: () => Promise<{ pairs: DexPair[]; error?: string }>
       }
+      macro: {
+        fetch: (key: string) => Promise<{ ok: boolean; series: MacroSeries[]; error?: string }>
+      }
     }
   }
 }
@@ -137,6 +140,24 @@ interface DexPair {
   pairCreatedAt: number | null
   imageUrl: string | null
   boost: number | null
+}
+
+/** One macro observation point (mirrors src/main/macro.ts). */
+interface MacroPoint {
+  date: string
+  value: number | null
+}
+
+/** A normalised macro series with recent history (mirrors src/main/macro.ts). */
+interface MacroSeries {
+  id: string
+  fredId: string
+  label: string
+  unit: string
+  latest: number | null
+  prev: number | null
+  date: string
+  history: MacroPoint[]
 }
 
 export {}

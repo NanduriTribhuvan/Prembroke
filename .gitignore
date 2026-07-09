@@ -7,3 +7,13 @@ dist/
 # Local secrets — never commit
 src/renderer/src/config/keys.local.ts
 build/
+
+# IDE / tool config
+.kiro/
+.vscode/
+.claude/
+
+# Internal docs (not for public repo)
+DESIGN.md
+PLAN.md
+BONDA1.md

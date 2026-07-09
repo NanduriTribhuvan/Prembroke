@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { DexPair } from '../main/dex'
+import type { MacroSeries } from '../main/macro'
 
 const api = {
   platform: process.platform,
@@ -126,6 +127,10 @@ const api = {
       ipcRenderer.invoke('dex:search', q),
     trending: (): Promise<{ pairs: DexPair[]; error?: string }> => ipcRenderer.invoke('dex:trending'),
     newPairs: (): Promise<{ pairs: DexPair[]; error?: string }> => ipcRenderer.invoke('dex:new')
+  },
+  macro: {
+    fetch: (key: string): Promise<{ ok: boolean; series: MacroSeries[]; error?: string }> =>
+      ipcRenderer.invoke('macro:fetch', key)
   }
 }
 
