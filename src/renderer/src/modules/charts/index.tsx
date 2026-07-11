@@ -10,7 +10,7 @@
  * @module charts
  */
 
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ChartCandlestick, LayoutDashboard, Layers, WifiOff } from 'lucide-react'
 import { ModuleHeader } from '@/components/ui/ModuleHeader'
 import { TabBar } from '@/components/ui/TabBar'
@@ -19,7 +19,8 @@ import { Toolbar, ToolbarDivider } from '@/components/ui/Toolbar'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useSettings } from '@/stores/settings'
 import type { BuiltinIndicatorSpec } from '@shared/chart/indicator-series'
-import { ALL_OVERLAY_IDS, type SmcOverlayId, type SmcOverlayState, type Drawable } from '@shared/smc'
+import { ALL_OVERLAY_IDS, buildOverlays, type SmcOverlayId, type SmcOverlayState, type Drawable } from '@shared/smc'
+import { computeConviction } from '@/modules/conviction/engine'
 import { ChartCanvas } from './ChartCanvas'
 import { IndicatorPanel } from './IndicatorPanel'
 import { useChartData } from './useChartData'
@@ -66,19 +67,35 @@ function ChartPane({
   reduceMotion,
   showLabel,
   indicators,
-  smcDrawables
+  smcState
 }: {
   symbol: string
   interval: ChartInterval
   reduceMotion: boolean
   showLabel: boolean
   indicators: BuiltinIndicatorSpec[]
-  smcDrawables: Drawable[]
+  smcState: SmcOverlayState
 }): React.JSX.Element {
   const { candles, live, lastPrice, lastDir, status, requestHistory } = useChartData(
     symbol,
     interval
   )
+
+  // Compute live SMC overlays from the candle data using the Conviction Engine
+  const smcDrawables = useMemo((): Drawable[] => {
+    // Only compute if at least one overlay is enabled and we have enough candles
+    const anyEnabled = ALL_OVERLAY_IDS.some((id) => smcState[id])
+    const allCandles = live ? [...candles, live] : candles
+    if (!anyEnabled || allCandles.length < 20) return []
+
+    try {
+      const result = computeConviction(symbol, interval, allCandles)
+      return buildOverlays(result, smcState)
+    } catch {
+      // If conviction engine fails for any reason, just show no overlays
+      return []
+    }
+  }, [candles, live, symbol, interval, smcState])
 
   if (status === 'offline') {
     return (
@@ -169,9 +186,9 @@ export default function ChartsModule(): React.JSX.Element {
 
   const visible = symbols.slice(0, layout)
 
-  // SMC drawables — empty array for now; computing real SMC overlays requires
-  // ConvictionResult which is a stretch goal. Passing empty keeps the prop wired.
-  const smcDrawables: Drawable[] = []
+  // SMC drawables are now computed per-pane from live candle data via the
+  // Conviction Engine + buildOverlays. Each ChartPane receives the smcState
+  // toggle map and computes its own overlays internally.
 
   return (
     <div className="flex h-full flex-col">
@@ -289,7 +306,7 @@ export default function ChartsModule(): React.JSX.Element {
                 reduceMotion={reduceMotion}
                 showLabel={layout > 1}
                 indicators={indicators}
-                smcDrawables={smcDrawables}
+                smcState={smcState}
               />
             </div>
           ))}

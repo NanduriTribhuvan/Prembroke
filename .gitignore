@@ -21,3 +21,6 @@ BONDA1.md
 # PDFs, scripts, and generated files
 *.pdf
 scripts/
+
+# One-off images
+xpost1.png
