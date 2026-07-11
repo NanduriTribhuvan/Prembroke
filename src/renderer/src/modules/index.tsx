@@ -10,6 +10,7 @@ import {
   BookOpen,
   BookOpenCheck,
   Boxes,
+  Brain,
   Building2,
   Calculator,
   CalendarDays,
@@ -78,6 +79,7 @@ import FinancialsModule from './financials'
 import AlphaModule from './alpha'
 import CryptoOptionsModule from './cryptooptions'
 import ResearchModule from './research'
+import AnalystModule from './analyst'
 import DexModule from './dex'
 import DefiModule from './defi'
 import WidgetCanvas from '@/components/canvas/WidgetCanvas'
@@ -124,6 +126,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'social', label: 'X Pulse', icon: AtSign, component: SocialModule },
   { id: 'ai', label: 'AI Mentor', icon: Sparkles, component: AiModule },
   { id: 'research', label: 'Research Team', icon: Users, component: ResearchModule },
+  { id: 'analyst', label: 'Analyst', icon: Brain, component: AnalystModule },
   { id: 'playbook', label: 'Playbook', icon: BookMarked, component: PlaybookModule },
   { id: 'alerts', label: 'Alerts', icon: Bell, component: AlertsModule },
   { id: 'toolkit', label: 'Toolkit', icon: Calculator, component: ToolkitModule },

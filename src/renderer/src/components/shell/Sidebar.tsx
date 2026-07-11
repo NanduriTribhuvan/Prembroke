@@ -38,7 +38,7 @@ const GROUPS: { heading: string; ids: string[] }[] = [
       'defi'
     ]
   },
-  { heading: 'Intel', ids: ['news', 'tv', 'social', 'ai', 'research', 'playbook', 'calendar'] },
+  { heading: 'Intel', ids: ['news', 'tv', 'social', 'ai', 'research', 'analyst', 'playbook', 'calendar'] },
   { heading: 'Tools', ids: ['backtest', 'journal', 'alerts', 'toolkit', 'settings'] }
 ]
 

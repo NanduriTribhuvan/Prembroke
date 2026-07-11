@@ -42,6 +42,7 @@ export type ViewId =
   | 'calendar'
   | 'playbook'
   | 'settings'
+  | 'analyst'
   | 'canvas'
   | 'apps'
 
