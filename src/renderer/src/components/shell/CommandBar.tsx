@@ -28,6 +28,7 @@ const FUNCS: Record<string, ViewId> = {
   DEFI: 'defi', YIELDS: 'defi', APY: 'defi', TVL: 'defi', HACKS: 'defi',
   NEWS: 'news', TV: 'tv', X: 'social', SOCIAL: 'social', AI: 'ai', MENTOR: 'ai',
   RESEARCH: 'research', RT: 'research', TEAM: 'research', DD: 'research',
+  ANALYST: 'analyst', ANALYZE: 'analyst',
   PLAY: 'playbook', BOOK: 'playbook', ICT: 'playbook', CAL: 'calendar', ECO: 'calendar',
   ALERT: 'alerts', ALERTS: 'alerts', JRNL: 'journal', JOURNAL: 'journal', BT: 'backtest',
   TEST: 'backtest', TOOLS: 'toolkit', SET: 'settings', SETTINGS: 'settings',
