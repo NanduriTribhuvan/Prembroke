@@ -1,4 +1,13 @@
+/**
+ * Parity shim: provides the same useTickers() / useFeedStatus() / Tick API
+ * as the original direct-WebSocket implementation, but sources all data from
+ * the main-process Pricing_Service via the preload pricing bridge.
+ *
+ * No direct renderer WebSocket connection is opened. (Requirement 5.6)
+ */
 import { useSyncExternalStore } from 'react'
+
+// ─── Public types (unchanged contract) ─────────────────────────────────────
 
 export interface Tick {
   symbol: string
@@ -9,6 +18,8 @@ export interface Tick {
 }
 
 export type FeedStatus = 'connecting' | 'live' | 'offline'
+
+// ─── Ticker tape symbol list ───────────────────────────────────────────────
 
 const TAPE: { s: string; label: string }[] = [
   { s: 'BTCUSDT', label: 'BTC' },
@@ -23,82 +34,98 @@ const TAPE: { s: string; label: string }[] = [
   { s: 'PAXGUSDT', label: 'GOLD' }
 ]
 
+// ─── Internal feed class (bridges to Pricing_Service via IPC) ──────────────
+
 class TickerFeed {
-  private ws: WebSocket | null = null
   private listeners = new Set<() => void>()
   private ticks = new Map<string, Tick>()
   private snapshot: Tick[] = []
   private status: FeedStatus = 'connecting'
-  private retry = 0
   private started = false
+  private subIds: string[] = []
 
   private notify(): void {
     for (const listener of this.listeners) listener()
   }
 
-  private connect(): void {
-    const streams = TAPE.map((t) => `${t.s.toLowerCase()}@miniTicker`).join('/')
-    try {
-      this.ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`)
-    } catch {
-      this.scheduleReconnect()
-      return
-    }
+  private async start(): Promise<void> {
+    const pricing = window.api.pricing
 
-    this.ws.onmessage = (event) => {
-      this.retry = 0
-      let data: { s: string; c: string; o: string } | undefined
+    for (const { s, label } of TAPE) {
       try {
-        data = (JSON.parse(String(event.data)) as { data?: { s: string; c: string; o: string } }).data
+        const result = await pricing.subscribe(
+          { venue: 'binance', symbol: s, type: 'ticker' },
+          (update) => {
+            if (update.ticker) {
+              const { symbol, last, changePct } = update.ticker
+              const prev = this.ticks.get(symbol)
+              const dir: 1 | -1 | 0 = prev
+                ? last > prev.price
+                  ? 1
+                  : last < prev.price
+                    ? -1
+                    : prev.dir
+                : 0
+
+              this.ticks.set(symbol, {
+                symbol,
+                label,
+                price: last,
+                changePct,
+                dir
+              })
+              this.rebuildSnapshot()
+            }
+
+            // Reflect feed status from the pricing update
+            if (update.status && update.status !== this.status) {
+              this.status = update.status
+              this.notify()
+            }
+          }
+        )
+
+        if (result.ok) {
+          this.subIds.push(result.subId)
+
+          // Seed from snapshot if available
+          if (result.snapshot?.ticker) {
+            const { symbol, last, changePct } = result.snapshot.ticker
+            this.ticks.set(symbol, {
+              symbol,
+              label,
+              price: last,
+              changePct,
+              dir: 0
+            })
+          }
+        }
       } catch {
-        return
+        // Individual subscription failure doesn't block others
       }
-      if (!data) return
-      const def = TAPE.find((t) => t.s === data.s)
-      if (!def) return
+    }
 
-      const price = parseFloat(data.c)
-      const open = parseFloat(data.o)
-      const prev = this.ticks.get(data.s)
-      const dir: 1 | -1 | 0 = prev ? (price > prev.price ? 1 : price < prev.price ? -1 : prev.dir) : 0
-
-      this.ticks.set(data.s, {
-        symbol: data.s,
-        label: def.label,
-        price,
-        changePct: open ? ((price - open) / open) * 100 : 0,
-        dir
-      })
-      this.snapshot = TAPE.filter((t) => this.ticks.has(t.s)).map((t) => this.ticks.get(t.s)!)
+    // After all subscriptions attempted, mark live if at least one succeeded
+    if (this.subIds.length > 0) {
       this.status = 'live'
-      this.notify()
-    }
-
-    this.ws.onclose = () => {
+    } else {
       this.status = 'offline'
-      this.notify()
-      this.scheduleReconnect()
     }
-
-    this.ws.onerror = () => {
-      this.ws?.close()
-    }
+    this.rebuildSnapshot()
   }
 
-  private scheduleReconnect(): void {
-    const delay = Math.min(30_000, 1000 * 2 ** this.retry++)
-    setTimeout(() => {
-      this.status = 'connecting'
-      this.notify()
-      this.connect()
-    }, delay)
+  private rebuildSnapshot(): void {
+    this.snapshot = TAPE
+      .filter((t) => this.ticks.has(t.s))
+      .map((t) => this.ticks.get(t.s)!)
+    this.notify()
   }
 
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener)
     if (!this.started) {
       this.started = true
-      this.connect()
+      void this.start()
     }
     return () => {
       this.listeners.delete(listener)
@@ -108,6 +135,8 @@ class TickerFeed {
   getSnapshot = (): Tick[] => this.snapshot
   getStatus = (): FeedStatus => this.status
 }
+
+// ─── Singleton + hooks ─────────────────────────────────────────────────────
 
 export const tickerFeed = new TickerFeed()
 

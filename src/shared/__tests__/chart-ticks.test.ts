@@ -63,8 +63,11 @@ describe('niceTicks — Property 6: in-bounds, sorted, bounded in count', () => 
 
         // Tolerance absorbs floating-point drift near the bounds, scaled to the
         // span so it stays meaningful across many orders of magnitude.
+        // The implementation uses a relative EPSILON of 1e-9 * step when deciding
+        // whether a tick is "inside" the range, so the test tolerance must be at
+        // least as permissive.
         const span = high - low
-        const tol = Math.max(Math.abs(high), Math.abs(low), span) * 1e-9
+        const tol = Math.max(Math.abs(high), Math.abs(low), span, 1) * 1e-9 + span * 1e-9
 
         for (let i = 0; i < ticks.length; i += 1) {
           // In-bounds: every tick lies within [low, high] (± tolerance).

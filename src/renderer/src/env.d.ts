@@ -114,6 +114,13 @@ declare global {
       macro: {
         fetch: (key: string) => Promise<{ ok: boolean; series: MacroSeries[]; error?: string }>
       }
+      pricing: {
+        subscribe: (
+          req: SubscribeRequest,
+          onUpdate: (u: PricingUpdate) => void
+        ) => Promise<{ ok: boolean; subId: string; snapshot?: PricingSnapshot }>
+        unsubscribe: (subId: string) => Promise<{ ok: boolean }>
+      }
     }
   }
 }
@@ -158,6 +165,56 @@ interface MacroSeries {
   prev: number | null
   date: string
   history: MacroPoint[]
+}
+
+// --- Pricing types (mirrors src/main/pricing-registry.ts + design) ---
+
+/** Supported exchange venues. */
+type ExchangeId = 'binance' | 'bybit' | 'okx' | 'coinbase'
+
+/** Canonical candle interval. */
+type Interval = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d'
+
+/** The kind of data an upstream pricing stream carries. */
+type DataType = 'ticker' | 'candle' | 'orderbook'
+
+/** Connection state for a pricing stream. */
+type FeedStatus = 'connecting' | 'live' | 'offline'
+
+/** A single OHLCV candle. */
+interface Candle {
+  time: number
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+}
+
+/** Request shape for pricing subscriptions. */
+interface SubscribeRequest {
+  venue?: ExchangeId
+  symbol: string
+  interval?: Interval
+  type: DataType
+}
+
+/** A single coalesced pricing update pushed from main to renderer. */
+interface PricingUpdate {
+  subId: string
+  key: string
+  type: DataType
+  status: FeedStatus
+  ticker?: { symbol: string; last: number; changePct: number; quoteVolume: number }
+  candle?: Candle
+  closedCandle?: Candle
+  orderbook?: { bids: [number, number][]; asks: [number, number][] }
+}
+
+/** Initial snapshot returned alongside a successful subscribe response. */
+interface PricingSnapshot {
+  candles?: Candle[]
+  ticker?: { symbol: string; last: number; changePct: number; quoteVolume: number }
 }
 
 export {}

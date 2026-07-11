@@ -73,6 +73,7 @@ export default function CommandBar(): React.JSX.Element {
   const [presetName, setPresetName] = useState('')
   const setConvictionSymbol = useView((s) => s.setConvictionSymbol)
   const setActiveTimeframe = useView((s) => s.setActiveTimeframe)
+  const focusChart = useView((s) => s.focusChart)
   const openInActive = useWorkspace((s) => s.openInActive)
   const layout = useWorkspace((s) => s.layout)
   const setLayout = useWorkspace((s) => s.setLayout)
@@ -118,8 +119,28 @@ export default function CommandBar(): React.JSX.Element {
       const resolved = resolveSymbol(symbol)
       setConvictionSymbol(resolved)
       if (!func) func = 'conviction'
+      // When navigating to charts with a symbol (and optional timeframe), use focusChart
+      if (func === 'charts') {
+        focusChart(resolved, timeframe ?? undefined)
+        setFlash(`${resolved}${timeframe ? ` ${timeframe}` : ''} → CHARTS`)
+        setInput('')
+        setHelp(false)
+        setSel(0)
+        window.setTimeout(() => setFlash(null), 2200)
+        return
+      }
       setFlash(`${resolved}${timeframe ? ` ${timeframe}` : ''} → ${func.toUpperCase()}`)
     } else if (timeframe) {
+      // Timeframe-only with CHART func → update chart interval
+      if (func === 'charts') {
+        focusChart(useView.getState().chartSymbol, timeframe)
+        setFlash(`${timeframe} → CHARTS`)
+        setInput('')
+        setHelp(false)
+        setSel(0)
+        window.setTimeout(() => setFlash(null), 2200)
+        return
+      }
       setFlash(timeframe)
     } else if (func) {
       setFlash(func.toUpperCase())

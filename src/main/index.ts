@@ -11,6 +11,7 @@ import { registerExchangeIpc } from './exchange'
 import { registerDeribitIpc } from './deribit'
 import { registerDexIpc } from './dex'
 import { registerMacroIpc } from './macro'
+import { registerPricingIpc } from './pricing'
 
 /** Window/taskbar icon. In dev this resolves to the repo's build resource; in a
  *  packaged build the embedded exe icon is used (this path is absent and ignored). */
@@ -86,6 +87,7 @@ app.whenReady().then(() => {
   registerDeribitIpc()
   registerDexIpc()
   registerMacroIpc()
+  registerPricingIpc()
   ipcMain.handle('window:popout', (_e, moduleId: string) => createPopout(String(moduleId)))
   createWindow()
 

@@ -1,6 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { DexPair } from '../main/dex'
 import type { MacroSeries } from '../main/macro'
+import type { DataType, PricingUpdate } from '../main/pricing-registry'
+import type { ExchangeId, Interval } from '@shared/markets'
+import type { Candle } from '@shared/indicators'
 
 const api = {
   platform: process.platform,
@@ -131,7 +134,53 @@ const api = {
   macro: {
     fetch: (key: string): Promise<{ ok: boolean; series: MacroSeries[]; error?: string }> =>
       ipcRenderer.invoke('macro:fetch', key)
-  }
+  },
+  pricing: (() => {
+    // Per-subscription listeners, keyed by subId, so unsubscribe removes only its own.
+    const listeners = new Map<string, (_e: unknown, payload: PricingUpdate) => void>()
+    return {
+      subscribe: (
+        req: { venue?: ExchangeId; symbol: string; interval?: Interval; type: DataType },
+        onUpdate: (u: PricingUpdate) => void
+      ): Promise<{
+        ok: boolean
+        subId: string
+        snapshot?: {
+          candles?: Candle[]
+          ticker?: { symbol: string; last: number; changePct: number; quoteVolume: number }
+        }
+      }> => {
+        const subId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+        const listener = (_e: unknown, payload: PricingUpdate): void => {
+          if (payload?.subId === subId) onUpdate(payload)
+        }
+        listeners.set(subId, listener)
+        ipcRenderer.on('pricing:update', listener)
+        return (
+          ipcRenderer.invoke('pricing:subscribe', { subId, ...req }) as Promise<{
+            ok: boolean
+            subId: string
+            snapshot?: {
+              candles?: Candle[]
+              ticker?: { symbol: string; last: number; changePct: number; quoteVolume: number }
+            }
+          }>
+        ).catch((err: unknown) => {
+          ipcRenderer.removeListener('pricing:update', listener)
+          listeners.delete(subId)
+          throw err
+        })
+      },
+      unsubscribe: (subId: string): Promise<{ ok: boolean }> => {
+        const listener = listeners.get(subId)
+        if (listener) {
+          ipcRenderer.removeListener('pricing:update', listener)
+          listeners.delete(subId)
+        }
+        return ipcRenderer.invoke('pricing:unsubscribe', subId) as Promise<{ ok: boolean }>
+      }
+    }
+  })()
 }
 
 export type PreloadApi = typeof api
